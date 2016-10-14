@@ -1,0 +1,16 @@
+{
+    "dev": {
+        "s3_bucket": "",
+        "app_function": "app.dpr_api",
+        "aws_region": "",
+        "use_apigateway": true,
+        "memory_size": 512,
+        "log_level": "DEBUG",
+        "profile_name": "default",
+        "environment_variables":
+            {
+                "METADATA_BUCKET": "",
+                "METADATA_KEY_PREFIX": "metadata"
+            }
+    }
+}
