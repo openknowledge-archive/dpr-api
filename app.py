@@ -13,7 +13,17 @@ logger.setLevel(logging.DEBUG)
 
 dpr_api.config['SWAGGER'] = {
     "swagger_version": "2.0",
-    "title": "DPR API"
+    "title": "DPR API",
+    "specs": [
+            {
+                "version": "0.0.1",
+                "title": "v1",
+                "endpoint": 'spec',
+                "description": "First Cut for DPR API",
+                "route": '/v1/spec',
+                "rule_filter": lambda rule: rule.endpoint.startswith('api_v1')
+            }
+        ]
 }
 
 Swagger(dpr_api)
@@ -148,7 +158,10 @@ class MetaDataApi(MethodView):
 
 
 view = MetaDataApi.as_view('metadata')
-dpr_api.add_url_rule('/metadata/<publisher>/<package>', view_func=view, methods=["GET", "PUT"])
+dpr_api.add_url_rule('/api/v1/metadata/<publisher>/<package>',
+                     view_func=view,
+                     methods=["GET", "PUT"],
+                     endpoint="api_v1")
 
 
 if __name__ == '__main__':
