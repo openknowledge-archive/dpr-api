@@ -33,7 +33,7 @@ target/
 .env
 
 # virtualenv
-venv/
+env/
 ENV/
 
 # IDEA
