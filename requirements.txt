@@ -1,9 +1,10 @@
-flask
-zappa
-boto3
-flasgger
+flask==0.11
 Flask-SQLAlchemy==2.1
+zappa==0.27.0
+boto3==1.4.1
+flasgger==0.5.13
 
-## testing
-coverage
-moto
+
+coverage==4.2
+moto==0.4.27
+nose==1.3.7
