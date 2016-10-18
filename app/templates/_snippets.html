@@ -66,18 +66,9 @@
   <hr />
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script>
-  $(document).ready(function(){
-    $("button").click(function(){
-      $(".vis").toggle();
-      $(".viewer").toggle();
-      $("#search").toggle();
-    });
-  });
-  </script>
   
-  <button>Switch View</button>
-  <input id="search" placeholder="Search" type="search" style="float:right; display: none">
+  <!--<button>Switch View</button>
+  <input id="search" placeholder="Search" type="search" style="float:right; display: none">-->
   <div class="viewer" style="display: none"></div>
   <div class="vis"></div>
   <div class="resources" id="data">
@@ -154,8 +145,8 @@
   </div>
 
   <script type="text/javascript">
-    var DataPackageData = {{ jsonDataPackage }};
-    var DataViews = {{ dataViews }};
+    var DataPackageData = {{ jsonDataPackage|tojson }};
+    var DataViews = {{ dataViews|tojson }};
   </script>
 </div><!-- / dataset show -->
 {%- endmacro %}

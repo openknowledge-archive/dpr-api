@@ -1,0 +1,39 @@
+{
+  "name": "demo-package",
+  "title": "Fixture",
+  "descriptions": "Fixture package for testing",
+  "licenses" : [
+    {
+      "type": "type",
+      "url": "http://example.com/licenses"
+    }
+  ],
+  "keywords": [ "test", "fixtures", "examples"],
+  "version": "0.1.0",
+  "last_updated": "2016-10-17",
+  "sources": [
+    {
+      "name": "test",
+      "web": "http://www.example.com/fixstures"
+    }
+  ],
+  "resources": [
+    { 
+      "path": "data/package.csv",
+      "schema": {
+        "fields": [
+          {
+            "name": "header1",
+            "type": "string"
+          },
+          {
+            "name": "header2",
+            "type": "number"
+          }
+        ]
+      },
+      "name":"demo"
+    }
+  ],
+  "views": []
+}

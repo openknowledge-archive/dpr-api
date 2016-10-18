@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% import '_snippets.html' as snippets %}
+
+{% block title %}
+{{dataset.title}} - Dataset
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>
+    {{ dataset.title }}
+  </h1>
+</div>
+
+{{snippets.dataset_show(dataset, jsonDataPackage, dataViews, showDataApi)}}
+{% endblock %}
