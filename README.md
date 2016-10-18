@@ -5,6 +5,9 @@ Requirement python 2.7
 ```
 $ virtualenv env
 $ source env/bin/activate
+For dev use 
+$ pip install -r requirements.dev.txt
+else
 $ pip install -r requirements.txt
 ```
 
@@ -28,12 +31,27 @@ There are different environment to deploy.
     
     For further deployment:
     $  zappa update dev
+
+##### Zappa Configuration:
+```
+s3_bucket: Which bucket the zip will be deployed
+aws_region: aws region
+environment_variables.FLASK_CONFIGURATION what config class the app will take from 
+   app.config.py 
+```
     
 ## Api Doc:
 All api documentation is maintained by [flasgger](https://github.com/rochacbruno/flasgger)
 
 The swagger UI Url path is {host}/apidocs/index.html
     
+## Environment Setting:
+Plz put .env file in root directory and add environment variables to that
+```
+aws_access_key_id=
+aws_secret_access_key=
+aws_region=
+```
     
 ## Testing:
 All tests are in tests directory. We use nose for testing
