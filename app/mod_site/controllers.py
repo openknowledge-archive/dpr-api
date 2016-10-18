@@ -8,12 +8,14 @@ datapackage['owner'] = 'demo'
 catalog = Catalog()
 catalog.load([datapackage])
 
+
 @mod_site.route("/", methods=["GET"])
 def home():
     datasets = catalog.query()
     coreDatasets = catalog.by_owner('core')
     total = len(datasets)
-    return render_template("index.html", total=total, datasets= datasets, coreDatasets=coreDatasets, title= 'home')
+    return render_template("index.html", total=total, datasets=datasets, coreDatasets=coreDatasets, title='home')
+
 
 @mod_site.route("/<owner>/<id>", methods=["GET"])
 def datapackage_show(owner, id):

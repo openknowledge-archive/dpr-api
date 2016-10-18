@@ -1,5 +1,6 @@
 from flask import current_app as app
 
+
 class Catalog(object):
     def __init__(self):
         self._list = []
@@ -25,4 +26,3 @@ class Catalog(object):
             for dp in self._cache[owner]:
                 result.append(self._cache[owner][dp])
         return result
-    

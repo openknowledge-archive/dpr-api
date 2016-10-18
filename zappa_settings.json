@@ -8,7 +8,7 @@
         "log_level": "DEBUG",
         "profile_name": "default",
         "environment_variables": {
-            "FLASK_CONFIGURATION": "development",
+            "FLASK_CONFIGURATION": "development"
         }
     }
 }

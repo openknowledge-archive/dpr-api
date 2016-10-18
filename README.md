@@ -58,3 +58,7 @@ All tests are in tests directory. We use nose for testing
 
 To run all tests plz use ```nosetests tests``` from the base directory.
 If want to run specific module use i.e. ```nosetests tests/test_basics.py```
+
+* Some times nosetests got chached by bash so tests may fail as it points to /usr/local/nosetests
+ not the virtual env nosetest
+ then plz run ```./env/bin/nosetests tests```
