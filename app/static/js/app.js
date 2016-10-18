@@ -61,6 +61,13 @@ function findResourceIndex(views, datapackage) {
 function datasetShowSetup() {
   // DataFileData will be defined in Jinja template
   if (DataViews.length > 0) {
+    $(document).ready(function(){
+      $("button").click(function(){
+        $(".vis").toggle();
+        $(".viewer").toggle();
+        $("#search").toggle();
+      });
+    });
     var datafile = new Catalog.Models.DataFile(DataPackageData);
     var resourceIndex = findResourceIndex(DataViews, DataPackageData);
     var view = new Catalog.Views.DataFile({
@@ -75,10 +82,12 @@ function datasetShowSetup() {
     var resourceIndex = $($el).data('resource-index');
     var reclineDataset = Catalog.dataPackageResourceToDataset(DataPackageData, resourceIndex);
     var hot;
-   
-    CSV.fetch({ 
-      "url": reclineDataset.remoteurl
+    CSV.fetch({
+      // simplest way to render data, for first demo
+      // should probably be changed "url": 'http://url/to/raw/data.csv'
+      "data": 'header1,header2\ntest,0\nexample,1\n"more test",3'
     }).done(function(dataset) {
+      
       var options = {
         data: dataset.records,
         colHeaders: dataset.fields,
