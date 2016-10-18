@@ -15,7 +15,7 @@ This is flask based project. We can also deploy this in AWS lambda using zappa.
 For local testing we can start the project using:
     
 ```
-$ python app.py
+$ python dpr.py
 ```
 
 
@@ -34,3 +34,9 @@ All api documentation is maintained by [flasgger](https://github.com/rochacbruno
 
 The swagger UI Url path is {host}/apidocs/index.html
     
+    
+## Testing:
+All tests are in tests directory. We use nose for testing
+
+To run all tests plz use ```nosetests tests``` from the base directory.
+If want to run specific module use i.e. ```nosetests tests/test_basics.py```

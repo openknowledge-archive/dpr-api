@@ -1,5 +1,5 @@
 class BaseConfig(object):
-    DEBUG = False
+    DEBUG = True
     TESTING = False
     SWAGGER = {
         "swagger_version": "2.0",
