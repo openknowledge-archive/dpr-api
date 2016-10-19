@@ -5,3 +5,8 @@ boto3==1.4.1
 flasgger==0.5.13
 python-dotenv==0.6.0
 PyJWT==1.4.2
+
+## TESTS DEPENDENCIES
+coverage==4.2
+moto==0.4.27
+nose==1.3.7
