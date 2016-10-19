@@ -22,7 +22,7 @@ var getVegaSpec = function(table,DataViews,resourceIndex) {
       "data": [
         {
           "name": "data",
-          "url": table.remoteurl,
+          "url": "https://gist.githubusercontent.com/zelima/062431419a1a790cc084fdba62322109/raw/39ee548e067999c6a270b5a90b7b74bac642a685/monthly-series.csv",
           "format": {
             "type": "csv",
             "parse": parse
@@ -74,6 +74,7 @@ var getVegaSpec = function(table,DataViews,resourceIndex) {
           "type": "text",
           "properties": {
             "enter": {
+              "fontWeight": {"value": "bold"},
               "align": {"value": "left"},
               "fill": {"value": "#333"}
             },
@@ -94,13 +95,14 @@ var getVegaSpec = function(table,DataViews,resourceIndex) {
           "type": "text",
           "properties": {
             "enter": {
+              "fontWeight": {"value": "bold"},
               "align": {"value": "left"},
               "fill": {"value": "#333"}
             },
             "update": {
               "x": {"scale": "x", "signal": "tooltip."+date, "offset": 15},
               "y": {"scale": "y", "signal": "tooltip."+price, "offset": -5},
-              "text": {"signal": "tooltip."+price},
+              "text": {"template": "Price: {{tooltip."+price+"}}"},
               "fillOpacity": [
                 { "test": "!tooltip._id",
                   "value": 0

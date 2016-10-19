@@ -10,7 +10,7 @@
   ],
   "keywords": [ "test", "fixtures", "examples"],
   "version": "0.1.0",
-  "last_updated": "2016-10-17",
+  "last_updated": "2016-10-18",
   "sources": [
     {
       "name": "test",
@@ -23,11 +23,11 @@
       "schema": {
         "fields": [
           {
-            "name": "header1",
-            "type": "string"
+            "name": "Date",
+            "type": "date"
           },
           {
-            "name": "header2",
+            "name": "Price",
             "type": "number"
           }
         ]
@@ -35,5 +35,17 @@
       "name":"demo"
     }
   ],
-  "views": []
+  "views": [
+    {
+      "id": "Graph",
+      "type": "Graph",
+      "state": {
+        "graphType": "lines",
+        "group": "Date",
+        "series": [
+          "Price"
+        ]
+      }
+    }
+  ]
 }
