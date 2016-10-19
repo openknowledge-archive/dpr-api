@@ -1,0 +1,8 @@
+test:
+    script:
+        - nosetests tests
+        
+before_script:
+    - virtualenv env
+    - source env/bin/activate
+    - pip install -r requirements.txt
