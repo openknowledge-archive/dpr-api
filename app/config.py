@@ -1,3 +1,6 @@
+import os
+
+
 class BaseConfig(object):
     DEBUG = True
     TESTING = False
@@ -15,9 +18,15 @@ class BaseConfig(object):
             }
         ]
     }
+    AUTH0_CLIENT_ID = os.environ.get('AUTH0_CLIENT_ID')
+    AUTH0_CLIENT_SECRET = os.environ.get('AUTH0_CLIENT_SECRET')
+    AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
+    AUTH0_DB_NAME = os.environ.get('AUTH0_DB_NAME')
+    AUTH0_LOGIN_PAGE = os.environ.get('AUTH0_LOGIN_PAGE')
+    AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
 
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     TESTING = True
-    S3_BUCKET_NAME = 'dev'
+    S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')

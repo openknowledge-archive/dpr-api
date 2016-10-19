@@ -1,7 +1,11 @@
 import json
+import requests
+from functools import wraps
 from flask import Blueprint, request, jsonify
 from flask import current_app as app
+
 from app.mod_api.models import MetaDataS3
+from app.mod_site.controllers import requires_auth
 
 mod_api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -105,6 +109,7 @@ def get_metadata(publisher, package):
 
 
 @mod_api.route("/<publisher>", methods=["GET"])
+@requires_auth
 def get_all_metadata_names_for_publisher(publisher):
     """
     DPR meta-data get operation.
@@ -148,3 +153,4 @@ def get_all_metadata_names_for_publisher(publisher):
     except Exception as e:
         app.logger.error(e)
         return jsonify({'status': 'KO', 'message': e.message}), 500
+
