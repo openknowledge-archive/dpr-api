@@ -11,14 +11,43 @@ catalog.load([datapackage])
 
 @mod_site.route("/", methods=["GET"])
 def home():
+    """
+    Loads home page
+    ---
+    tags:
+      - site
+    responses:
+      200:
+        description: Succesfuly loaded home page
+    """
     datasets = catalog.query()
     coreDatasets = catalog.by_owner('core')
     total = len(datasets)
-    return render_template("index.html", total=total, datasets=datasets, coreDatasets=coreDatasets, title='home')
-
+    return render_template("index.html", total=total, datasets= datasets, coreDatasets=coreDatasets, title= 'home'), 200
 
 @mod_site.route("/<owner>/<id>", methods=["GET"])
 def datapackage_show(owner, id):
+    """
+    Loads datapackage page for given owner 
+    ---
+    tags:
+      - site
+    parameters:
+      - name: owner
+        in: path
+        type: string
+        required: true
+        description: datapackage owner name
+      - name: id
+        in: path
+        type: string
+        description: datapackage name
+    responses:
+      404:
+        description: Datapackage does not exist
+      200:
+        description: Succesfuly loaded
+    """
     dataset = catalog.get(owner, id)
     if not dataset:
         return "404 Not Found"

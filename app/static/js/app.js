@@ -84,8 +84,7 @@ function datasetShowSetup() {
     var hot;
     CSV.fetch({
       // simplest way to render data, for first demo
-      // should probably be changed "url": 'http://url/to/raw/data.csv'
-      "data": 'header1,header2\ntest,0\nexample,1\n"more test",3'
+      "url": 'https://gist.githubusercontent.com/zelima/062431419a1a790cc084fdba62322109/raw/39ee548e067999c6a270b5a90b7b74bac642a685/monthly-series.csv'
     }).done(function(dataset) {
       
       var options = {
