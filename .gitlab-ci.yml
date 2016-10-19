@@ -1,7 +1,7 @@
 test:
     script:
-        - apt-get install -y python-virtualenv
         - apt-get install -y python-pip
+        - pip install virtualenv
         - virtualenv env
         - source env/bin/activate
         - pip install -r requirements.txt
