@@ -3,6 +3,7 @@ from flask import json
 import unittest
 from app.mod_site.models import Catalog
 
+
 class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
@@ -44,4 +45,3 @@ class CatalogTestCase(unittest.TestCase):
         
         assert catalog.by_owner('demo') == [datapackage]
         assert catalog.by_owner('anon') == []
-   

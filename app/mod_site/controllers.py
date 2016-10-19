@@ -8,6 +8,7 @@ datapackage['owner'] = 'demo'
 catalog = Catalog()
 catalog.load([datapackage])
 
+
 @mod_site.route("/", methods=["GET"])
 def home():
     """
