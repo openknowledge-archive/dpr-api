@@ -1,7 +1,8 @@
 import json
 from flask import Blueprint, request, jsonify
 from flask import current_app as app
-from app.mod_api.models import MetaDataS3
+from app.mod_api.models import MetaDataS3, MetaDataDB
+from app.database import s3, db
 
 mod_api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -97,8 +98,8 @@ def get_metadata(publisher, package):
                         description: Exception message
     """
     try:
-        metadata = MetaDataS3(publisher=publisher, package=package)
-        return jsonify({"data": json.loads(metadata.get_metadata_body()), "status": "OK"}), 200
+        metadata = MetaDataDB.query.filter_by(name=package, publisher=publisher).first().descriptor
+        return jsonify({"data": metadata, "status": "OK"}), 200
     except Exception as e:
         app.logger.error(e)
         return jsonify({'status': 'KO', 'message': e.message}), 500
