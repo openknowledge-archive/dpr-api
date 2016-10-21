@@ -34,7 +34,7 @@ my.Views.DataFile = Backbone.View.extend({
     vg.embed(vis, vegaSpec);
     
     CSV.fetch({ 
-      "url": table.remoteurl
+      "url": "https://gist.githubusercontent.com/zelima/062431419a1a790cc084fdba62322109/raw/39ee548e067999c6a270b5a90b7b74bac642a685/monthly-series.csv"
     }).done(function(dataset) {
       var options = {
         data: dataset.records,

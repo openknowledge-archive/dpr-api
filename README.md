@@ -10,6 +10,19 @@ $ pip install -r requirements.dev.txt
 else
 $ pip install -r requirements.txt
 ```
+### Set up postgres database
+
+```
+$ psql -U postgres -c "create user dpr_user password 'secret' createdb;"
+$ psql -U postgres -c "create database dpr_db owner=dpr_user;"
+
+# create tables
+$ python manager.py createdb
+
+# you may need to install psysopg2 manually if comand throws errors
+$ sudo apt-get install libpq-dev python-dev
+$ pip install psycopg2
+```
 
 ### DPR API project. 
 This is flask based project. We can also deploy this in AWS lambda using zappa.
@@ -20,7 +33,6 @@ For local testing we can start the project using:
 ```
 $ python dpr.py
 ```
-
 
 #### Lambda Deployment Process:
 The lambda configuration is in zappa_settings.json
