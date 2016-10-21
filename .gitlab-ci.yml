@@ -3,7 +3,9 @@ test:
     script:
         - virtualenv env
         - source env/bin/activate
+        - sudo apt-get install libpq-dev python-dev
         - pip install -r requirements.dev.txt
+        - pip install psycopg2
         - nosetests tests
             
 cache:
