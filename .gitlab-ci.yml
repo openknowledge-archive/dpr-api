@@ -1,13 +1,38 @@
-test:
+services:
+    - postgres
+
+variables:
+    POSTGRES_DB: dpr_db
+    POSTGRES_USER: dpr_user
+    POSTGRES_PASSWORD: secret
+
+stages:
+    - build
+    - setup
+    - test
+
+build:
+    stage: build
     image: python:2.7
     script:
         - virtualenv env
         - source env/bin/activate
         - apt-get install libpq-dev
         - pip install -r requirements.dev.txt
-        - pip install psycopg2
+
+setup:
+    stage: setup
+    image: python:2.7
+    script:
+        - python manager.py createdb
+        - python manager.py populate
+    
+test:
+    stage: test
+    image: python:2.7
+    script:
         - nosetests tests
-            
+        - python manager.py dropdb
 cache:
     paths:
       - env/
