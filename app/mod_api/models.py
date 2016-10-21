@@ -1,4 +1,4 @@
-from app.database import s3
+from app.database import s3, db
 from flask import current_app as app
 
 
@@ -38,3 +38,25 @@ class MetaDataS3(object):
 
     def build_s3_prefix(self):
         return "{prefix}/{publisher}".format(prefix=self.prefix, publisher=self.publisher)
+
+class MetaDataDB(db.Model):
+    
+    __tablename__ = "packages"
+    
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(64), unique = True)
+    publisher = db.Column(db.String(64), unique = True)
+    descriptor = db.Column(db.LargeBinary)
+    status = db.Column(db.String(16))
+    private = db.Column(db.Boolean)
+    
+    def __init__(self, name, publisher, descriptor, status, private):
+        self.name = name
+        self.publisher = publisher
+        self.descriptor = descriptor
+        self.status = status
+        self.private = private
+        
+    def __repr__(self):
+        return "{name}\t{publisher}\t{descriptor}\t{status}\t{private}\n".format\
+        (name=self.name, publisher=self.publisher, descriptor=self.descriptor,status=self.status,private=self.private)
