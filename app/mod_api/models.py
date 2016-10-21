@@ -46,7 +46,7 @@ class MetaDataDB(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(64), unique = True)
     publisher = db.Column(db.String(64), unique = True)
-    descriptor = db.Column(db.LargeBinary)
+    descriptor = db.Column(db.JSON)
     status = db.Column(db.String(16))
     private = db.Column(db.Boolean)
     
