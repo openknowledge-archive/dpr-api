@@ -25,7 +25,7 @@ def dropdb():
 @manager.command
 def populate():
     data = json.loads(open('fixtures/datapackage.json').read())
-    db.session.add(models.MetaDataDB("demo1", "demo-package1", data, "avtive", False))
+    db.session.add(models.MetaDataDB("demo", "demo-package", data, "avtive", False))
     db.session.commit()
 
 if __name__ == "__main__":
