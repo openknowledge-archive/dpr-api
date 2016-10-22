@@ -2,6 +2,7 @@ import os
 
 
 class BaseConfig(object):
+    API_KEY = os.environ.get("API_KEY")
     DEBUG = True
     TESTING = False
     SWAGGER = {
@@ -24,6 +25,7 @@ class BaseConfig(object):
     AUTH0_DB_NAME = os.environ.get('AUTH0_DB_NAME')
     AUTH0_LOGIN_PAGE = os.environ.get('AUTH0_LOGIN_PAGE')
     AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
 
 
 class DevelopmentConfig(BaseConfig):

@@ -1,16 +1,15 @@
 import json
-import requests
-from functools import wraps
 from flask import Blueprint, request, jsonify
 from flask import current_app as app
 
 from app.mod_api.models import MetaDataS3
-from app.mod_site.controllers import requires_auth
+from app.mod_auth.controllers import requires_auth
 
 mod_api = Blueprint('api', __name__, url_prefix='/api')
 
 
 @mod_api.route("/<publisher>/<package>", methods=["PUT"])
+@requires_auth
 def save_metadata(publisher, package):
     """
     DPR metadata put operation.
@@ -55,7 +54,7 @@ def save_metadata(publisher, package):
         metadata.save()
         return jsonify({"status": "OK"}), 200
     except Exception as e:
-
+        app.logger.error(e)
         return jsonify({'status': 'KO', 'message': e.message}), 500
 
 
@@ -109,7 +108,6 @@ def get_metadata(publisher, package):
 
 
 @mod_api.route("/<publisher>", methods=["GET"])
-@requires_auth
 def get_all_metadata_names_for_publisher(publisher):
     """
     DPR meta-data get operation.
@@ -153,4 +151,3 @@ def get_all_metadata_names_for_publisher(publisher):
     except Exception as e:
         app.logger.error(e)
         return jsonify({'status': 'KO', 'message': e.message}), 500
-
