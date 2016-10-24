@@ -6,6 +6,7 @@ mod_site = Blueprint('site', __name__)
 catalog = Catalog()
 
 @mod_site.route("/", methods=["GET"])
+@mod_site.route("/home", methods=["GET"])
 def home(id = 'demo'):
     """
     Loads home page
@@ -18,8 +19,9 @@ def home(id = 'demo'):
       200:
         description: Succesfuly loaded home page
     """
-    
+
     return render_template("index.html", total=0, datasets= [], coreDatasets=[], title= 'home'), 200
+
 
 @mod_site.route("/<owner>/<id>", methods=["GET"])
 def datapackage_show(owner, id):
@@ -50,5 +52,5 @@ def datapackage_show(owner, id):
     dataset = metadata['data']
     resources = dataset['resources']
     dataViews = dataset['views'] or []
-    
+
     return render_template("dataset.html", dataset= dataset, showDataApi=True, jsonDataPackage=dataset, dataViews=dataViews), 200

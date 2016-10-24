@@ -1,7 +1,7 @@
 {
     "dev": {
         "s3_bucket": "",
-        "app_function": "drp.app",
+        "app_function": "dpr.application",
         "aws_region": "us-west-2",
         "use_apigateway": true,
         "memory_size": 512,
