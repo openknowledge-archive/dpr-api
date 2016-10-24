@@ -2,7 +2,7 @@ import json
 from flask import Blueprint, request, jsonify
 from flask import current_app as app
 from flask import redirect
-from app.database import db
+from app.database import db, s3
 from app.mod_api.models import MetaDataS3, User
 from app.utils.auth import requires_auth
 from app.utils.auth0_helper import get_user_info_with_code, update_user_secret, get_user
@@ -103,8 +103,8 @@ def get_metadata(publisher, package):
                         description: Exception message
     """
     try:
-        metadata = MetaDataS3(publisher=publisher, package=package)
-        return jsonify({"data": json.loads(metadata.get_metadata_body()), "status": "OK"}), 200
+        metadata = MetaDataDB.query.filter_by(name=package, publisher=publisher).first().descriptor
+        return jsonify({"data": metadata, "status": "OK"}), 200
     except Exception as e:
         app.logger.error(e)
         return jsonify({'status': 'KO', 'message': e.message}), 500

@@ -16,8 +16,9 @@ $ pip install -r requirements.txt
 $ psql -U postgres -c "create user dpr_user password 'secret' createdb;"
 $ psql -U postgres -c "create database dpr_db owner=dpr_user;"
 
-# create tables
+# create and populate tables
 $ python manager.py createdb
+$ python manager.py populate
 
 # you may need to install psysopg2 manually if comand throws errors
 $ sudo apt-get install libpq-dev python-dev
