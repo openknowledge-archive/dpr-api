@@ -34,4 +34,5 @@ class BaseConfig(object):
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     TESTING = True
-    S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
+    # need to add as test would fail
+    S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'test')
