@@ -33,8 +33,8 @@ def dropdb():
 def populate():
     data = json.loads(open('fixtures/datapackage.json').read())
     db.session.add(models.MetaDataDB("demo", "demo-package", data, "avtive", False))
-    user = models.User("test_user")
-    user.email, user.nickname, user.secret_key = "test@gmail.com", "test", "secret"
+    user = models.User()
+    user.user_id, user.email, user.user_name, user.secret = "auth0|123", "test@gmail.com", "test", "secret"
 
     db.session.add(user)
     db.session.commit()
