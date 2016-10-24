@@ -1,5 +1,5 @@
 import json
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from flask import current_app as app
 from flask import redirect
 from app.database import db, s3
@@ -202,7 +202,9 @@ def callback_handling():
         db.session.add(user)
         db.session.commit()
     user = User.query.filter_by(user_id=user_id).first()
-    return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
+    ## For now dashboard is rendered directly from callbacl, this needs to be changed
+    return render_template("dashboard.html", user=user.serialize['name'])
+    # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
 
 
 @mod_api.route("/login", methods=['POST'])
