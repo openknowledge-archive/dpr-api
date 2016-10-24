@@ -16,7 +16,6 @@ def get_user_info(code):
     }
 
     token_info = requests.post(token_url, data=json.dumps(token_payload), headers=json_header).json()
-    print token_info
     user_url = "https://{domain}/userinfo?access_token={access_token}" \
         .format(domain=app.config["AUTH0_DOMAIN"], access_token=token_info['access_token'])
 

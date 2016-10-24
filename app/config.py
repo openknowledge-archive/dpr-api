@@ -25,7 +25,9 @@ class BaseConfig(object):
     AUTH0_DB_NAME = os.environ.get('AUTH0_DB_NAME')
     AUTH0_LOGIN_PAGE = os.environ.get('AUTH0_LOGIN_PAGE')
     AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
+
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class DevelopmentConfig(BaseConfig):

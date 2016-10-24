@@ -45,13 +45,22 @@ class User(db.Model):
     __tablename__ = 'user'
 
     user_id = db.Column(db.String(64), primary_key=True)
-    secret_key = db.Column(db.String(128))
     nickname = db.Column(db.String(64), index=True)
     email = db.Column(db.String(128), index=True)
     picture = db.Column(db.String(128))
+    name = db.Column(db.String(64))
+    password = db.Column(db.String(64))
 
-    def __init__(self, user_id):
-        self.user_id = user_id
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'user_id': self.user_id,
+            'nickname': self.nickname,
+            'email': self.user_id,
+            'picture': self.nickname,
+            'name': self.name
+        }
 
 
 class MetaDataDB(db.Model):

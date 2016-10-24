@@ -26,6 +26,7 @@ def home():
     total = len(datasets)
     return render_template("index.html", total=total, datasets= datasets, coreDatasets=coreDatasets, title= 'home'), 200
 
+
 @mod_site.route("/<owner>/<id>", methods=["GET"])
 def datapackage_show(owner, id):
     """
