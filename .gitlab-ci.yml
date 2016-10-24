@@ -1,26 +1,11 @@
-image: python:2.7
-services:
-    - postgres
-
-variables:
-    POSTGRES_DB: dpr_db
-    POSTGRES_USER: dpr_user
-    POSTGRES_PASSWORD: secret
-
-build:
-    stage: build
+test:
+    image: python:2.7
     script:
         - virtualenv env
         - source env/bin/activate
-        - apt-get install libpq-dev
         - pip install -r requirements.dev.txt
-
-        - python manager.py createdb
-        - python manager.py populate
-
         - nosetests tests
-        - python manager.py dropdb
-
+            
 cache:
     paths:
       - env/
