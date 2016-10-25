@@ -1,6 +1,6 @@
 {
     "dev": {
-        "s3_bucket": "",
+        "s3_bucket": "neo20iitkgp",
         "app_function": "dpr.application",
         "aws_region": "us-west-2",
         "use_apigateway": true,

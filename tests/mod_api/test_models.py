@@ -1,6 +1,7 @@
 from app import create_app
 import boto3
 import unittest
+from urlparse import urlparse
 from app.mod_api.models import MetaDataS3
 from moto import mock_s3
 
@@ -23,35 +24,47 @@ class MetadataS3TestCase(unittest.TestCase):
     @mock_s3
     def test_save(self):
         with self.app.app_context():
-            s3 = boto3.resource('s3')
+            s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
-            bucket = s3.Bucket(bucket_name)
-            bucket.create()
+            s3.create_bucket(Bucket=bucket_name)
             metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
             key = metadata.build_s3_key()
             metadata.save()
-            obs_list = list(s3.Bucket(bucket_name).objects.filter(Prefix=key))
+            obs_list = list(s3.list_objects(Bucket=bucket_name, Prefix=key).get('Contents'))
             assert 1 == len(obs_list)
-            assert key == obs_list[0].key
+            assert key == obs_list[0]['Key']
 
     @mock_s3
     def test_get_metadata_body(self):
         with self.app.app_context():
-            s3 = boto3.resource('s3')
+            s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
-            bucket = s3.Bucket(bucket_name)
-            bucket.create()
+            s3.create_bucket(Bucket=bucket_name)
             metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
-            bucket.put_object(Key=metadata.build_s3_key(), Body=metadata.body)
+            s3.put_object(Bucket=bucket_name, Key=metadata.build_s3_key(), Body=metadata.body)
             assert metadata.body == metadata.get_metadata_body()
 
     @mock_s3
     def test_get_all_metadata_name_for_publisher(self):
         with self.app.app_context():
-            s3 = boto3.resource('s3')
+            s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
-            bucket = s3.Bucket(bucket_name)
-            bucket.create()
+            s3.create_bucket(Bucket=bucket_name)
             metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
-            bucket.put_object(Key=metadata.build_s3_key(), Body=metadata.body)
+            s3.put_object(Bucket=bucket_name, Key=metadata.build_s3_key(), Body=metadata.body)
             assert 1 == len(metadata.get_all_metadata_name_for_publisher())
+
+    @mock_s3
+    def test_generate_pre_signed_put_obj_url(self):
+        with self.app.app_context():
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
+            url = metadata.generate_pre_signed_put_obj_url()
+            parsed = urlparse(url)
+            print parsed
+            print parsed.netloc
+            print 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION'])
+            assert parsed.netloc == 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION'])
+

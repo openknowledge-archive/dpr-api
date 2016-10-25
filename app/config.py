@@ -14,11 +14,15 @@ class BaseConfig(object):
                 "title": "v1",
                 "endpoint": 'spec',
                 "description": "First Cut for DPR API",
-                "route": '/spec',
+                "route": '/api',
                 "rule_filter": lambda rule: True
             }
         ]
     }
+    AWS_ACCESS_KET_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+    AWS_REGION = os.environ.get('AWS_REGION', 'eu-west-1')
+
     AUTH0_CLIENT_ID = os.environ.get('AUTH0_CLIENT_ID')
     AUTH0_CLIENT_SECRET = os.environ.get('AUTH0_CLIENT_SECRET')
     AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')

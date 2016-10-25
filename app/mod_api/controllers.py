@@ -1,9 +1,9 @@
 import json
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, _request_ctx_stack, render_template
 from flask import current_app as app
 from flask import redirect
 from app.database import db, s3
-from app.mod_api.models import MetaDataS3, User
+from app.mod_api.models import MetaDataS3, User, MetaDataDB
 from app.utils.auth import requires_auth
 from app.utils.auth0_helper import get_user_info_with_code, update_user_secret, get_user
 from app.utils.jwt_utilities import JWTHelper
@@ -53,9 +53,16 @@ def save_metadata(publisher, package):
                         description: Status of the operation
     """
     try:
-        metadata = MetaDataS3(publisher=publisher, package=package, body=request.data)
-        metadata.save()
-        return jsonify({"status": "OK"}), 200
+        user = _request_ctx_stack.top.current_user
+        user_id = user['user']
+        user = User.query.filter_by(user_id=user_id).first()
+        if user is not None:
+            if user.user_name == publisher:
+                metadata = MetaDataS3(publisher=publisher, package=package, body=json.dumps(request.data))
+                metadata.save()
+                return jsonify({"status": "OK"}), 200
+            return jsonify({"status": "KO", "message": 'user name and publisher not matched'}), 400
+        return jsonify({"status": "KO", "message": 'user not found'}), 400
     except Exception as e:
         app.logger.error(e)
         return jsonify({'status': 'KO', 'message': e.message}), 500
@@ -106,7 +113,6 @@ def get_metadata(publisher, package):
         metadata = MetaDataDB.query.filter_by(name=package, publisher=publisher).first().descriptor
         return jsonify({"data": metadata, "status": "OK"}), 200
     except Exception as e:
-        app.logger.error(e)
         return jsonify({'status': 'KO', 'message': e.message}), 500
 
 
@@ -207,8 +213,8 @@ def callback_handling():
     # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
 
 
-@mod_api.route("/login", methods=['POST'])
-def login():
+@mod_api.route("/jwt", methods=['POST'])
+def get_jwt():
     """
     This API is responsible for Login
     ---
@@ -266,4 +272,13 @@ def auth0_login():
         - auth
         - auth0
     """
-    return redirect(app.config['AUTH0_LOGIN_PAGE'])
+    redirect_url = "https://{domain}/login?client={client_id}"\
+        .format(domain=app.config['AUTH0_DOMAIN'], client_id=app.config['AUTH0_CLIENT_ID'])
+    return redirect(redirect_url)
+
+
+@mod_api.route('/s3_url/<publisher>/<package>', methods=['GET'])
+def get_s3_signed_url(publisher, package):
+    """Look at http://stackoverflow.com/questions/34583869/descriptions-of-boto3-clientmethods"""
+    metadata = MetaDataS3(publisher=publisher, package=package)
+    return jsonify({'key': metadata.generate_pre_signed_put_obj_url()})
