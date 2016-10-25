@@ -1,3 +1,4 @@
+import json
 from app.database import s3, db
 from flask import current_app as app
 
@@ -14,21 +15,20 @@ class MetaDataS3(object):
     def save(self):
         bucket_name = app.config['S3_BUCKET_NAME']
         key = self.build_s3_key()
-        s3.Bucket(bucket_name).put_object(Key=key, Body=self.body)
+        s3.put_object(Bucket=bucket_name, Key=key, Body=self.body)
 
     def get_metadata_body(self):
         bucket_name = app.config['S3_BUCKET_NAME']
         key = self.build_s3_key()
-        response = s3.Object(bucket_name, key).get()
+        response = s3.get_object(Bucket=bucket_name, Key=key)
         return response['Body'].read()
 
     def get_all_metadata_name_for_publisher(self):
         bucket_name = app.config['S3_BUCKET_NAME']
         keys = []
         prefix = self.build_s3_prefix()
-        bucket = s3.Bucket(bucket_name)
-        for ob in bucket.objects.filter(Prefix=prefix):
-            keys.append(ob.key)
+        for ob in s3.list_objects(Bucket=bucket_name, Prefix=prefix)['Contents']:
+            keys.append(ob['Key'])
         return keys
 
     def build_s3_key(self):
@@ -38,6 +38,13 @@ class MetaDataS3(object):
 
     def build_s3_prefix(self):
         return "{prefix}/{publisher}".format(prefix=self.prefix, publisher=self.publisher)
+
+    def generate_pre_signed_put_obj_url(self):
+        bucket_name = app.config['S3_BUCKET_NAME']
+        key = self.build_s3_key()
+        params = {'Bucket': bucket_name, 'Key': key}
+        url = s3.generate_presigned_url('put_object', Params=params, ExpiresIn=3600)
+        return url
 
 
 class User(db.Model):
