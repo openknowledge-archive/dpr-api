@@ -1,5 +1,7 @@
 ## DPR-API
 
+[![Build Status](https://travis-ci.org/frictionlessdata/dpr-api.svg?branch=master)](https://travis-ci.org/frictionlessdata/dpr-api)
+
 Requirement python 2.7
 
 ```
