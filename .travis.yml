@@ -6,3 +6,5 @@ python:
 install:
   - pip install -r requirements.dev.txt
 script: nosetests tests --with-coverage --cover-package=app
+after_success:
+  coveralls

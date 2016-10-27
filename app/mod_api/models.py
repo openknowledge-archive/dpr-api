@@ -1,4 +1,3 @@
-import json
 from app.database import s3, db
 from flask import current_app as app
 
