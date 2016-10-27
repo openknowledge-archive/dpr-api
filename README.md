@@ -14,6 +14,26 @@ $ pip install -r requirements.dev.txt
 else
 $ pip install -r requirements.txt
 ```
+
+## Environment Setting:
+Plz put .env file in root directory and add environment variables to that
+```
+API_KEY=
+AWS_ACCESS_KET_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=
+AUTH0_CLIENT_ID=
+AUTH0_CLIENT_SECRET=
+AUTH0_DOMAIN=
+AUTH0_DB_NAME=
+AUTH0_LOGIN_PAGE=
+AUTH0_CALLBACK_URL=
+S3_BUCKET_NAME=
+SQLALCHEMY_DATABASE_URI=
+```
+Rename the env.template file to .env file.
+
+
 ### Set up postgres database
 
 ```
@@ -61,24 +81,6 @@ environment_variables.FLASK_CONFIGURATION what config class the app will take fr
 All api documentation is maintained by [flasgger](https://github.com/rochacbruno/flasgger)
 
 The swagger UI Url path is {host}/apidocs/index.html
-    
-## Environment Setting:
-Plz put .env file in root directory and add environment variables to that
-```
-API_KEY=
-AWS_ACCESS_KET_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=
-AUTH0_CLIENT_ID=
-AUTH0_CLIENT_SECRET=
-AUTH0_DOMAIN=
-AUTH0_DB_NAME=
-AUTH0_LOGIN_PAGE=
-AUTH0_CALLBACK_URL=
-S3_BUCKET_NAME=
-SQLALCHEMY_DATABASE_URI=
-```
-Rename the env.template file to .env file.
     
 ## Testing:
 All tests are in tests directory. We use nose for testing
