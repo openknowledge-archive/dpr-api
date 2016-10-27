@@ -11,12 +11,14 @@ class MetadataS3TestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
 
-    def test_metadata_s3_key(self):
+    @staticmethod
+    def test_metadata_s3_key():
         metadata = MetaDataS3(publisher="pub_test", package="test_package")
         expected = "{t}/pub_test/test_package/_v/latest/datapackage.json".format(t=metadata.prefix)
         assert expected == metadata.build_s3_key()
 
-    def test_metadata_s3_prefix(self):
+    @staticmethod
+    def test_metadata_s3_prefix():
         metadata = MetaDataS3(publisher="pub_test", package="test_package")
         expected = "{t}/pub_test".format(t=metadata.prefix)
         assert expected == metadata.build_s3_prefix()
@@ -67,4 +69,3 @@ class MetadataS3TestCase(unittest.TestCase):
             print parsed.netloc
             print 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION'])
             assert parsed.netloc == 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION'])
-

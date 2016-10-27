@@ -50,8 +50,8 @@ def update_user_secret(user_id):
 
 def get_auth0_token(jwt_token):
     if jwt_token is not None:
-        j = jwt.decode(jwt_token, verify=False)
-        if int(time.time()) > int(j['exp']):
+        token_payload = jwt.decode(jwt_token, verify=False)
+        if int(time.time()) > int(token_payload['exp']):
             return jwt_token
 
     json_header = {'content-type': 'application/json'}
