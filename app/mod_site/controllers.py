@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, json
+import markdown, urllib
+from flask import Blueprint, render_template, json, session, Markup
 from flask import current_app as app
 from app.mod_site.models import Catalog
 
@@ -18,7 +19,16 @@ def home():
       200:
         description: Succesfuly loaded home page
     """
-    
+    if 'logged_in' in session:
+        ## this is harde coded for now
+        content = urllib.urlopen('https://raw.githubusercontent.com/frictionlessdata/dpmpy/master/README.md').read()
+        content = Markup(markdown.markdown(content))
+        return render_template("dashboard.html", user=session['logged_in'], content=content), 200
+    return render_template("index.html", title= 'Home'), 200
+
+@mod_site.route("/logout")
+def logout():
+    session.pop('logged_in', None)
     return render_template("index.html", title= 'Home'), 200
 
 @mod_site.route("/<owner>/<id>", methods=["GET"])
