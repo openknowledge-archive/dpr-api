@@ -44,7 +44,7 @@ def datapackage_show(owner, id):
       200:
         description: Succesfuly loaded
     """
-    metadata = json.loads(app.test_client().get('/api/{owner}/{id}'.format(owner=owner, id=id)).data)
+    metadata = json.loads(app.test_client().get('/api/package/{owner}/{id}'.format(owner=owner, id=id)).data)
     if metadata['status'] == 'KO':
         return "404 Not Found", 404
     dataset = metadata['data']

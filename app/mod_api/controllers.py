@@ -11,7 +11,7 @@ from app.utils.jwt_utilities import JWTHelper
 mod_api = Blueprint('api', __name__, url_prefix='/api')
 
 
-@mod_api.route("/<publisher>/<package>", methods=["PUT"])
+@mod_api.route("/package/<publisher>/<package>", methods=["PUT"])
 @requires_auth
 def save_metadata(publisher, package):
     """
@@ -68,7 +68,7 @@ def save_metadata(publisher, package):
         return jsonify({'status': 'KO', 'message': e.message}), 500
 
 
-@mod_api.route("/<publisher>/<package>", methods=["GET"])
+@mod_api.route("/package/<publisher>/<package>", methods=["GET"])
 def get_metadata(publisher, package):
     """
     DPR meta-data get operation.
@@ -213,7 +213,7 @@ def callback_handling():
     # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
 
 
-@mod_api.route("/jwt", methods=['POST'])
+@mod_api.route("/auth/token", methods=['POST'])
 def get_jwt():
     """
     This API is responsible for Login
