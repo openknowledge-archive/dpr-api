@@ -58,7 +58,7 @@ def save_metadata(publisher, package):
         user = User.query.filter_by(user_id=user_id).first()
         if user is not None:
             if user.user_name == publisher:
-                metadata = MetaDataS3(publisher=publisher, package=package, body=json.dumps(request.data))
+                metadata = MetaDataS3(publisher=publisher, package=package, body=request.data)
                 metadata.save()
                 return jsonify({"status": "OK"}), 200
             return jsonify({"status": "KO", "message": 'user name and publisher not matched'}), 400
