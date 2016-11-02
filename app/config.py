@@ -2,7 +2,7 @@ import os
 
 
 class BaseConfig(object):
-    API_KEY = os.environ.get("API_KEY")
+    API_KEY = os.environ.get("API_KEY", 'api-key')
     DEBUG = True
     TESTING = False
     SWAGGER = {
