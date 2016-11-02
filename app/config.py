@@ -14,7 +14,7 @@ class BaseConfig(object):
                 "title": "v1",
                 "endpoint": 'spec',
                 "description": "First Cut for DPR API",
-                "route": '/api',
+                "route": '/spec',
                 "rule_filter": lambda rule: True
             }
         ]
@@ -31,7 +31,8 @@ class BaseConfig(object):
     AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
     AUTH0_API_AUDIENCE = os.environ.get('AUTH0_API_AUDIENCE')
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI",
+                                             'postgresql://dpr_user:secret@localhost/dpr_db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 

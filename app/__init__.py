@@ -4,8 +4,8 @@ from flask import Flask
 from database import db
 from os.path import join, dirname
 from dotenv import load_dotenv
-from app.mod_api.controllers import mod_api
-from app.mod_site.controllers import mod_site
+from app.mod_api.controllers import mod_api_blueprint
+from app.mod_site.controllers import mod_site_blueprint
 
 app_config = {
     "development": "app.config.DevelopmentConfig",
@@ -27,8 +27,8 @@ def create_app():
 
     db.init_app(app)
 
-    app.register_blueprint(mod_api)
-    app.register_blueprint(mod_site)
+    app.register_blueprint(mod_api_blueprint)
+    app.register_blueprint(mod_site_blueprint)
 
     Swagger(app)
     return app
