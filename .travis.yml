@@ -5,6 +5,7 @@ os:
 before_install:
   - sudo /etc/init.d/postgresql stop
   - sudo apt-get remove --purge postgresql-9.1
+  - sudo service postgresql start 9.4
 
 python:
   - "2.7"
