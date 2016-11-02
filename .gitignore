@@ -39,4 +39,5 @@ ENV/
 # IDEA
 .idea/
 
-
+# temp files
+*~
