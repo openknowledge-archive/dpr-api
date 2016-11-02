@@ -2,6 +2,10 @@ language: python
 sudo: required
 os:
   - linux
+before_install:
+  - sudo /etc/init.d/postgresql stop
+  - sudo apt-get remove --purge postgresql-9.1
+
 python:
   - "2.7"
 services:
