@@ -9,8 +9,11 @@ from app import create_app
 
 dot_env_path = join(dirname(__file__), '.env')
 load_dotenv(dot_env_path)
-migrate = Migrate(create_app(), db)
-manager = Manager(create_app())
+
+app = create_app()
+manager = Manager(app)
+
+migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 
 
