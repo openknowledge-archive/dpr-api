@@ -3,6 +3,8 @@ os:
   - linux
 python:
   - "2.7"
+services:
+  - postgresql
 addons:
   postgresql: "9.5"
 before_script:
