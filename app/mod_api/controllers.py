@@ -1,5 +1,5 @@
 import json
-from flask import Blueprint, request, jsonify, _request_ctx_stack, render_template
+from flask import Blueprint, request, jsonify, _request_ctx_stack, render_template, session, url_for
 from flask import current_app as app
 from flask import redirect
 from app.database import db, s3
@@ -208,8 +208,9 @@ def callback_handling():
         db.session.add(user)
         db.session.commit()
     user = User.query.filter_by(user_id=user_id).first()
-    ## For now dashboard is rendered directly from callbacl, this needs to be changed
-    return render_template("dashboard.html", user=user.serialize['name'])
+    session['logged_in'] = user.serialize['name']
+    # redirects to home page when logged in
+    return redirect(url_for('site.home'))
     # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
 
 

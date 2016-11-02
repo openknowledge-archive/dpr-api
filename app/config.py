@@ -33,6 +33,7 @@ class BaseConfig(object):
 
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = 'F\x10x\tes\xf6W{\xc7<\xb6\x07\xbd\xc2\xea)\xe1\rvl\x8ct\r'
 
 
 class DevelopmentConfig(BaseConfig):
