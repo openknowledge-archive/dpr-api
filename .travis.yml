@@ -1,8 +1,21 @@
 language: python
+sudo: required
 os:
   - linux
+before_install:
+  - sudo /etc/init.d/postgresql stop
+  - sudo apt-get remove --purge postgresql-9.1
+  - sudo service postgresql start 9.4
+
 python:
   - "2.7"
+services:
+  - postgresql
+addons:
+  postgresql: "9.4"
+before_script:
+  - psql -U postgres -c "create user dpr_user password 'secret' createdb;"
+  - psql -U postgres -c "create database dpr_db owner=dpr_user;"
 install:
   - pip install -r requirements.dev.txt
 script: nosetests tests --with-coverage --cover-package=app

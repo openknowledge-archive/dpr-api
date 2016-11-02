@@ -1,4 +1,7 @@
+from sqlalchemy import UniqueConstraint
+
 from app.database import s3, db
+from sqlalchemy.dialects.postgresql import JSON
 from flask import current_app as app
 
 
@@ -26,8 +29,10 @@ class MetaDataS3(object):
         bucket_name = app.config['S3_BUCKET_NAME']
         keys = []
         prefix = self.build_s3_prefix()
-        for ob in s3.list_objects(Bucket=bucket_name, Prefix=prefix)['Contents']:
-            keys.append(ob['Key'])
+        list_objects = s3.list_objects(Bucket=bucket_name, Prefix=prefix)
+        if list_objects is not None and 'Contents' in list_objects:
+            for ob in s3.list_objects(Bucket=bucket_name, Prefix=prefix)['Contents']:
+                keys.append(ob['Key'])
         return keys
 
     def build_s3_key(self):
@@ -70,15 +75,16 @@ class MetaDataDB(db.Model):
     __tablename__ = "packages"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    publisher = db.Column(db.String(64), unique=True)
-    descriptor = db.Column(db.JSON)
+    name = db.Column(db.String(64))
+    publisher = db.Column(db.String(64))
+    descriptor = db.Column(JSON)
     status = db.Column(db.String(16))
     private = db.Column(db.Boolean)
 
-    def __init__(self, name, publisher, descriptor, status, private):
+    __table_args__ = (
+        UniqueConstraint("name", "publisher"),
+    )
+
+    def __init__(self, name, publisher):
         self.name = name
         self.publisher = publisher
-        self.descriptor = descriptor
-        self.status = status
-        self.private = private

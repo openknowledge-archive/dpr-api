@@ -1,11 +1,12 @@
 from flask import Blueprint, render_template, json
 from flask import current_app as app
 from app.mod_site.models import Catalog
+from app.mod_api.controllers import get_metadata
 
-mod_site = Blueprint('site', __name__)
+mod_site_blueprint = Blueprint('site', __name__)
 catalog = Catalog()
 
-@mod_site.route("/", methods=["GET"])
+@mod_site_blueprint.route("/", methods=["GET"])
 def home():
     """
     Loads home page
@@ -21,7 +22,7 @@ def home():
     
     return render_template("index.html", title= 'Home'), 200
 
-@mod_site.route("/<owner>/<id>", methods=["GET"])
+@mod_site_blueprint.route("/<owner>/<id>", methods=["GET"])
 def datapackage_show(owner, id):
     """
     Loads datapackage page for given owner 
@@ -45,7 +46,7 @@ def datapackage_show(owner, id):
         description: Succesfuly loaded
     """
     metadata = json.loads(app.test_client().get('/api/package/{owner}/{id}'.format(owner=owner, id=id)).data)
-    if metadata['status'] == 'KO':
+    if metadata['error_code'] == 'DATA_NOT_FOUND':
         return "404 Not Found", 404
     dataset = metadata['data']
     resources = dataset['resources']
