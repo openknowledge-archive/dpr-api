@@ -16,12 +16,12 @@ class MetaDataS3(object):
 
     def save(self):
         bucket_name = app.config['S3_BUCKET_NAME']
-        key = self.build_s3_key()
+        key = self.build_s3_key('datapackage.json')
         s3.put_object(Bucket=bucket_name, Key=key, Body=self.body)
 
     def get_metadata_body(self):
         bucket_name = app.config['S3_BUCKET_NAME']
-        key = self.build_s3_key()
+        key = self.build_s3_key('datapackage.json')
         response = s3.get_object(Bucket=bucket_name, Key=key)
         return response['Body'].read()
 
@@ -35,17 +35,17 @@ class MetaDataS3(object):
                 keys.append(ob['Key'])
         return keys
 
-    def build_s3_key(self):
-        return "{prefix}/{publisher}/{package}/_v/{version}/datapackage.json"\
+    def build_s3_key(self, path):
+        return "{prefix}/{publisher}/{package}/_v/{version}/{path}"\
             .format(prefix=self.prefix, publisher=self.publisher,
-                    package=self.package, version=self.version)
+                    package=self.package, version=self.version, path=path)
 
     def build_s3_prefix(self):
         return "{prefix}/{publisher}".format(prefix=self.prefix, publisher=self.publisher)
 
-    def generate_pre_signed_put_obj_url(self):
+    def generate_pre_signed_put_obj_url(self, path):
         bucket_name = app.config['S3_BUCKET_NAME']
-        key = self.build_s3_key()
+        key = self.build_s3_key(path)
         params = {'Bucket': bucket_name, 'Key': key}
         url = s3.generate_presigned_url('put_object', Params=params, ExpiresIn=3600)
         return url

@@ -293,8 +293,9 @@ def get_s3_signed_url():
     data = request.get_json()
     publisher = data.get('publisher', None)
     package = data.get('package', None)
+    path = data.get('path', None)
     if publisher is None or package is None:
         return jsonify({'message': 'publisher or package can not be empty',
                         'error_code': 'INVALID_INPUT'}), 400
     metadata = MetaDataS3(publisher=publisher, package=package)
-    return jsonify({'key': metadata.generate_pre_signed_put_obj_url()}), 200
+    return jsonify({'key': metadata.generate_pre_signed_put_obj_url(path)}), 200
