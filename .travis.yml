@@ -1,4 +1,5 @@
 language: python
+sudo: required
 os:
   - linux
 python:
