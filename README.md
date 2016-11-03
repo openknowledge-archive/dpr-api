@@ -40,9 +40,8 @@ Rename the env.template file to .env file.
 $ psql -U postgres -c "create user dpr_user password 'secret' createdb;"
 $ psql -U postgres -c "create database dpr_db owner=dpr_user;"
 
-# create and populate tables
-$ python manager.py createdb
-$ python manager.py populate
+# create tables
+python manager.py db upgrade
 
 # you may need to install psysopg2 manually if comand throws errors
 $ sudo apt-get install libpq-dev python-dev
