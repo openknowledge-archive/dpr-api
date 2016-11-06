@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from os.path import join, dirname
+from os.path import join, dirname, expanduser
 from dotenv import load_dotenv
 
 env_variables = [
@@ -52,6 +52,6 @@ if __name__ == "__main__":
     region = "region={k}\n".format(k=os.getenv('AWS_REGION'))
     file_content = ['[default]\n', key, secret,
                     '[profile default]\n', 'output=json\n', region]
-
-    with open('/root/.aws/credentials', 'w') as f:
+    home = expanduser("~")
+    with open(home + '/.aws/credentials', 'w') as f:
         f.writelines(file_content)
