@@ -53,5 +53,5 @@ if __name__ == "__main__":
     file_content = ['[default]\n', key, secret,
                     '[profile default]\n', 'output=json\n', region]
 
-    with open('/root/aws/.credentials', 'w') as f:
+    with open('/root/.aws/credentials', 'w') as f:
         f.writelines(file_content)
