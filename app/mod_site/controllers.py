@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, json
 from flask import current_app as app
+
+from app.utils import get_zappa_prefix, get_s3_cdn_prefix
 from app.mod_site.models import Catalog
-from app.mod_api.controllers import get_metadata
 
 mod_site_blueprint = Blueprint('site', __name__)
 catalog = Catalog()
@@ -20,7 +21,8 @@ def home():
         description: Succesfuly loaded home page
     """
     
-    return render_template("index.html", title= 'Home'), 200
+    return render_template("index.html", title='Home', zappa_env=get_zappa_prefix(),
+                           s3_cdn=get_s3_cdn_prefix()), 200
 
 @mod_site_blueprint.route("/<owner>/<id>", methods=["GET"])
 def datapackage_show(owner, id):
@@ -52,4 +54,6 @@ def datapackage_show(owner, id):
     resources = dataset['resources']
     dataViews = dataset['views'] or []
     
-    return render_template("dataset.html", dataset= dataset, showDataApi=True, jsonDataPackage=dataset, dataViews=dataViews), 200
+    return render_template("dataset.html", dataset=dataset, showDataApi=True,
+                           jsonDataPackage=dataset, dataViews=dataViews,
+                           zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200

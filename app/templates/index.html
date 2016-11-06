@@ -5,7 +5,7 @@
   <div id="carousel-banner" class="carousel slide" data-ride="carousel">
     <div class="carousel-inner">
       <div class="item active" style="background: black;">
-        <img src="static/img/hero-team.jpg" width="100%" alt="..." style="opacity: 0.6;"/>
+        <img src="{{ s3_cdn }}/static/img/hero-team.jpg" width="100%" alt="..." style="opacity: 0.6;"/>
         <div class="carousel-content">
           <div class="container">
             <div class="carousel-content-panel text-center">
@@ -13,8 +13,8 @@
               <h2>Publish, find and install data packages quickly and easily</h2>
               <div class="banner-button">
                 <ul class="list-inline">
-                  <li><a href="/api/auth/login" class="btn btn-green">Sign Up</a></li>
-                  <li><a href="/api/auth/login" class="btn btn-green">Sign In</a></li>
+                  <li><a href="{{ zappa_env }}/api/auth/login" class="btn btn-green">Sign Up</a></li>
+                  <li><a href="{{ zappa_env }}/api/auth/login" class="btn btn-green">Sign In</a></li>
                 </ul>
               </div>
             </div>

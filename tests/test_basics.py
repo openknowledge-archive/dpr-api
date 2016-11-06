@@ -18,6 +18,3 @@ class BasicTestCase(unittest.TestCase):
     def test_testing_mode(self):
         """Most basic of tests: make sure TESTING = True in app.config."""
         assert self.app.config['TESTING'] is True
-
-    def test_configuration_env(self):
-        assert get_config_class_name() == 'app.config.DevelopmentConfig'

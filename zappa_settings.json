@@ -1,5 +1,5 @@
 {
-    "dev": {
+    "stage": {
         "s3_bucket": "neo20iitkgp",
         "app_function": "dpr.application",
         "aws_region": "us-west-2",
@@ -8,7 +8,24 @@
         "log_level": "DEBUG",
         "profile_name": "default",
         "environment_variables": {
-            "FLASK_CONFIGURATION": "development"
-        }
+            "FLASK_CONFIGURATION": "stage"
+        },
+        "events" : [
+            {
+                "function" : "app.lambda.s3_event_listener.write_to_rds_on_s3_metadata_put",
+                "event_source": {
+                    "arn": "arn:aws:s3:::neo20iitkgp",
+                    "events": [
+                        "s3:ObjectCreated:*"
+                    ],
+                    "key_filters" : [
+                        {
+                            "type" : "suffix",
+                            "value": "datapackage.json"
+                        }
+                    ]
+                }
+            }
+        ]
     }
 }

@@ -1,26 +1,25 @@
 import os
+import flask_s3
 from flasgger import Swagger
 from flask import Flask
 from database import db
-from os.path import join, dirname
-from dotenv import load_dotenv
 from app.mod_api.controllers import mod_api_blueprint
 from app.mod_site.controllers import mod_site_blueprint
 
 app_config = {
+    "base": "app.config.BaseConfig",
+    "test": "app.config.BaseConfig",
     "development": "app.config.DevelopmentConfig",
-    "default": "app.config.DevelopmentConfig"
+    "stage": "app.config.StageConfig"
 }
 
 
 def get_config_class_name():
-    config_name = os.getenv('FLASK_CONFIGURATION', 'default')
+    config_name = os.getenv('FLASK_CONFIGURATION', 'development')
     return app_config[config_name]
 
 
 def create_app():
-    dot_env_path = join(dirname(__file__), '../.env')
-    load_dotenv(dot_env_path)
 
     app = Flask(__name__)
     app.config.from_object(get_config_class_name())
@@ -29,6 +28,9 @@ def create_app():
 
     app.register_blueprint(mod_api_blueprint)
     app.register_blueprint(mod_site_blueprint)
+
+    if app.config.get('TESTING') is False:
+        flask_s3.create_all(app)
 
     Swagger(app)
     return app

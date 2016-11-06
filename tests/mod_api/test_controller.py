@@ -5,7 +5,7 @@ from mock import patch
 
 from app import create_app
 from app.database import db
-from app.mod_api.models import User, MetaDataDB, MetaDataS3
+from app.mod_api.models import User, MetaDataDB
 
 
 class AuthTokenTestCase(unittest.TestCase):
@@ -49,7 +49,7 @@ class AuthTokenTestCase(unittest.TestCase):
                               content_type='application/json')
         assert rv.status_code == 400
         data = json.loads(rv.data)
-        assert data['error_code'] == 'SECRET_EMPTY'
+        assert data['error_code'] == 'INVALID_INPUT'
 
     def test_throw_404_if_user_id_do_not_exists(self):
         rv = self.client.post(self.auth_token_url,
@@ -98,6 +98,14 @@ class AuthTokenTestCase(unittest.TestCase):
         data = json.loads(rv.data)
         self.assertEqual(rv.status_code, 403)
         self.assertEqual(data['error_code'], 'SECRET_ERROR')
+
+    def test_throw_500_if_exception_occours(self):
+        rv = self.client.post(self.auth_token_url,
+                              data="'username': None,",
+                              content_type='application/json')
+        data = json.loads(rv.data)
+        self.assertEqual(rv.status_code, 500)
+        self.assertEqual(data['error_code'], 'GENERIC_ERROR')
 
     def test_return_200_if_email_and_secret_matches(self):
         rv = self.client.post(self.auth_token_url,
@@ -283,8 +291,45 @@ class SaveMetaDataTestCase(unittest.TestCase):
     def test_return_200_if_all_right(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
-        response = self.client.put(self.url, headers=dict(Authorization=auth))
+        response = self.client.put(self.url, headers=dict(Authorization=auth), data=json.dumps({'name': 'package'}))
         self.assertEqual(200, response.status_code)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+
+class CallbackHandlingTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+
+    @patch('app.mod_api.controllers.get_user_info_with_code')
+    def test_throw_500_if_error_getting_user_info_from_auth0(self, get_user):
+        get_user.return_value = None
+
+        response = self.client.get('/api/auth/callback?code=123')
+        self.assertTrue(get_user.called)
+
+        data = json.loads(response.data)
+
+        self.assertEqual(data['error_code'], 'GENERIC_ERROR')
+        self.assertEqual(response.status_code, 500)
+
+    @patch('app.mod_api.controllers.get_user_info_with_code')
+    @patch('app.mod_api.controllers.update_user_secret_from_user_info')
+    @patch('app.mod_api.controllers.get_user')
+    @patch('app.mod_api.models.User.create_or_update_user_from_callback')
+    def test_return_200_if_all_right(self, get_user_with_code, update_user_secret,
+                                     get_user, create_user):
+        get_user_with_code('123').side_effect = {'user_id': "test_id", "user_metadata": {"secr": "tt"}}
+        response = self.client.get('/api/auth/callback?code=123')
+        self.assertEqual(update_user_secret.call_count, 1)
+        self.assertEqual(get_user.call_count, 1)
+        self.assertEqual(create_user.call_count, 1)
+
+        self.assertEqual(response.status_code, 200)
 
     def tearDown(self):
         with self.app.app_context():

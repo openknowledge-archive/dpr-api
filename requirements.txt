@@ -1,6 +1,6 @@
 flask==0.11
 Flask-SQLAlchemy==2.1
-zappa==0.28.0
+zappa==0.28.2
 boto3==1.4.1
 flasgger==0.5.13
 python-dotenv==0.6.0
@@ -8,3 +8,4 @@ PyJWT==1.4.2
 Flask-Migrate==2.0.0
 Flask-Script==2.0.5
 psycopg2==2.6.2
+flask-s3==0.3.1
