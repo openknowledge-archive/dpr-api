@@ -40,7 +40,10 @@ class BaseConfig(object):
     S3_BUCKET_NAME = "test"
 
     FLASKS3_BUCKET_NAME = "test"
-    FLASKS3_FILEPATH_HEADERS = {r'/*\.css': {'Content-Type': 'text/css'}}
+    FLASKS3_FILEPATH_HEADERS = {
+        r'/*\.css': {'Content-Type': 'text/css'},
+        r'/*\.js': {'Content-Type': "text/javascript"}
+    }
 
 
 class DevelopmentConfig(BaseConfig):
@@ -74,6 +77,4 @@ class DevelopmentConfig(BaseConfig):
 
 class StageConfig(DevelopmentConfig):
     DEBUG = False
-
-    TESTING = True
-    # need to add as test would fail
+    TESTING = False

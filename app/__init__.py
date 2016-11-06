@@ -1,5 +1,7 @@
 import os
 import flask_s3
+import boto3
+from botocore.client import Config
 from flasgger import Swagger
 from flask import Flask
 from database import db
@@ -28,6 +30,13 @@ def create_app():
 
     app.register_blueprint(mod_api_blueprint)
     app.register_blueprint(mod_site_blueprint)
+
+    s3 = boto3.client('s3',
+                      region_name=app.config['AWS_REGION'],
+                      aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
+                      aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'],
+                      config=Config(signature_version='s3v4'))
+    app.config['S3'] = s3
 
     if app.config.get('TESTING') is False:
         flask_s3.create_all(app)

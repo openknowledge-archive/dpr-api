@@ -1,7 +1,7 @@
 import json
 from sqlalchemy import UniqueConstraint
 
-from app.database import s3, db
+from app.database import db
 from sqlalchemy.dialects.postgresql import JSON
 from flask import current_app as app
 
@@ -25,31 +25,25 @@ class MetaDataS3(object):
 
     def save(self):
         bucket_name = app.config['S3_BUCKET_NAME']
+        s3_client = app.config['S3']
         key = self.build_s3_key('datapackage.json')
-        s3.aws_secret_access_key = app.config['AWS_SECRET_ACCESS_KEY']
-        s3.aws_access_key_id = app.config['AWS_ACCESS_KEY_ID']
-        s3.region_name = app.config['AWS_REGION']
-        s3.put_object(Bucket=bucket_name, Key=key, Body=self.body)
+        s3_client.put_object(Bucket=bucket_name, Key=key, Body=self.body)
 
     def get_metadata_body(self):
         bucket_name = app.config['S3_BUCKET_NAME']
+        s3_client = app.config['S3']
         key = self.build_s3_key('datapackage.json')
-        s3.aws_secret_access_key = app.config['AWS_SECRET_ACCESS_KEY']
-        s3.aws_access_key_id = app.config['AWS_ACCESS_KEY_ID']
-        s3.region_name = app.config['AWS_REGION']
-        response = s3.get_object(Bucket=bucket_name, Key=key)
+        response = s3_client.get_object(Bucket=bucket_name, Key=key)
         return response['Body'].read()
 
     def get_all_metadata_name_for_publisher(self):
         bucket_name = app.config['S3_BUCKET_NAME']
+        s3_client = app.config['S3']
         keys = []
         prefix = self.build_s3_prefix()
-        s3.aws_secret_access_key = app.config['AWS_SECRET_ACCESS_KEY']
-        s3.aws_access_key_id = app.config['AWS_ACCESS_KEY_ID']
-        s3.region_name = app.config['AWS_REGION']
-        list_objects = s3.list_objects(Bucket=bucket_name, Prefix=prefix)
+        list_objects = s3_client.list_objects(Bucket=bucket_name, Prefix=prefix)
         if list_objects is not None and 'Contents' in list_objects:
-            for ob in s3.list_objects(Bucket=bucket_name, Prefix=prefix)['Contents']:
+            for ob in s3_client.list_objects(Bucket=bucket_name, Prefix=prefix)['Contents']:
                 keys.append(ob['Key'])
         return keys
 
@@ -63,12 +57,10 @@ class MetaDataS3(object):
 
     def generate_pre_signed_put_obj_url(self, path):
         bucket_name = app.config['S3_BUCKET_NAME']
+        s3_client = app.config['S3']
         key = self.build_s3_key(path)
         params = {'Bucket': bucket_name, 'Key': key}
-        s3.aws_secret_access_key = app.config['AWS_SECRET_ACCESS_KEY']
-        s3.aws_access_key_id = app.config['AWS_ACCESS_KEY_ID']
-        s3.region_name = app.config['AWS_REGION']
-        url = s3.generate_presigned_url('put_object', Params=params, ExpiresIn=3600)
+        url = s3_client.generate_presigned_url('put_object', Params=params, ExpiresIn=3600)
         return url
 
 
