@@ -37,4 +37,5 @@ deploy:
   provider: script
   script: zappa_deploy.sh
   on:
+    repo: frictionlessdata/dpr-api
     branch: master
