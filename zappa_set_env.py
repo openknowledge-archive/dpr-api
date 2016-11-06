@@ -5,47 +5,25 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 
 env_variables = [
-    "API_KEY", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY",
-    "AWS_REGION", "AUTH0_CLIENT_ID", "AUTH0_CLIENT_SECRET",
-    "AUTH0_DOMAIN", "AUTH0_DB_NAME", "AUTH0_CALLBACK_URL",
-    "AUTH0_API_AUDIENCE", "S3_BUCKET_NAME", "SQLALCHEMY_DATABASE_URI",
-    'FLASKS3_BUCKET_NAME'
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_REGION",
+
+    "AUTH0_CLIENT_ID",
+    "AUTH0_CLIENT_SECRET",
+    "AUTH0_DOMAIN",
+    "AUTH0_DB_NAME",
+    "AUTH0_CALLBACK_URL",
+    "AUTH0_API_AUDIENCE",
+
+    "S3_BUCKET_NAME",
+    'FLASKS3_BUCKET_NAME',
+
+    "SQLALCHEMY_DATABASE_URI",
 ]
 
 if __name__ == "__main__":
-    '''
-    {
-    "dev": {
-        "s3_bucket": "neo20iitkgp",
-        "app_function": "dpr.application",
-        "aws_region": "us-west-2",
-        "use_apigateway": true,
-        "memory_size": 512,
-        "log_level": "DEBUG",
-        "profile_name": "default",
-        "environment_variables": {
-            "FLASK_CONFIGURATION": "development"
-        },
-        "events" : [
-            {
-                "function" : "app.lambda.s3_event_listener.write_to_rds_on_s3_metadata_put",
-                "event_source": {
-                    "arn": "arn:aws:s3:::neo20iitkgp",
-                    "events": [
-                        "s3:ObjectCreated:*"
-                    ],
-                    "key_filters" : [
-                        {
-                            "type" : "suffix",
-                            "value": "datapackage.json"
-                        }
-                    ]
-                }
-            }
-        ]
-    }
-}
-    '''
+
     stage = None
     if len(sys.argv) == 1:
         stage = 'stage'
@@ -71,7 +49,9 @@ if __name__ == "__main__":
 
     key = "aws_access_key_id={k}\n".format(k=os.getenv('AWS_ACCESS_KEY_ID'))
     secret = "aws_secret_access_key={k}\n".format(k=os.getenv('AWS_SECRET_ACCESS_KEY'))
-    file_content = ['[default]\n', key, secret]
+    region = "region={k}\n".format(k=os.getenv('AWS_REGION'))
+    file_content = ['[default]\n', key, secret,
+                    '[profile default]\n', 'output=json\n', region]
 
-    with open(current_dir + '/.credentials', 'w') as f:
+    with open('/root/.aws/credentials', 'w') as f:
         f.writelines(file_content)

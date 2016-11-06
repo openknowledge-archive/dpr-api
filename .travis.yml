@@ -34,8 +34,9 @@ after_success:
   coveralls
 
 deploy:
+  skip_cleanup: true
   provider: script
-  script: zappa_deploy.sh
+  script: bash zappa_deploy.sh
   on:
     repo: frictionlessdata/dpr-api
     branch: master
