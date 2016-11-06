@@ -2,10 +2,11 @@ import json
 from flask import Blueprint, request, jsonify, _request_ctx_stack, render_template
 from flask import current_app as app
 from flask import redirect
-from app.database import db, s3
+from app.database import db
 from app.mod_api.models import MetaDataS3, User, MetaDataDB
 from app.utils.auth import requires_auth
-from app.utils.auth0_helper import get_user_info_with_code, update_user_secret, get_user
+from app.utils.auth0_helper import get_user_info_with_code, \
+    update_user_secret, get_user, update_user_secret_from_user_info
 from app.utils.jwt_utilities import JWTHelper
 
 mod_api_blueprint = Blueprint('api', __name__, url_prefix='/api')
@@ -59,6 +60,10 @@ def save_metadata(publisher, package):
         if user is not None:
             if user.user_name == publisher:
                 metadata = MetaDataS3(publisher=publisher, package=package, body=request.data)
+                is_valid = metadata.validate()
+                if not is_valid:
+                    return jsonify(
+                        {"error_code": "INVALID_DATA", "message": 'Missing required field in metadata'}), 400
                 metadata.save()
                 return jsonify({"status": "OK"}), 200
             return jsonify({"error_code": "USER_NOT_FOUND", "message": 'user name and publisher not matched'}), 400
@@ -166,7 +171,7 @@ def get_all_metadata_names_for_publisher(publisher):
         return jsonify({'data': metadata, "status": "OK"}), 200
     except Exception as e:
         app.logger.error(e)
-        return jsonify({'status': 'KO', 'message': e.message}), 500
+        return jsonify({'error_code': 'GENERIC_ERROR', 'message': e.message}), 500
 
 
 @mod_api_blueprint.route("/auth/callback")
@@ -193,36 +198,29 @@ def callback_handling():
                         type: map
                         description: Returns back email, nickname, picture, name
     """
-    code = request.args.get('code')
-    user_info = get_user_info_with_code(code)
-    user_id = user_info['user_id']
-    if 'user_metadata' in user_info and 'secret' not in user_info['user_metadata']:
-        update_user_secret(user_id)
-    else:
-        update_user_secret(user_id)
+    try:
+        code = request.args.get('code')
+        user_info = get_user_info_with_code(code)
+        user_id = user_info['user_id']
+        update_user_secret_from_user_info(user_info)
 
-    user_info = get_user(user_id)
-    jwt_helper = JWTHelper(app.config['API_KEY'], user_id)
+        user_info = get_user(user_id)
+        jwt_helper = JWTHelper(app.config['API_KEY'], user_id)
 
-    user = User.query.filter_by(user_id=user_id).first()
-    if user is None:
-        user = User()
-        user.email = user_info['email']
-        user.secret = user_info['user_metadata']['secret']
-        user.user_id = user_info['user_id']
-        user.user_name = user_info['username']
-        db.session.add(user)
-        db.session.commit()
-    user = User.query.filter_by(user_id=user_id).first()
-    ## For now dashboard is rendered directly from callbacl, this needs to be changed
-    return render_template("dashboard.html", user=user.serialize['name'])
-    # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
+        user = User().create_or_update_user_from_callback(user_info)
+
+        ## For now dashboard is rendered directly from callbacl, this needs to be changed
+        return render_template("dashboard.html", user=user.serialize['name']), 200
+        # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
+    except Exception as e:
+        app.logger.error(e)
+        return jsonify({'error_code': 'GENERIC_ERROR', 'message': e.message}), 500
 
 
 @mod_api_blueprint.route("/auth/token", methods=['POST'])
 def get_jwt():
     """
-    This API is responsible for Login
+    This API is responsible for returning JWT token
     ---
     tags:
         - auth
@@ -242,37 +240,65 @@ def get_jwt():
           type: string
           required: true
           description: user password
+    responses:
+        500:
+            description: Generic Error
+            schema:
+                id: generic_error
+                properties:
+                    error_code:
+                        type: string
+                        description: Status of the operation
+                    message:
+                        type: string
+                        description: Exception message
+        200:
+            description: Success Message
+            schema:
+                id: put_package_success
+                properties:
+                    token:
+                        type: string
+                        description: jwt token
+        400:
+            description: Bad input data
+            schema:
+                id:
     """
-    data = request.get_json()
-    user_name = data.get('username', None)
-    email = data.get('email', None)
-    secret = data.get('secret', None)
-    verify = False
-    user_id = None
-    if user_name is None and email is None:
-        return jsonify({'message': 'User name or email both can not be empty',
-                        'error_code': 'INVALID_INPUT'}), 400
+    try:
+        data = request.get_json()
+        user_name = data.get('username', None)
+        email = data.get('email', None)
+        secret = data.get('secret', None)
+        verify = False
+        user_id = None
+        if user_name is None and email is None:
+            return jsonify({'message': 'User name or email both can not be empty',
+                            'error_code': 'INVALID_INPUT'}), 400
 
-    if secret is None:
-        return jsonify({'message': 'secret can not be empty', 'error_code': 'SECRET_EMPTY'}), 400
-    elif user_name is not None:
-        user = User.query.filter_by(user_name=user_name).first()
-        if user is None:
-            return jsonify({'message': 'user does not exists', 'error_code': 'USER_NOT_FOUND'}), 404
-        if secret == user.secret:
-            verify = True
-            user_id = user.user_id
-    elif email is not None:
-        user = User.query.filter_by(email=email).first()
-        if user is None:
-            return jsonify({'message': 'user does not exists', 'error_code': 'USER_NOT_FOUND'}), 404
-        if secret == user.secret:
-            verify = True
-            user_id = user.user_id
-    if verify:
-        return jsonify({'token': JWTHelper(app.config['API_KEY'], user_id).encode()}), 200
-    else:
-        return jsonify({'message': 'Secret key do not match', 'error_code': 'SECRET_ERROR'}), 403
+        if secret is None:
+            return jsonify({'message': 'secret can not be empty', 'error_code': 'INVALID_INPUT'}), 400
+        elif user_name is not None:
+            user = User.query.filter_by(user_name=user_name).first()
+            if user is None:
+                return jsonify({'message': 'user does not exists', 'error_code': 'USER_NOT_FOUND'}), 404
+            if secret == user.secret:
+                verify = True
+                user_id = user.user_id
+        elif email is not None:
+            user = User.query.filter_by(email=email).first()
+            if user is None:
+                return jsonify({'message': 'user does not exists', 'error_code': 'USER_NOT_FOUND'}), 404
+            if secret == user.secret:
+                verify = True
+                user_id = user.user_id
+        if verify:
+            return jsonify({'token': JWTHelper(app.config['API_KEY'], user_id).encode()}), 200
+        else:
+            return jsonify({'message': 'Secret key do not match', 'error_code': 'SECRET_ERROR'}), 403
+    except Exception as e:
+        app.logger.error(e)
+        return jsonify({'error_code': 'GENERIC_ERROR', 'message': e.message}), 500
 
 
 @mod_api_blueprint.route("/auth/login", methods=['GET'])
@@ -298,4 +324,5 @@ def get_s3_signed_url():
         return jsonify({'message': 'publisher or package can not be empty',
                         'error_code': 'INVALID_INPUT'}), 400
     metadata = MetaDataS3(publisher=publisher, package=package)
-    return jsonify({'key': metadata.generate_pre_signed_put_obj_url(path)}), 200
+    url = metadata.generate_pre_signed_put_obj_url(path)
+    return jsonify({'key': url}), 200

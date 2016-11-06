@@ -41,3 +41,6 @@ ENV/
 
 # temp files
 *~
+.credentials
+*_deploy.json
+.DS_Store
