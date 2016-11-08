@@ -1,4 +1,7 @@
 import boto3
+import os
+import psycopg2
+from botocore.client import Config
 
 
 def write_to_rds_on_s3_metadata_put(event, context):
@@ -50,4 +53,37 @@ def write_to_rds_on_s3_metadata_put(event, context):
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = event['Records'][0]['s3']['object']['key']
     """
-    pass
+    print '-------------------------------------------------------------'
+    print '-------------------------------------------------------------'
+    print '-------------------------------------------------------------'
+    print '------------------GOT THE MESSAGE----------------------------'
+    print '-------------------------------------------------------------'
+    print '-------------------------------------------------------------'
+    print '-------------------------------------------------------------'
+
+    DSN = os.environ.get("SQLALCHEMY_DATABASE_URI")
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_REGION = os.environ.get('AWS_REGION')
+    s3 = boto3.client('s3',
+                      region_name=AWS_REGION,
+                      aws_access_key_id=AWS_ACCESS_KEY_ID,
+                      aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                      config=Config(signature_version='s3v4'))
+
+    bucket = event['Records'][0]['s3']['bucket']['name']
+    key = event['Records'][0]['s3']['object']['key']
+    values = key.split('/')
+    publisher, package, version = values[1], values[2], values[4]
+
+    descriptor = s3.get_object(Bucket=bucket, Key=key).response['Body'].read()
+
+    connect = psycopg2.connect(dsn=DSN)
+    cursor = connect.cursor()
+    cursor.execute("""
+                INSERT INTO packages (name, publisher, "descriptor") VALUES (%s, %s, %s,);
+                """, (publisher, package, descriptor))
+    connect.commit()
+    cursor.close()
+    connect.close()
+
