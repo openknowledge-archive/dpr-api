@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
+{% block scriptextras%}
+<script>
+document.cookie = "encoded_token={{encoded_token}};"
+</script>
+{% endblock %}
+
 {% block content %}
 <div align="center"><h1>Hello {{ user}}</h1></div>
 {% endblock %}
