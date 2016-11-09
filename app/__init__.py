@@ -5,6 +5,7 @@ from botocore.client import Config
 from flasgger import Swagger
 from flask import Flask
 from database import db
+from werkzeug.utils import import_string
 from app.mod_api.controllers import mod_api_blueprint
 from app.mod_site.controllers import mod_site_blueprint
 
@@ -18,7 +19,10 @@ app_config = {
 
 def get_config_class_name():
     config_name = os.getenv('FLASK_CONFIGURATION', 'development')
-    return app_config[config_name]
+    class_name = app_config[config_name]
+    config_class = import_string(class_name)()
+    getattr(config_class, 'check_required_config')()
+    return class_name
 
 
 def create_app():
