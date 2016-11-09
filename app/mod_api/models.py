@@ -115,3 +115,15 @@ class MetaDataDB(db.Model):
     def __init__(self, name, publisher):
         self.name = name
         self.publisher = publisher
+
+    @staticmethod
+    def create_or_update(name, publisher, **kwargs):
+        instance = MetaDataDB.query.filter_by(name=name,
+                                              publisher=publisher).first()
+        if not instance:
+            instance = MetaDataDB(name, publisher)
+
+        for key, value in kwargs.items():
+            setattr(instance, key, value)
+        db.session.add(instance)
+        db.session.commit()

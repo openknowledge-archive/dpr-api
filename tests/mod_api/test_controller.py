@@ -244,6 +244,71 @@ class GetS3SignedUrlTestCase(unittest.TestCase):
         self.assertEqual('https://trial_url', data['key'])
 
 
+class FinalizeMetaDataTestCase(unittest.TestCase):
+    publisher = 'test_publisher'
+    package = 'test_package'
+    user_id = 'trial_id'
+    url = '/api/package/%s/%s/finalize' % (publisher, package)
+    jwt_url = '/api/auth/token'
+
+    def setUp(self):
+        self.app = create_app()
+        # self.app.app_context().push()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.user_id = self.user_id
+            self.user.email, self.user.user_name, self.user.secret = \
+                'test@test.com', self.publisher, 'super_secret'
+            db.session.add(self.user)
+            db.session.commit()
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt = data['token']
+
+    @patch('app.mod_api.models.MetaDataDB.create_or_update')
+    @patch('app.mod_api.models.MetaDataS3.get_metadata_body')
+    def test_return_200_if_all_right(self, body_mock, meta_mock):
+        body_mock.return_value = json.dumps(dict(name='package'))
+        meta_mock.return_value = None
+        auth = "bearer %s" % self.jwt
+        response = self.client.get(self.url, headers=dict(Authorization=auth))
+        self.assertEqual(200, response.status_code)
+
+    def test_throw_404_if_user_not_exists(self):
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+        auth = "bearer %s" % self.jwt
+        response = self.client.get(self.url, headers=dict(Authorization=auth))
+        self.assertEqual(404, response.status_code)
+
+    @patch('app.mod_api.models.MetaDataS3.get_metadata_body')
+    def test_throw_500_if_failed_to_get_data_from_s3(self, body_mock):
+        body_mock.return_value = None
+        auth = "bearer %s" % self.jwt
+        response = self.client.get(self.url, headers=dict(Authorization=auth))
+        self.assertEqual(500, response.status_code)
+
+    def test_throw_403_if_user_not_permitted_for_this_operation(self):
+        auth = "bearer %s" % self.jwt
+        url = '/api/package/%s/%s/finalize' % ("test_publisher1", self.package)
+        response = self.client.get(url, headers=dict(Authorization=auth))
+        self.assertEqual(403, response.status_code)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+
 class SaveMetaDataTestCase(unittest.TestCase):
     publisher = 'test_publisher'
     package = 'test_package'
@@ -293,6 +358,26 @@ class SaveMetaDataTestCase(unittest.TestCase):
         auth = "bearer %s" % self.jwt
         response = self.client.put(self.url, headers=dict(Authorization=auth), data=json.dumps({'name': 'package'}))
         self.assertEqual(200, response.status_code)
+
+    @patch('app.mod_api.models.MetaDataS3.save')
+    def test_return_500_for_internal_error(self, save):
+        save.side_effect = Exception('some problem')
+        auth = "bearer %s" % self.jwt
+        response = self.client.put(self.url, headers=dict(Authorization=auth),
+                                   data=json.dumps({'name': 'package'}))
+        data = json.loads(response.data)
+        self.assertEqual(500, response.status_code)
+        self.assertEqual('GENERIC_ERROR', data['error_code'])
+
+    @patch('app.mod_api.models.MetaDataS3.save')
+    def test_throw_400_if_meta_data_is_invalid(self, save):
+        save.return_value = None
+        auth = "bearer %s" % self.jwt
+        response = self.client.put(self.url, headers=dict(Authorization=auth),
+                                   data=json.dumps({'name1': 'package'}))
+        data = json.loads(response.data)
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(data['error_code'], 'INVALID_DATA')
 
     def tearDown(self):
         with self.app.app_context():

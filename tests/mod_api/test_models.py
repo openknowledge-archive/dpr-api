@@ -121,9 +121,33 @@ class MetaDataDBTestCase(unittest.TestCase):
             db.session.commit()
 
     def test_composite_key(self):
-        # from app.mod_api.models import MetaDataDB
         res = MetaDataDB.query.filter_by(publisher=self.publisher_one).all()
         self.assertEqual(2, len(res))
+
+    def test_update_fields_if_instance_present(self):
+        metadata = MetaDataDB.query.filter_by(publisher=self.publisher_one,
+                                              name=self.package_one).one()
+        self.assertEqual(json.loads(metadata.descriptor)['name'], "test_one")
+        MetaDataDB.create_or_update(self.package_one, self.publisher_one,
+                                    descriptor=json.dumps(dict(name='sub')),
+                                    private=True)
+        metadata = MetaDataDB.query.filter_by(publisher=self.publisher_one,
+                                              name=self.package_one).one()
+        self.assertEqual(json.loads(metadata.descriptor)['name'], "sub")
+        self.assertEqual(metadata.private, True)
+
+    def test_insert_if_not_present(self):
+        pub = "custom_pub"
+        name = "custom_name"
+        metadata = MetaDataDB.query.filter_by(publisher=pub,
+                                              name=name).all()
+        self.assertEqual(len(metadata), 0)
+        MetaDataDB.create_or_update(name, pub,
+                                    descriptor=json.dumps(dict(name='sub')),
+                                    private=True)
+        metadata = MetaDataDB.query.filter_by(publisher=pub,
+                                              name=name).all()
+        self.assertEqual(len(metadata), 1)
 
     def tearDown(self):
         with self.app.app_context():

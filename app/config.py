@@ -1,7 +1,6 @@
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
-from utils import get_zappa_prefix
 
 
 class BaseConfig(object):
@@ -23,8 +22,7 @@ class BaseConfig(object):
                 "route": '/spec',
                 "rule_filter": lambda rule: True
             }
-        ],
-        "url_prefix": get_zappa_prefix()
+        ]
     }
     AWS_ACCESS_KEY_ID = ""
     AWS_SECRET_ACCESS_KEY = ""
