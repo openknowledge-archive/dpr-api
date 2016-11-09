@@ -10,10 +10,28 @@
         "profile_name": "default",
         "environment_variables": {
             "FLASK_CONFIGURATION": "stage"
-        },
+        }
+    },
+    "stage_s3": {
+        "lambda_description": "Whats up with that",
+        "lambda_handler": "s3_event.write_to_rds_on_s3_metadata_put",
+        "s3_bucket": "neo20iitkgp",
+        "aws_region": "us-west-2",
+        "use_apigateway": false,
+        "memory_size": 128,
+        "log_level": "DEBUG",
+        "debug": true,
+        "keep_warm": false,
+        "profile_name": "default",
+        "environment_variables": {},
+        "cloudwatch_log_level": "DEBUG",
+        "cloudwatch_data_trace": true,
+        "cloudwatch_metrics_enabled": true,
+        "delete_local_zip": false,
+        "delete_s3_zip": true,
         "events" : [
             {
-                "function" : "s3_event_listener.write_to_rds_on_s3_metadata_put",
+                "function" : "s3_event.write_to_rds_on_s3_metadata_put",
                 "event_source": {
                     "arn": "arn:aws:s3:::neo20iitkgp",
                     "events": [
