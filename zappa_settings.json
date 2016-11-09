@@ -6,13 +6,14 @@
         "use_apigateway": true,
         "memory_size": 512,
         "log_level": "DEBUG",
+        "debug": true,
         "profile_name": "default",
         "environment_variables": {
             "FLASK_CONFIGURATION": "stage"
         },
         "events" : [
             {
-                "function" : "app.lambda.s3_event_listener.write_to_rds_on_s3_metadata_put",
+                "function" : "s3_event_listener.write_to_rds_on_s3_metadata_put",
                 "event_source": {
                     "arn": "arn:aws:s3:::neo20iitkgp",
                     "events": [
@@ -21,7 +22,11 @@
                     "key_filters" : [
                         {
                             "type" : "suffix",
-                            "value": "datapackage.json"
+                            "value": ".json"
+                        },
+                        {
+                            "type" : "prefix",
+                            "value": "metadata"
                         }
                     ]
                 }

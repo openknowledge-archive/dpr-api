@@ -4,6 +4,7 @@ from flask import current_app as app
 from flask import redirect
 from app.database import db
 from app.mod_api.models import MetaDataS3, User, MetaDataDB
+from app.utils import get_zappa_prefix, get_s3_cdn_prefix
 from app.utils.auth import requires_auth
 from app.utils.auth0_helper import get_user_info_with_code, \
     update_user_secret, get_user, update_user_secret_from_user_info
@@ -210,7 +211,8 @@ def callback_handling():
         user = User().create_or_update_user_from_callback(user_info)
 
         ## For now dashboard is rendered directly from callbacl, this needs to be changed
-        return render_template("dashboard.html", user=user.serialize['name']), 200
+        return render_template("dashboard.html", user=user.serialize['name'],
+                               zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
         # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
     except Exception as e:
         app.logger.error(e)

@@ -5,6 +5,9 @@ from utils import get_zappa_prefix
 
 
 class BaseConfig(object):
+    required_config = ['AWS_REGION', 'SQLALCHEMY_DATABASE_URI',
+                       'S3_BUCKET_NAME', 'FLASKS3_BUCKET_NAME']
+
     API_KEY = "dpr-api-key"
     DEBUG = True
     TESTING = True
@@ -31,7 +34,6 @@ class BaseConfig(object):
     AUTH0_CLIENT_SECRET = ""
     AUTH0_DOMAIN = ""
     AUTH0_DB_NAME = ""
-    AUTH0_LOGIN_PAGE = ""
     AUTH0_CALLBACK_URL = ""
     AUTH0_API_AUDIENCE = ""
 
@@ -45,8 +47,21 @@ class BaseConfig(object):
         r'/*\.js': {'Content-Type': "text/javascript"}
     }
 
+    def check_required_config(self):
+        for conf in self.required_config:
+            conf_value = self.__getattribute__(conf)
+            if conf_value is None:
+                raise Exception("value of %s can not be None" % conf)
+
 
 class DevelopmentConfig(BaseConfig):
+    required_config = ['AWS_REGION', 'S3_BUCKET_NAME',
+                       'FLASKS3_BUCKET_NAME', 'AWS_ACCESS_KEY_ID',
+                       'AWS_SECRET_ACCESS_KEY', 'AUTH0_CLIENT_ID',
+                       'AUTH0_CLIENT_SECRET', 'AUTH0_DOMAIN',
+                       'AUTH0_DB_NAME', 'AUTH0_CALLBACK_URL',
+                       'AUTH0_API_AUDIENCE', 'SQLALCHEMY_DATABASE_URI',
+                       'S3_BUCKET_NAME', 'FLASKS3_BUCKET_NAME']
     try:
         dot_env_path = join(dirname(__file__), '../.env')
         load_dotenv(dot_env_path)
@@ -68,7 +83,6 @@ class DevelopmentConfig(BaseConfig):
     AUTH0_CLIENT_SECRET = os.environ.get('AUTH0_CLIENT_SECRET')
     AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
     AUTH0_DB_NAME = os.environ.get('AUTH0_DB_NAME')
-    AUTH0_LOGIN_PAGE = os.environ.get('AUTH0_LOGIN_PAGE')
     AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
     AUTH0_API_AUDIENCE = os.environ.get('AUTH0_API_AUDIENCE')
 
