@@ -7,6 +7,7 @@ from app.mod_site.models import Catalog
 mod_site_blueprint = Blueprint('site', __name__)
 catalog = Catalog()
 
+
 @mod_site_blueprint.route("/", methods=["GET"])
 def home():
     """
@@ -24,20 +25,21 @@ def home():
     return render_template("index.html", title='Home', zappa_env=get_zappa_prefix(),
                            s3_cdn=get_s3_cdn_prefix()), 200
 
-@mod_site_blueprint.route("/<owner>/<id>", methods=["GET"])
-def datapackage_show(owner, id):
+
+@mod_site_blueprint.route("/<publisher>/<package>", methods=["GET"])
+def datapackage_show(publisher, package):
     """
     Loads datapackage page for given owner 
     ---
     tags:
       - site
     parameters:
-      - name: owner
+      - name: publisher
         in: path
         type: string
         required: true
         description: datapackage owner name
-      - name: id
+      - name: package
         in: path
         type: string
         description: datapackage name
@@ -47,7 +49,8 @@ def datapackage_show(owner, id):
       200:
         description: Succesfuly loaded
     """
-    metadata = json.loads(app.test_client().get('/api/package/{owner}/{id}'.format(owner=owner, id=id)).data)
+    metadata = json.loads(app.test_client().get('/api/package/{publisher}/{package}'.
+                                                format(publisher=publisher, package=package)).data)
     if metadata['error_code'] == 'DATA_NOT_FOUND':
         return "404 Not Found", 404
     dataset = metadata['data']
