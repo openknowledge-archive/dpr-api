@@ -244,9 +244,7 @@ def callback_handling():
         code = request.args.get('code')
         user_info = get_user_info_with_code(code)
         user_id = user_info['user_id']
-        update_user_secret_from_user_info(user_info)
 
-        user_info = get_user(user_id)
         jwt_helper = JWTHelper(app.config['API_KEY'], user_id)
 
         user = User().create_or_update_user_from_callback(user_info)

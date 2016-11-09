@@ -1,4 +1,5 @@
 import json
+import os
 from sqlalchemy import UniqueConstraint
 
 from app.database import db
@@ -90,9 +91,13 @@ class User(db.Model):
         if user is None:
             user = User()
             user.email = user_info['email']
-            user.secret = user_info['user_metadata']['secret']
+            user.secret = os.urandom(24).encode('hex')
             user.user_id = user_info['user_id']
             user.user_name = user_info['username']
+            db.session.add(user)
+            db.session.commit()
+        elif user.secret == 'supersecret':
+            user.secret = os.urandom(24).encode('hex')
             db.session.add(user)
             db.session.commit()
         return user
