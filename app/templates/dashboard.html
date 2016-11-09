@@ -2,7 +2,7 @@
 
 {% block scriptextras%}
 <script>
-document.cookie = "encoded_token={{encoded_token}};"
+localStorage.setItem("encoded_token", "{{encoded_token}}");
 </script>
 {% endblock %}
 
