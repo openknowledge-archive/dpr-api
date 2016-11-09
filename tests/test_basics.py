@@ -2,6 +2,7 @@ import sys
 import os
 import unittest
 from app import create_app, get_config_class_name
+from app.config import BaseConfig
 
 
 class BasicTestCase(unittest.TestCase):
@@ -19,5 +20,10 @@ class BasicTestCase(unittest.TestCase):
         """Most basic of tests: make sure TESTING = True in app.config."""
         assert self.app.config['TESTING'] is True
 
-    def test_configuration_env(self):
-        assert get_config_class_name() == 'app.config.DevelopmentConfig'
+    def test_required_config_none(self):
+        """All of the required config must not be None"""
+        base_config = BaseConfig()
+        setattr(base_config, 'required_config', ['TEST_CONF'])
+        setattr(base_config, 'TEST_CONF', None)
+
+        self.assertRaises(Exception, base_config.check_required_config)

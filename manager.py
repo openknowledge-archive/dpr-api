@@ -6,11 +6,15 @@ from dotenv import load_dotenv
 from app.database import db
 from app.mod_api import models
 from app import create_app
+from app.mod_api.models import MetaDataDB
 
 dot_env_path = join(dirname(__file__), '.env')
 load_dotenv(dot_env_path)
-migrate = Migrate(create_app(), db)
-manager = Manager(create_app())
+
+app = create_app()
+manager = Manager(app)
+
+migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 
 
@@ -35,7 +39,9 @@ def dropdb():
 @manager.command
 def populate():
     data = json.loads(open('fixtures/datapackage.json').read())
-    db.session.add(models.MetaDataDB("demo-package", "demo", data, "avtive", False))
+    metadata = MetaDataDB("demo-package", "demo")
+    metadata.descriptor, metadata.status, metadata.private = data, 'active', False
+    db.session.add(metadata)
     user = models.User()
     user.user_id, user.email, user.user_name, user.secret = "auth0|123", "test@gmail.com", "test", "secret"
 
