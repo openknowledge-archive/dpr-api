@@ -77,6 +77,9 @@
                 <ul class="nav navbar-nav navbar-right">
                   <li><a href="{{ zappa_env }}/apidocs/index.html">API</a></li>
                   <li><a href="http://frictionlessdata.io/">About</a></li>
+                  {% if user %}
+                  <li><a id="logout" href="/logout">Logout</a></li>
+                  {% endif %}
                   <li><a href="http://okfn.org/"><img src="//a.okfn.org/img/oki/landscape-rgb-165x43.png" alt="logo" style="height: 33px; margin-top: -7px;" /></a></li>
                 </ul>
               </div>

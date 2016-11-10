@@ -5,6 +5,9 @@
 {% if encoded_token %}
 localStorage.setItem("encoded_token","{{encoded_token}}");
 {% endif %}
+$('#logout').on('click', function() {
+     localStorage.removeItem("encoded_token");
+});
 </script>
 {% endblock %}
 {% block content %}

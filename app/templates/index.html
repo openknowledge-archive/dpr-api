@@ -2,7 +2,7 @@
 {% block scripts %}
 <script>
 var encoded = localStorage.getItem('encoded_token');
-document.getElementById('signin').href = "dashboard?encoded_token="+encoded;
+document.getElementById('signin').href = "{{ zappa_env }}/dashboard?encoded_token="+encoded;
 </script>
 {% endblock %}
 {% block content %}
