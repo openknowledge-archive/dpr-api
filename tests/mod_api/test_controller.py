@@ -403,12 +403,14 @@ class CallbackHandlingTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
 
     @patch('app.mod_api.controllers.get_user_info_with_code')
+    @patch('app.mod_api.controllers.JWTHelper')
     @patch('app.mod_api.models.User.create_or_update_user_from_callback')
-    def test_return_200_if_all_right(self, get_user_with_code, create_user):
+    def test_return_200_if_all_right(self, get_user_with_code, JWTHelper, create_user):
         get_user_with_code('123').side_effect = {'user_id': "test_id", "user_metadata": {"secr": "tt"}}
         response = self.client.get('/api/auth/callback?code=123')
         self.assertEqual(create_user.call_count, 1)
-
+        self.assertEqual(JWTHelper.call_count, 1)
+        
         self.assertEqual(response.status_code, 200)
 
     def tearDown(self):
