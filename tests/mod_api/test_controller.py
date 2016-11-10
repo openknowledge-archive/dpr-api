@@ -436,9 +436,9 @@ class DataProxyTestCase(unittest.TestCase):
         build_key.return_value = ''
         get_s3_object.return_value = 'test_data'
         response = self.client.get(self.url)
-        data = json.loads(response.data)
+        data = response.data
         self.assertEqual(200, response.status_code)
-        self.assertEqual(data['data'], 'test_data')
+        self.assertEqual(data, 'test_data')
 
     @patch("app.mod_api.models.MetaDataS3.get_s3_object")
     @patch("app.mod_api.models.MetaDataS3.build_s3_key")
