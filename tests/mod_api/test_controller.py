@@ -417,3 +417,35 @@ class CallbackHandlingTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+
+
+class DataProxyTestCase(unittest.TestCase):
+    publisher = 'test_pub'
+    package = 'test_package'
+    resource = 'test_resource'
+    url = '/api/dataproxy/{publisher}/{package}/{resource}.csv'\
+        .format(publisher=publisher, package=package, resource=resource)
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+
+    @patch("app.mod_api.models.MetaDataS3.get_s3_object")
+    @patch("app.mod_api.models.MetaDataS3.build_s3_key")
+    def test_return_200_if_all_right_for_csv(self, build_key, get_s3_object):
+        build_key.return_value = ''
+        get_s3_object.return_value = 'test_data'
+        response = self.client.get(self.url)
+        data = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(data['data'], 'test_data')
+
+    @patch("app.mod_api.models.MetaDataS3.get_s3_object")
+    @patch("app.mod_api.models.MetaDataS3.build_s3_key")
+    def test_throw_500_if_not_able_to_get_data_from_s3(self, build_key, get_s3_object):
+        build_key.return_value = ''
+        get_s3_object.side_effect = Exception('failed')
+        response = self.client.get(self.url)
+        data = json.loads(response.data)
+        self.assertEqual(500, response.status_code)
+        self.assertEqual(data['message'], 'failed')

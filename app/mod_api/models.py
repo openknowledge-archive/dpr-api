@@ -31,9 +31,12 @@ class MetaDataS3(object):
         s3_client.put_object(Bucket=bucket_name, Key=key, Body=self.body)
 
     def get_metadata_body(self):
+        key = self.build_s3_key('datapackage.json')
+        return self.get_s3_object(key)
+
+    def get_s3_object(self, key):
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
-        key = self.build_s3_key('datapackage.json')
         response = s3_client.get_object(Bucket=bucket_name, Key=key)
         return response['Body'].read()
 
