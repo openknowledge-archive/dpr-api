@@ -171,6 +171,57 @@ def get_metadata(publisher, package):
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
+@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/<resource>.json", methods=["GET"])
+@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/<resource>.csv", methods=["GET"])
+def get_resource(publisher, package, resource):
+    """
+    DPR resource get operation.
+    This API is responsible for getting resource from S3.
+    ---
+    tags:
+        - package
+    parameters:
+        - in: path
+          name: publisher
+          type: string
+          required: true
+          description: publisher name
+        - in: path
+          name: package
+          type: string
+          required: true
+          description: package name, use this to retrieve the data package metadata contents
+        - in: path
+          name: resource
+          type: string
+          required: true
+          description: resource index or name
+    responses:
+
+        200:
+            description: Get Data package for one key
+            schema:
+                id: get_data_package
+                properties:
+                    data:
+                        type: string
+                        description: The resource
+        500:
+            description: Internal Server Error
+    """
+    try:
+        path = request.path
+        metadata = MetaDataS3(publisher, package)
+        if path.endswith('csv'):
+            resource_key = metadata.build_s3_key(resource + '.csv')
+        else:
+            resource_key = metadata.build_s3_key(resource + '.json')
+        data = metadata.get_s3_object(resource_key)
+        return jsonify({"data": data}), 200
+    except Exception as e:
+        return handle_error('GENERIC_ERROR', e.message, 500)
+
+
 @mod_api_blueprint.route("/package/<publisher>", methods=["GET"])
 def get_all_metadata_names_for_publisher(publisher):
     """
