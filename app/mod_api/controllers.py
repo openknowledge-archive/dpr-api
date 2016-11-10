@@ -301,7 +301,7 @@ def callback_handling():
         user = User().create_or_update_user_from_callback(user_info)
 
         ## For now dashboard is rendered directly from callbacl, this needs to be changed
-        return render_template("dashboard.html", user=user.serialize['name'], encoded_token=jwt_helper.encode(),
+        return render_template("dashboard.html", user=user, encoded_token=jwt_helper.encode(),
                                zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
         # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
     except Exception as e:

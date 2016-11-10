@@ -1,5 +1,10 @@
 {% extends "base.html" %}
-
+{% block scripts %}
+<script>
+var encoded = localStorage.getItem('encoded_token');
+document.getElementById('signin').href = "dashboard?encoded_token="+encoded;
+</script>
+{% endblock %}
 {% block content %}
 <div class="header-bottom">
   <div id="carousel-banner" class="carousel slide" data-ride="carousel">
@@ -14,7 +19,7 @@
               <div class="banner-button">
                 <ul class="list-inline">
                   <li><a href="{{ zappa_env }}/api/auth/login" class="btn btn-green">Sign Up</a></li>
-                  <li><a href="{{ zappa_env }}/api/auth/login" class="btn btn-green">Sign In</a></li>
+                  <li><a href="" id="signin" class="btn btn-green">Sign In</a></li>
                 </ul>
               </div>
             </div>

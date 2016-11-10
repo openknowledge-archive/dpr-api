@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, json, request
+from flask import Blueprint, render_template, json, request, redirect
 from flask import current_app as app
-
+import jwt
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix
 from app.mod_site.models import Catalog
+from app.mod_api.models import User
+
 
 mod_site_blueprint = Blueprint('site', __name__)
 catalog = Catalog()
@@ -25,6 +27,32 @@ def home():
     return render_template("index.html", title='Home', zappa_env=get_zappa_prefix(),
                            s3_cdn=get_s3_cdn_prefix()), 200
 
+@mod_site_blueprint.route("/dashboard", methods=["GET","POST"])
+def dashboard():
+    """
+    Loads Dashboard page if user already login else redirect to Login
+    ---
+    tags:
+      - site
+    responses:
+      302:
+        description: Redirect to Auth0
+      200:
+        description: Load the Dashboard
+    """
+
+    encoded_token = request.args.get('encoded_token','')
+    if encoded_token:
+        try:
+          payload = jwt.decode(encoded_token,app.config['API_KEY'])
+        except:
+          return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
+        user = User().get_userinfo_by_id(payload['user'])
+        return render_template("dashboard.html", user=user, 
+          zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
+        
+      
+    return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
 
 @mod_site_blueprint.route("/<publisher>/<package>", methods=["GET"])
 def datapackage_show(publisher, package):
