@@ -217,7 +217,7 @@ def get_resource(publisher, package, resource):
         else:
             resource_key = metadata.build_s3_key(resource + '.json')
         data = metadata.get_s3_object(resource_key)
-        return jsonify({"data": data}), 200
+        return  data, 200
     except Exception as e:
         return handle_error('GENERIC_ERROR', e.message, 500)
 
