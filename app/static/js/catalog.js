@@ -34,7 +34,7 @@ my.Views.DataFile = Backbone.View.extend({
     vg.embed(vis, vegaSpec);
     
     CSV.fetch({ 
-      "url": "https://gist.githubusercontent.com/zelima/062431419a1a790cc084fdba62322109/raw/39ee548e067999c6a270b5a90b7b74bac642a685/monthly-series.csv"
+      "url": table.path
     }).done(function(dataset) {
       var options = {
         data: dataset.records,
@@ -73,24 +73,6 @@ my.Views.DataFile = Backbone.View.extend({
     return this;
   }
 });  
-
-my.VegaLiteSpec = function(table,DataViews,resourceIndex) {
-  var vegaSpec = {
-    "description": "testing",
-    "data": {"url": table.remoteurl, "formatType":"csv"},
-    "mark": "line",
-    "encoding": {
-      "x": {
-        "field":DataViews[resourceIndex].state.group,
-        "type": "temporal",
-        "axis": {"labelAngle": 0},
-        },
-      "y": {"field": DataViews[resourceIndex].state.series[0], "type": "quantitative"}
-    },
-    "config": {"cell": {"width": 1095,"height": 450}, "background": "#FFFFFF"},
-  };
-  return vegaSpec;
-};
 
 my.Views.Search = Backbone.View.extend({
   events: {

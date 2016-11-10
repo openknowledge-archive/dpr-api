@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, json
+from flask import Blueprint, render_template, json, request
 from flask import current_app as app
 
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix
@@ -51,12 +51,20 @@ def datapackage_show(publisher, package):
     """
     metadata = json.loads(app.test_client().get('/api/package/{publisher}/{package}'.
                                                 format(publisher=publisher, package=package)).data)
-    if metadata['error_code'] == 'DATA_NOT_FOUND':
-        return "404 Not Found", 404
+    try:
+        if metadata['error_code'] == 'DATA_NOT_FOUND':
+            return "404 Not Found", 404
+    except:
+           pass
+    
     dataset = metadata['data']
     resources = dataset['resources']
-    dataViews = dataset['views'] or []
-    
+    try:
+        dataViews = dataset['views']
+    except:
+        dataViews = []
+    for res in resources:
+        res['path'] = request.url_root+'api/dataproxy/{publisher}/{package}/{resource}.csv'.format(publisher=publisher, package=package, resource=res['name'])
     return render_template("dataset.html", dataset=dataset, showDataApi=True,
                            jsonDataPackage=dataset, dataViews=dataViews,
                            zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
