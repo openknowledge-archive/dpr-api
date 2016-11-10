@@ -3,7 +3,7 @@ var getVegaSpec = function(table,DataViews,resourceIndex) {
   var date = DataViews[resourceIndex].state.group;
   var parse = makeParse(date, price);
   // needs to be automate (passed to datapackage.json or smth)
-  var template = makeTemplate(date, "daily");
+  var template = makeTemplate(date, "annual");
   var spec = {
     "actions": false,
     "spec": {
@@ -22,7 +22,7 @@ var getVegaSpec = function(table,DataViews,resourceIndex) {
       "data": [
         {
           "name": "data",
-          "url": "https://gist.githubusercontent.com/zelima/062431419a1a790cc084fdba62322109/raw/39ee548e067999c6a270b5a90b7b74bac642a685/monthly-series.csv",
+          "url": table.path,
           "format": {
             "type": "csv",
             "parse": parse

@@ -80,11 +80,10 @@ function datasetShowSetup() {
   // create a grid view for each resource in the page
   $('.js-show-handsontable-grid').each(function(idx, $el) {
     var resourceIndex = $($el).data('resource-index');
-    var reclineDataset = Catalog.dataPackageResourceToDataset(DataPackageData, resourceIndex);
+    var resource = Catalog.dataPackageResourceToDataset(DataPackageData, resourceIndex);
     var hot;
     CSV.fetch({
-      // simplest way to render data, for first demo
-      "url": 'https://gist.githubusercontent.com/zelima/062431419a1a790cc084fdba62322109/raw/39ee548e067999c6a270b5a90b7b74bac642a685/monthly-series.csv'
+      "url": resource.path
     }).done(function(dataset) {
       
       var options = {
