@@ -105,6 +105,13 @@ class User(db.Model):
             db.session.commit()
         return user
 
+    @staticmethod
+    def get_userinfo_by_id(user_id):
+        user = User.query.filter_by(user_id=user_id).first()
+        if user:
+            return user
+        return None
+
 
 class MetaDataDB(db.Model):
     __tablename__ = "packages"
