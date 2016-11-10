@@ -46,13 +46,30 @@ def dashboard():
         try:
           payload = jwt.decode(encoded_token,app.config['API_KEY'])
         except:
-          return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
+            return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
         user = User().get_userinfo_by_id(payload['user'])
-        return render_template("dashboard.html", user=user, 
-          zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
+        if user:
+            return render_template("dashboard.html", user=user, 
+              zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
         
       
     return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
+
+@mod_site_blueprint.route("/logout", methods=["GET","POST"])
+def logout():
+    """
+    Loads Dashboard page if user already login else redirect to Login
+    ---
+    tags:
+      - site
+    responses:
+      302:
+        description: Redirect to Auth0
+      200:
+        description: Load the Dashboard
+    """
+    return render_template("index.html", title='Home', zappa_env=get_zappa_prefix(),
+                           s3_cdn=get_s3_cdn_prefix()), 200
 
 @mod_site_blueprint.route("/<publisher>/<package>", methods=["GET"])
 def datapackage_show(publisher, package):
