@@ -1,4 +1,5 @@
 import boto3
+import json
 import logging
 import psycopg2
 
@@ -82,13 +83,13 @@ def write_to_rds_on_s3_metadata_put(event, context):
     publisher, package, version = values[1], values[2], values[4]
 
     response = s3.get_object(Bucket=bucket, Key=key)
-    descriptor = response['Body'].read()
+    descriptor = json.dumps(response['Body'].read())
 
     connect = psycopg2.connect(dsn=DSN)
     cursor = connect.cursor()
 
     cursor.execute("""
-                INSERT INTO packages (name, publisher, "descriptor") VALUES (%s, %s, %s)
+                INSERT INTO packages (publisher, name, "descriptor") VALUES (%s, %s, %s)
                 ON CONFLICT (name, publisher) DO UPDATE SET "descriptor" = %s
                 """, (publisher, package, descriptor, descriptor))
     connect.commit()
