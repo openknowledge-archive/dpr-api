@@ -4,7 +4,7 @@ var getVegaSpec = function(table,DataViews,resourceIndex) {
   var parse = makeParse(date, price);
   // needs to be automate (passed to datapackage.json or smth)
   var template = makeTemplate(date, "annual");
-  var spec = 
+  var spec = {
     "actions": false,
     "spec": {
       "width": 1080,
