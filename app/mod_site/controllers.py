@@ -28,7 +28,7 @@ def home():
         if encoded_token:
             try:
                 payload = jwt.decode(encoded_token, app.config['API_KEY'])
-            except Excaption as e:
+            except Exception as e:
                 app.logger.error(e)
                 return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
             user = User().get_userinfo_by_id(payload['user'])
