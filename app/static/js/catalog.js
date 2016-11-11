@@ -36,7 +36,7 @@ my.Views.DataFile = Backbone.View.extend({
     vg.embed(vis[0], vegaSpec);
     
     CSV.fetch({ 
-      "url": table.path
+      "url": table.localurl
     }).done(function(dataset) {
       var options = {
         data: dataset.records,

@@ -22,7 +22,7 @@ var getVegaSpec = function(table,DataViews,resourceIndex) {
       "data": [
         {
           "name": "data",
-          "url": table.path,
+          "url": table.localurl,
           "format": {
             "type": "csv",
             "parse": parse

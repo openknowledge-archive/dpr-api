@@ -103,13 +103,15 @@ def datapackage_show(publisher, package):
            pass
     
     dataset = metadata['data']
+    dataset['owner'] = publisher
     resources = dataset['resources']
     try:
         dataViews = dataset['views']
     except:
         dataViews = []
     for res in resources:
-        res['path'] = request.url_root+'api/dataproxy/{publisher}/{package}/r/{resource}.csv'.format(publisher=publisher, package=package, resource=res['name'])
+        res['localurl'] = request.url_root+'api/dataproxy/{publisher}/{package}/r/{resource}.csv'.format(publisher=publisher, package=package, resource=res['name'])
+    print dataset
     return render_template("dataset.html", dataset=dataset, showDataApi=True,
                            jsonDataPackage=dataset, dataViews=dataViews,
                            zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
