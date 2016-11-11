@@ -2,7 +2,10 @@
 {% block scripts %}
 <script>
 var encoded = localStorage.getItem('encoded_token');
-document.getElementById('signin').href = "{{ zappa_env }}/dashboard?encoded_token="+encoded;
+$('#login').on('click', function(e) {
+    e.preventDefault();
+    post_encoded_token(this.href, {"encoded_token":encoded})
+});
 </script>
 {% endblock %}
 {% block content %}
@@ -19,7 +22,7 @@ document.getElementById('signin').href = "{{ zappa_env }}/dashboard?encoded_toke
               <div class="banner-button">
                 <ul class="list-inline">
                   <li><a href="{{ zappa_env }}/api/auth/login" class="btn btn-green">Sign Up</a></li>
-                  <li><a href="" id="signin" class="btn btn-green">Sign In</a></li>
+                  <li><a href="{{ zappa_env }}" id="login" class="btn btn-green">Sign In</a></li>
                 </ul>
               </div>
             </div>

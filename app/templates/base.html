@@ -78,7 +78,7 @@
                   <li><a href="{{ zappa_env }}/apidocs/index.html">API</a></li>
                   <li><a href="http://frictionlessdata.io/">About</a></li>
                   {% if user %}
-                  <li><a id="logout" href="/logout">Logout</a></li>
+                  <li><a id="logout" href="{{ zappa_env }}/logout">Logout</a></li>
                   {% endif %}
                   <li><a href="http://okfn.org/"><img src="//a.okfn.org/img/oki/landscape-rgb-165x43.png" alt="logo" style="height: 33px; margin-top: -7px;" /></a></li>
                 </ul>
@@ -153,7 +153,7 @@
 <script type="text/javascript" src="{{ s3_cdn }}/static/js/graph.js"></script>
 <script type="text/javascript" src="{{ s3_cdn }}/static/js/catalog.js"></script>
 <script type="text/javascript" src="{{ s3_cdn }}/static/js/app.js"></script>
-
+<script type="text/javascript" src="{{ s3_cdn }}/static/js/dashboard.js"></script>
 {% block scripts %}{% endblock %}
 
 <script type="text/javascript">

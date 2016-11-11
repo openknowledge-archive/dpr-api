@@ -63,6 +63,10 @@ class WebsiteTestCase(unittest.TestCase):
         rv = self.client.get('/')
         self.assertNotIn('404', rv.data)
 
+    def test_logout_page(self):
+        rv = self.client.get('/logout')
+        self.assertNotIn('404', rv.data)
+
     def test_data_package_page(self):
         descriptor=json.loads(open('fixtures/datapackage.json').read())
         with self.app.app_context():

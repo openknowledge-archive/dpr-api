@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, json, request, redirect
+from flask import Blueprint, render_template, json, request, redirect, url_for
 from flask import current_app as app
 import jwt
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix
@@ -10,7 +10,7 @@ mod_site_blueprint = Blueprint('site', __name__)
 catalog = Catalog()
 
 
-@mod_site_blueprint.route("/", methods=["GET"])
+@mod_site_blueprint.route("/", methods=["GET", "POST"])
 def home():
     """
     Loads home page
@@ -23,53 +23,36 @@ def home():
       200:
         description: Succesfuly loaded home page
     """
-    
-    return render_template("index.html", title='Home', zappa_env=get_zappa_prefix(),
+    if request.method == "POST":
+        encoded_token = request.form.get('encoded_token', '')
+        if encoded_token:
+            try:
+                payload = jwt.decode(encoded_token, app.config['API_KEY'])
+            except Excaption as e:
+                app.logger.error(e)
+                return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
+            user = User().get_userinfo_by_id(payload['user'])
+            if user:
+                return render_template("dashboard.html", user=user,
+                                       zappa_env=get_zappa_prefix(),
+                                       s3_cdn=get_s3_cdn_prefix()), 200
+        return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
+    return render_template("index.html", title='Home',
+                           zappa_env=get_zappa_prefix(),
                            s3_cdn=get_s3_cdn_prefix()), 200
 
-@mod_site_blueprint.route("/dashboard", methods=["GET","POST"])
-def dashboard():
-    """
-    Loads Dashboard page if user already login else redirect to Login
-    ---
-    tags:
-      - site
-    responses:
-      302:
-        description: Redirect to Auth0
-      200:
-        description: Load the Dashboard
-    """
-
-    encoded_token = request.args.get('encoded_token','')
-    if encoded_token:
-        try:
-          payload = jwt.decode(encoded_token,app.config['API_KEY'])
-        except:
-            return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
-        user = User().get_userinfo_by_id(payload['user'])
-        if user:
-            return render_template("dashboard.html", user=user, 
-              zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
-        
-      
-    return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
-
-@mod_site_blueprint.route("/logout", methods=["GET","POST"])
+@mod_site_blueprint.route("/logout", methods=["GET"])
 def logout():
     """
-    Loads Dashboard page if user already login else redirect to Login
+    Loads Home page if user already login
     ---
     tags:
       - site
     responses:
       302:
-        description: Redirect to Auth0
-      200:
-        description: Load the Dashboard
+        description: Load the Home Page
     """
-    return render_template("index.html", title='Home', zappa_env=get_zappa_prefix(),
-                           s3_cdn=get_s3_cdn_prefix()), 200
+    return redirect(url_for('.home'), code=302)
 
 @mod_site_blueprint.route("/<publisher>/<package>", methods=["GET"])
 def datapackage_show(publisher, package):
