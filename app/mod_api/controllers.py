@@ -1,7 +1,7 @@
 import json
 from flask import Blueprint, request, jsonify, _request_ctx_stack, render_template
 from flask import current_app as app
-from flask import redirect
+from flask import redirect, Response
 from app.mod_api.models import MetaDataS3, User, MetaDataDB
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
 from app.utils.auth import requires_auth
@@ -171,8 +171,8 @@ def get_metadata(publisher, package):
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
-@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/<resource>.json", methods=["GET"])
-@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/<resource>.csv", methods=["GET"])
+@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/r/<resource>.json", methods=["GET"])
+@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/r/<resource>.csv", methods=["GET"])
 def get_resource(publisher, package, resource):
     """
     DPR resource get operation.
@@ -214,10 +214,12 @@ def get_resource(publisher, package, resource):
         metadata = MetaDataS3(publisher, package)
         if path.endswith('csv'):
             resource_key = metadata.build_s3_key(resource + '.csv')
+            data = metadata.get_s3_object(resource_key)
+            return Response(data, mimetype='text/csv'), 200
         else:
             resource_key = metadata.build_s3_key(resource + '.json')
-        data = metadata.get_s3_object(resource_key)
-        return  data, 200
+            data = metadata.get_s3_object(resource_key)
+            return Response(data, mimetype='application/json'), 200
     except Exception as e:
         return handle_error('GENERIC_ERROR', e.message, 500)
 

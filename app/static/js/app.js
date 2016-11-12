@@ -83,7 +83,7 @@ function datasetShowSetup() {
     var resource = Catalog.dataPackageResourceToDataset(DataPackageData, resourceIndex);
     var hot;
     CSV.fetch({
-      "url": resource.path
+      "url": resource.localurl
     }).done(function(dataset) {
       
       var options = {

@@ -1,6 +1,6 @@
 {% macro dataset_summary(dataset) -%}
   <div class="dataset summary">
-    <img src="http://assets.okfn.org/p/data/img/icon-128.png"
+    <img src="https://assets.okfn.org/p/data/img/icon-128.png"
       alt="{{dataset.title}}" class="logo" />
     <h3><a href="/{{dataset.owner}}/{{dataset.id}}">{{dataset.title}}</a></h3>
     <div class="description">{{dataset.description}}</div>
@@ -32,8 +32,7 @@
 <div class="dataset show">
   <div class="row">
     <div class="col-md-8">
-      <img src="{{dataset.image or
-        'http://assets.okfn.org/p/data/img/icon-128.png'}}"
+      <img src="{{dataset.image or 'https://assets.okfn.org/p/data/img/icon-128.png'}}"
         alt="{{dataset.title}}" class="logo" />
       <div class="description">{{dataset.description}} &mdash; <a href="#readme">Read more</a></div>
 
@@ -45,17 +44,19 @@
     </div>
     <div class="col-md-4 sidebar">
       <div class="btn-group">
-        <a href="{{dataset.name}}/datapackage.json" class="btn btn-small btn-default"><i class="icon-download-alt"></i> Metadata</a></a>
+        <a href="/api/package/{{dataset.owner}}/{{dataset.name}}" class="btn btn-small btn-default"><i class="icon-download-alt"></i> Metadata</a></a>
         {% if dataset.bugs and dataset.bugs.url %}
         <a href="{{dataset.bugs.url}}" class="btn btn-small" target="_blank"><i class="icon-exclamation-sign icon-white"></i> Report an Issue</a>
         {% endif %}
       </div>
       <div class="homepage truncate"><i class="icon-home"></i> <a href="{{dataset.homepage}}" title="Home Page">{{dataset.homepage}}</a></div>
+      {% if dataset.licenses %}
       <div class="license">
-        <i class="icon-legal"></i> <a href="" title="Available under the following License"></a>
+        <i class="icon-legal"></i> <a href="{{dataset.licenses[0].url}}" title="Available under the following License">{{dataset.licenses[0].name or dataset.licenses[0].id}}</a>
         <br />
-        <a href="http://opendefinition.org" title="This data is open data as per the Open Definition"><img src="http://assets.okfn.org/images/buttons/od_80x15_blue.png" /></a>
+        <a href="https://opendefinition.org" title="This data is open data as per the Open Definition"><img src="https://assets.okfn.org/images/buttons/od_80x15_blue.png" /></a>
       </div>
+      {% endif %}
       <div class="source">
         <h5>Sources</h5>
         {{listify(dataset.sources)}}
@@ -63,7 +64,7 @@
     </div>
   </div>
 
-  <hr />
+  <hr/>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   
@@ -82,13 +83,11 @@
             <td><i class="icon-file-text-alt"></i> <a href="#resource-{{resource.name}}">{{resource.name}}</a></td>
             <td>{{resource.title}}</td>
             <td>{{resource.format}}</td>
-            <td class="download truncate"><a href="{{resource.url}}"><i class="icon-download-alt"></i> Download</a></td>
+            <td class="download truncate"><a href="{{resource.localurl}}"><i class="icon-download-alt"></i> Download</a></td>
             {% if showDataApi %}
             <td class="">
               [Local:
-              <a href="/core/{{dataset.name}}/r/{{resource.name}}.csv"><i class="icon-download-alt"></i> CSV</a>
-              &ndash;
-              <a href="/core/{{dataset.name}}/r/{{resource.name}}.json"><i class="icon-download-alt"></i> JSON</a>
+              <a href="{{resource.localurl}}"><i class="icon-download-alt"></i> CSV</a>
               ]
             </td>
             {% endif %}

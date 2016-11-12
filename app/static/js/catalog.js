@@ -26,15 +26,17 @@ my.Views.DataFile = Backbone.View.extend({
 
   render: function(resourceIndex) {
     var $viewer = this.$el;
+    var vis = $viewer.siblings('div.vis')
     $viewer.html('Loading View <img src="http://assets.okfn.org/images/icons/ajaxload-circle.gif" />');
-    var table = my.dataPackageResourceToDataset(this.model.toJSON(), resourceIndex);  
+    vis.html('Loading View <img src="http://assets.okfn.org/images/icons/ajaxload-circle.gif" />');
     
+    var table = my.dataPackageResourceToDataset(this.model.toJSON(), resourceIndex);  
     var vegaSpec = getVegaSpec(table,DataViews,resourceIndex);
-    var vis = $viewer.siblings('div.vis')[0];
-    vg.embed(vis, vegaSpec);
+    vis.empty();
+    vg.embed(vis[0], vegaSpec);
     
     CSV.fetch({ 
-      "url": table.path
+      "url": table.localurl
     }).done(function(dataset) {
       var options = {
         data: dataset.records,

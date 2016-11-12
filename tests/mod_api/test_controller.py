@@ -423,7 +423,7 @@ class DataProxyTestCase(unittest.TestCase):
     publisher = 'test_pub'
     package = 'test_package'
     resource = 'test_resource'
-    url = '/api/dataproxy/{publisher}/{package}/{resource}.csv'\
+    url = '/api/dataproxy/{publisher}/{package}/r/{resource}.csv'\
         .format(publisher=publisher, package=package, resource=resource)
 
     def setUp(self):
@@ -439,6 +439,17 @@ class DataProxyTestCase(unittest.TestCase):
         data = response.data
         self.assertEqual(200, response.status_code)
         self.assertEqual(data, 'test_data')
+    
+    @patch("app.mod_api.models.MetaDataS3.get_s3_object")
+    @patch("app.mod_api.models.MetaDataS3.build_s3_key")
+    def test_return_200_if_all_right_for_json(self, build_key, get_s3_object):
+        build_key.return_value = ''
+        get_s3_object.return_value = '[{"test": "json"}]'
+        self.url = self.url.split('.csv')[0] + '.json'
+        response = self.client.get(self.url)
+        data = response.data
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(data, '[{"test": "json"}]')
 
     @patch("app.mod_api.models.MetaDataS3.get_s3_object")
     @patch("app.mod_api.models.MetaDataS3.build_s3_key")
