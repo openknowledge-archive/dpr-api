@@ -8,6 +8,7 @@ localStorage.setItem("encoded_token","{{encoded_token}}");
 $('#logout').on('click', function(e) {
     localStorage.removeItem("encoded_token");
 });
+window.history.pushState("", "Dashboard", "/");
 </script>
 {% endblock %}
 {% block content %}

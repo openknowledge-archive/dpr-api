@@ -34,8 +34,9 @@ def home():
             user = User().get_userinfo_by_id(payload['user'])
             if user:
                 return render_template("dashboard.html", user=user,
-                                       zappa_env=get_zappa_prefix(),
-                                       s3_cdn=get_s3_cdn_prefix()), 200
+                                        title='Dashboard',
+                                        zappa_env=get_zappa_prefix(),
+                                        s3_cdn=get_s3_cdn_prefix()), 200
         return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
     return render_template("index.html", title='Home',
                            zappa_env=get_zappa_prefix(),
