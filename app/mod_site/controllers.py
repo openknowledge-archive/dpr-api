@@ -95,7 +95,7 @@ def datapackage_show(publisher, package):
         dataViews = []
     for res in resources:
         res['localurl'] = request.url_root+'api/dataproxy/{publisher}/{package}/r/{resource}.csv'.format(publisher=publisher, package=package, resource=res['name'])
-    print dataset
+    
     return render_template("dataset.html", dataset=dataset, showDataApi=True,
                            jsonDataPackage=dataset, dataViews=dataViews,
                            zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
