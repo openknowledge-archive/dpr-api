@@ -1,5 +1,12 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import json, csv
-from flask import Blueprint, request, jsonify, _request_ctx_stack, render_template
+from flask import Blueprint, request, jsonify, \
+    _request_ctx_stack, render_template
 from flask import current_app as app
 from flask import redirect, Response
 from app.mod_api.models import MetaDataS3, User, MetaDataDB
@@ -59,20 +66,27 @@ def save_metadata(publisher, package):
         user = User.query.filter_by(user_id=user_id).first()
         if user is not None:
             if user.user_name == publisher:
-                metadata = MetaDataS3(publisher=publisher, package=package, body=request.data)
+                metadata = MetaDataS3(publisher=publisher,
+                                      package=package,
+                                      body=request.data)
                 is_valid = metadata.validate()
                 if not is_valid:
-                    return handle_error('INVALID_DATA', 'Missing required field in metadata', 400)
+                    return handle_error('INVALID_DATA',
+                                        'Missing required field in metadata',
+                                        400)
                 metadata.save()
                 return jsonify({"status": "OK"}), 200
-            return handle_error('NOT_PERMITTED', 'user name and publisher not matched', 403)
+            return handle_error('NOT_PERMITTED',
+                                'user name and publisher not matched',
+                                403)
         return handle_error('USER_NOT_FOUND', 'user not found', 404)
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
-@mod_api_blueprint.route("/package/<publisher>/<package>/finalize", methods=["GET"])
+@mod_api_blueprint.route("/package/<publisher>/<package>/finalize",
+                         methods=["GET"])
 @requires_auth
 def finalize_metadata(publisher, package):
     """
@@ -115,12 +129,15 @@ def finalize_metadata(publisher, package):
                 metadata = MetaDataS3(publisher, package)
                 body = metadata.get_metadata_body()
                 if body is not None:
-                    MetaDataDB.create_or_update(name=package, publisher=publisher,
+                    MetaDataDB.create_or_update(name=package,
+                                                publisher=publisher,
                                                 descriptor=body)
                     return jsonify({"status": "OK"}), 200
 
                 raise Exception("Failed to get data from s3")
-            return handle_error('NOT_PERMITTED', 'user name and publisher not matched', 403)
+            return handle_error('NOT_PERMITTED',
+                                'user name and publisher not matched',
+                                403)
         return handle_error('USER_NOT_FOUND', 'user not found', 404)
     except Exception as e:
         app.logger.error(e)
@@ -145,7 +162,7 @@ def get_metadata(publisher, package):
           name: package
           type: string
           required: false
-          description: package name, use this to retrieve the data package metadata contents
+          description: package name - to retrieve the data package metadata
     responses:
 
         200:
@@ -162,17 +179,22 @@ def get_metadata(publisher, package):
             description: No metadata found for the package
     """
     try:
-        data = MetaDataDB.query.filter_by(name=package, publisher=publisher).first()
+        data = MetaDataDB.query.filter_by(name=package,
+                                          publisher=publisher).first()
         if data is None:
-            return handle_error('DATA_NOT_FOUND', 'No metadata found for the package', 404)
+            return handle_error('DATA_NOT_FOUND',
+                                'No metadata found for the package',
+                                404)
         metadata = json.loads(data.descriptor)
         return jsonify({"data": metadata}), 200
     except Exception as e:
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
-@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/r/<resource>.json", methods=["GET"])
-@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/r/<resource>.csv", methods=["GET"])
+@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/r/<resource>.json",
+                         methods=["GET"])
+@mod_api_blueprint.route("/dataproxy/<publisher>/<package>/r/<resource>.csv",
+                         methods=["GET"])
 def get_resource(publisher, package, resource):
     """
     DPR resource get operation.
@@ -190,7 +212,7 @@ def get_resource(publisher, package, resource):
           name: package
           type: string
           required: true
-          description: package name, use this to retrieve the data package metadata contents
+          description: package name - to retrieve the data package metadata
         - in: path
           name: resource
           type: string
@@ -266,9 +288,12 @@ def get_all_metadata_names_for_publisher(publisher):
             description: No metadata found for the package
     """
     try:
-        metadata = MetaDataDB.query.with_entities(MetaDataDB.name).filter_by(publisher=publisher).all()
+        metadata = MetaDataDB.query.with_entities(MetaDataDB.name).\
+            filter_by(publisher=publisher).all()
         if len(metadata) is 0:
-            return handle_error('DATA_NOT_FOUND', 'No metadata found for the package', 404)
+            return handle_error('DATA_NOT_FOUND',
+                                'No metadata found for the package',
+                                404)
         keys = []
         for d in metadata:
             keys.append(d[0])
@@ -302,7 +327,8 @@ def callback_handling():
                         description: The jwt
                     user:
                         type: map
-                        description: Returns back email, nickname, picture, name
+                        description: Returns back email, nickname,
+                                     picture, name
     """
     try:
         code = request.args.get('code')
@@ -313,13 +339,12 @@ def callback_handling():
 
         user = User().create_or_update_user_from_callback(user_info)
 
-        ## For now dashboard is rendered directly from callbacl, this needs to be changed
         return render_template("dashboard.html", user=user,
-                                title='Dashboard',
-                                encoded_token=jwt_helper.encode(),
-                                zappa_env=get_zappa_prefix(),
-                                s3_cdn=get_s3_cdn_prefix()), 200
-        # return jsonify({'status': 'OK', 'token': jwt_helper.encode(), 'user': user.serialize}), 200
+                               title='Dashboard',
+                               encoded_token=jwt_helper.encode(),
+                               zappa_env=get_zappa_prefix(),
+                               s3_cdn=get_s3_cdn_prefix()), 200
+
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
@@ -375,28 +400,39 @@ def get_jwt():
         verify = False
         user_id = None
         if user_name is None and email is None:
-            return handle_error('INVALID_INPUT', 'User name or email both can not be empty', 400)
+            return handle_error('INVALID_INPUT',
+                                'User name or email both can not be empty',
+                                400)
 
         if secret is None:
-            return handle_error('INVALID_INPUT', 'secret can not be empty', 400)
+            return handle_error('INVALID_INPUT',
+                                'secret can not be empty',
+                                400)
         elif user_name is not None:
             user = User.query.filter_by(user_name=user_name).first()
             if user is None:
-                return handle_error('USER_NOT_FOUND', 'user does not exists', 404)
+                return handle_error('USER_NOT_FOUND',
+                                    'user does not exists',
+                                    404)
             if secret == user.secret:
                 verify = True
                 user_id = user.user_id
         elif email is not None:
             user = User.query.filter_by(email=email).first()
             if user is None:
-                return handle_error('USER_NOT_FOUND', 'user does not exists', 404)
+                return handle_error('USER_NOT_FOUND',
+                                    'user does not exists',
+                                    404)
             if secret == user.secret:
                 verify = True
                 user_id = user.user_id
         if verify:
-            return jsonify({'token': JWTHelper(app.config['API_KEY'], user_id).encode()}), 200
+            return jsonify({'token': JWTHelper(app.config['API_KEY'],
+                                               user_id).encode()}),200
         else:
-            return handle_error('SECRET_ERROR', 'Secret key do not match', 403)
+            return handle_error('SECRET_ERROR',
+                                'Secret key do not match',
+                                403)
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
@@ -411,7 +447,8 @@ def auth0_login():
         - auth
     """
     redirect_url = "https://{domain}/login?client={client_id}"\
-        .format(domain=app.config['AUTH0_DOMAIN'], client_id=app.config['AUTH0_CLIENT_ID'])
+        .format(domain=app.config['AUTH0_DOMAIN'],
+                client_id=app.config['AUTH0_CLIENT_ID'])
     return redirect(redirect_url)
 
 
@@ -458,7 +495,9 @@ def get_s3_signed_url():
         package = data.get('package', None)
         path = data.get('path', None)
         if publisher is None or package is None:
-            return handle_error('INVALID_INPUT', 'publisher or package can not be empty', 400)
+            return handle_error('INVALID_INPUT',
+                                'publisher or package can not be empty',
+                                400)
 
         metadata = MetaDataS3(publisher=publisher, package=package)
         url = metadata.generate_pre_signed_put_obj_url(path)

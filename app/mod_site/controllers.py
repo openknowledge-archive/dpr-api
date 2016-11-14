@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from flask import Blueprint, render_template, json, request, redirect, url_for
 from flask import current_app as app
 import jwt
@@ -30,13 +36,13 @@ def home():
                 payload = jwt.decode(encoded_token, app.config['API_KEY'])
             except Exception as e:
                 app.logger.error(e)
-                return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
+                return redirect(get_zappa_prefix()+'/api/auth/login', code=302)
             user = User().get_userinfo_by_id(payload['user'])
             if user:
                 return render_template("dashboard.html", user=user,
-                                        title='Dashboard',
-                                        zappa_env=get_zappa_prefix(),
-                                        s3_cdn=get_s3_cdn_prefix()), 200
+                                       title='Dashboard',
+                                       zappa_env=get_zappa_prefix(),
+                                       s3_cdn=get_s3_cdn_prefix()), 200
         return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
     return render_template("index.html", title='Home',
                            zappa_env=get_zappa_prefix(),
@@ -58,7 +64,7 @@ def logout():
 @mod_site_blueprint.route("/<publisher>/<package>", methods=["GET"])
 def datapackage_show(publisher, package):
     """
-    Loads datapackage page for given owner 
+    Loads datapackage page for given owner
     ---
     tags:
       - site
@@ -78,14 +84,16 @@ def datapackage_show(publisher, package):
       200:
         description: Succesfuly loaded
     """
-    metadata = json.loads(app.test_client().get('/api/package/{publisher}/{package}'.
-                                                format(publisher=publisher, package=package)).data)
+    metadata = json.loads(
+        app.test_client().\
+        get('/api/package/{publisher}/{package}'.\
+            format(publisher=publisher, package=package)).data)
     try:
         if metadata['error_code'] == 'DATA_NOT_FOUND':
             return "404 Not Found", 404
     except:
-           pass
-    
+        pass
+
     dataset = metadata['data']
     dataset['owner'] = publisher
     resources = dataset['resources']
@@ -94,8 +102,11 @@ def datapackage_show(publisher, package):
     except:
         dataViews = []
     for res in resources:
-        res['localurl'] = request.url_root+'api/dataproxy/{publisher}/{package}/r/{resource}.csv'.format(publisher=publisher, package=package, resource=res['name'])
-    
+        res['localurl'] = request.url_root+\
+        'api/dataproxy/{publisher}/{package}/r/{resource}.csv'.\
+        format(publisher=publisher, package=package, resource=res['name'])
+
     return render_template("dataset.html", dataset=dataset, showDataApi=True,
                            jsonDataPackage=dataset, dataViews=dataViews,
-                           zappa_env=get_zappa_prefix(), s3_cdn=get_s3_cdn_prefix()), 200
+                           zappa_env=get_zappa_prefix(),
+                           s3_cdn=get_s3_cdn_prefix()), 200

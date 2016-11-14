@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import unittest
 import json
 
@@ -139,7 +145,8 @@ class GetMetaDataTestCase(unittest.TestCase):
             db.create_all()
 
     def test_throw_404_if_meta_data_not_found(self):
-        response = self.client.get('/api/package/%s/%s' % (self.publisher, self.package))
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(data['error_code'], 'DATA_NOT_FOUND')
@@ -151,7 +158,8 @@ class GetMetaDataTestCase(unittest.TestCase):
             metadata.descriptor = json.dumps(descriptor)
             db.session.add(metadata)
             db.session.commit()
-        response = self.client.get('/api/package/%s/%s' % (self.publisher, self.package))
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['data']['name'], 'test description')
@@ -163,7 +171,7 @@ class GetMetaDataTestCase(unittest.TestCase):
             metadata.descriptor = descriptor
             db.session.add(metadata)
             db.session.commit()
-        response = self.client.get('/api/package/%s/%s' % ('pub', self.package))
+        response = self.client.get('/api/package/%s/%s'%('pub', self.package))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['error_code'], 'GENERIC_ERROR')
@@ -342,21 +350,27 @@ class SaveMetaDataTestCase(unittest.TestCase):
         self.assertEqual(401, response.status_code)
 
     def test_should_throw_error_if_auth_header_not_starts_with_bearer(self):
-        response = self.client.put(self.url, headers=dict(Authorization='auth 123'))
+        response = self.client.put(self.url,
+                                   headers=dict(Authorization='auth 123'))
         self.assertEqual(401, response.status_code)
 
     def test_should_throw_error_if_auth_header_malformed(self):
-        response = self.client.put(self.url, headers=dict(Authorization='bearer123'))
+        response = self.client.put(self.url,
+                                   headers=dict(Authorization='bearer123'))
         self.assertEqual(401, response.status_code)
 
-        response = self.client.put(self.url, headers=dict(Authorization='bearer 123 231'))
+        response = self.client.put(self.url,
+                                   headers=dict(Authorization=\
+                                                 'bearer 123 231'))
         self.assertEqual(401, response.status_code)
 
     @patch('app.mod_api.models.MetaDataS3.save')
     def test_return_200_if_all_right(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
-        response = self.client.put(self.url, headers=dict(Authorization=auth), data=json.dumps({'name': 'package'}))
+        response = self.client.put(self.url,
+                                   headers=dict(Authorization=auth),
+                                   data=json.dumps({'name': 'package'}))
         self.assertEqual(200, response.status_code)
 
     @patch('app.mod_api.models.MetaDataS3.save')
@@ -405,12 +419,17 @@ class CallbackHandlingTestCase(unittest.TestCase):
     @patch('app.mod_api.controllers.get_user_info_with_code')
     @patch('app.mod_api.controllers.JWTHelper')
     @patch('app.mod_api.models.User.create_or_update_user_from_callback')
-    def test_return_200_if_all_right(self, get_user_with_code, JWTHelper, create_user):
-        get_user_with_code('123').side_effect = {'user_id': "test_id", "user_metadata": {"secr": "tt"}}
+    def test_return_200_if_all_right(self,
+                                     get_user_with_code,
+                                     JWTHelper,
+                                     create_user):
+        get_user_with_code('123').side_effect = {
+            'user_id': "test_id", "user_metadata": {"secr": "tt"}
+            }
         response = self.client.get('/api/auth/callback?code=123')
         self.assertEqual(create_user.call_count, 1)
         self.assertEqual(JWTHelper.call_count, 1)
-        
+
         self.assertEqual(response.status_code, 200)
 
     def tearDown(self):
@@ -441,7 +460,7 @@ class DataProxyTestCase(unittest.TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(data, 'test_header_0,test_header_1\n'\
                                      + 'test_value_0,test_value_3\n')
-    
+
     @patch("app.mod_api.models.MetaDataS3.get_s3_object")
     @patch("app.mod_api.models.MetaDataS3.build_s3_key")
     def test_return_200_if_all_right_for_json(self, build_key, get_s3_object):
@@ -462,7 +481,9 @@ class DataProxyTestCase(unittest.TestCase):
 
     @patch("app.mod_api.models.MetaDataS3.get_s3_object")
     @patch("app.mod_api.models.MetaDataS3.build_s3_key")
-    def test_throw_500_if_not_able_to_get_data_from_s3(self, build_key, get_s3_object):
+    def test_throw_500_if_not_able_to_get_data_from_s3(self,
+                                                       build_key,
+                                                       get_s3_object):
         build_key.return_value = ''
         get_s3_object.side_effect = Exception('failed')
         response = self.client.get(self.url)

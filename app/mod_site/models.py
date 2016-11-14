@@ -1,25 +1,30 @@
-from flask import current_app as app
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
+from flask import current_app as app
 
 class Catalog(object):
     def __init__(self):
         self._list = []
         self._cache = {}
-    
+
     def load(self, datapackages):
         self._list = datapackages
         for dp in datapackages:
-            if not dp['owner'] in self._cache:
+            if dp['owner'] not in self._cache:
                 self._cache[dp['owner']] = {}
             self._cache[dp['owner']][dp['name']] = dp
-    
+
     def get(self, owner, id):
         if owner in self._cache:
             return self._cache[owner][id]
-    
+
     def query(self):
         return self._list
-    
+
     def by_owner(self, owner):
         result = []
         if owner in self._cache:

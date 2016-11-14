@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv

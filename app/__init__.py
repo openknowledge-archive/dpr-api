@@ -1,11 +1,17 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import os
 import flask_s3
 import boto3
 from botocore.client import Config
 from flasgger import Swagger
 from flask import Flask
-from database import db
 from werkzeug.utils import import_string
+from .database import db
 from app.mod_api.controllers import mod_api_blueprint
 from app.mod_site.controllers import mod_site_blueprint
 
@@ -38,8 +44,9 @@ def create_app():
     s3 = boto3.client('s3',
                       region_name=app.config['AWS_REGION'],
                       aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
-                      aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'],
-                      config=Config(signature_version='s3v4'))
+                      config=Config(signature_version='s3v4'),
+                      aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY']
+                      )
     app.config['S3'] = s3
 
     if app.config.get('TESTING') is False:

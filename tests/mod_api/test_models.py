@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import boto3
 from urlparse import urlparse
 from moto import mock_s3
@@ -16,7 +22,8 @@ class MetadataS3TestCase(unittest.TestCase):
     @staticmethod
     def test_metadata_s3_key():
         metadata = MetaDataS3(publisher="pub_test", package="test_package")
-        expected = "{t}/pub_test/test_package/_v/latest/datapackage.json".format(t=metadata.prefix)
+        expected = "{t}/pub_test/test_package/_v/latest/datapackage.json".\
+                   format(t=metadata.prefix)
         assert expected == metadata.build_s3_key('datapackage.json')
 
     @staticmethod
@@ -31,10 +38,13 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
+            metadata = MetaDataS3(publisher="pub_test",
+                                  package="test_package",
+                                  body='hi')
             key = metadata.build_s3_key('datapackage.json')
             metadata.save()
-            obs_list = list(s3.list_objects(Bucket=bucket_name, Prefix=key).get('Contents'))
+            obs_list = list(s3.list_objects(Bucket=bucket_name, Prefix=key).\
+                            get('Contents'))
             assert 1 == len(obs_list)
             assert key == obs_list[0]['Key']
 
@@ -44,7 +54,9 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
+            metadata = MetaDataS3(publisher="pub_test",
+                                  package="test_package",
+                                  body='hi')
             s3.put_object(
                 Bucket=bucket_name,
                 Key=metadata.build_s3_key('datapackage.json'),
@@ -57,7 +69,9 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
+            metadata = MetaDataS3(publisher="pub_test",
+                                  package="test_package",
+                                  body='hi')
             s3.put_object(
                 Bucket=bucket_name,
                 Key=metadata.build_s3_key('datapackage.json'),
@@ -70,8 +84,12 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
-            s3.put_object(Bucket=bucket_name, Key='test/key.json', Body=metadata.body)
+            metadata = MetaDataS3(publisher="pub_test",
+                                  package="test_package",
+                                  body='hi')
+            s3.put_object(Bucket=bucket_name,
+                          Key='test/key.json',
+                          Body=metadata.body)
             assert 0 == len(metadata.get_all_metadata_name_for_publisher())
 
     @mock_s3
@@ -80,13 +98,17 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test", package="test_package", body='hi')
+            metadata = MetaDataS3(publisher="pub_test",
+                                  package="test_package",
+                                  body='hi')
             url = metadata.generate_pre_signed_put_obj_url('datapackage.json')
             parsed = urlparse(url)
-            print parsed
-            print parsed.netloc
-            print 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION'])
-            assert parsed.netloc == 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION'])
+            print (parsed)
+            print (parsed.netloc)
+            print ('s3-{region}.amazonaws.com'.\
+                   format(region=self.app.config['AWS_REGION']))
+            assert parsed.netloc == 's3-{region}.amazonaws.com'.\
+                                  format(region=self.app.config['AWS_REGION'])
 
 
 class MetaDataDBTestCase(unittest.TestCase):
