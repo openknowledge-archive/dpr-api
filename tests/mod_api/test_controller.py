@@ -434,22 +434,31 @@ class DataProxyTestCase(unittest.TestCase):
     @patch("app.mod_api.models.MetaDataS3.build_s3_key")
     def test_return_200_if_all_right_for_csv(self, build_key, get_s3_object):
         build_key.return_value = ''
-        get_s3_object.return_value = 'test_data'
+        get_s3_object.return_value = 'test_header_0,test_header_1\n'\
+                                     + 'test_value_0,test_value_3'
         response = self.client.get(self.url)
         data = response.data
         self.assertEqual(200, response.status_code)
-        self.assertEqual(data, 'test_data')
+        self.assertEqual(data, 'test_header_0,test_header_1\n'\
+                                     + 'test_value_0,test_value_3\n')
     
     @patch("app.mod_api.models.MetaDataS3.get_s3_object")
     @patch("app.mod_api.models.MetaDataS3.build_s3_key")
     def test_return_200_if_all_right_for_json(self, build_key, get_s3_object):
         build_key.return_value = ''
-        get_s3_object.return_value = '[{"test": "json"}]'
+        get_s3_object.return_value = 'test_header_0,test_header_1\n'\
+                                     + 'test_value_0,test_value_1\n'\
+                                     + 'test_value_2,test_value_3'
         self.url = self.url.split('.csv')[0] + '.json'
         response = self.client.get(self.url)
         data = response.data
         self.assertEqual(200, response.status_code)
-        self.assertEqual(data, '[{"test": "json"}]')
+        self.assertEqual(data, '['\
+                         +'{"test_header_0": "test_value_2", '\
+                         +'"test_header_1": "test_value_3"},'\
+                         +'{"test_header_0": "test_value_0", '\
+                         +'"test_header_1": "test_value_1"}'\
+                         +']')
 
     @patch("app.mod_api.models.MetaDataS3.get_s3_object")
     @patch("app.mod_api.models.MetaDataS3.build_s3_key")

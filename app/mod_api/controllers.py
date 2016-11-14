@@ -1,4 +1,4 @@
-import json
+import json, csv
 from flask import Blueprint, request, jsonify, _request_ctx_stack, render_template
 from flask import current_app as app
 from flask import redirect, Response
@@ -215,11 +215,22 @@ def get_resource(publisher, package, resource):
         if path.endswith('csv'):
             resource_key = metadata.build_s3_key(resource + '.csv')
             data = metadata.get_s3_object(resource_key)
-            return Response(data, mimetype='text/csv'), 200
+            def generate():
+                for row in data.splitlines():
+                    yield row + '\n'
+            return Response(generate()), 200
         else:
-            resource_key = metadata.build_s3_key(resource + '.json')
+            resource_key = metadata.build_s3_key(resource + '.csv')
             data = metadata.get_s3_object(resource_key)
-            return Response(data, mimetype='application/json'), 200
+            data = csv.DictReader(data.splitlines())
+            # taking first and adding at the end to avoid last comma
+            first_row = next(data)
+            def generate():
+                yield '['
+                for row in data:
+                    yield json.dumps(row) + ','
+                yield json.dumps(first_row)+']'
+            return Response(generate(), content_type='application/json'), 200
     except Exception as e:
         return handle_error('GENERIC_ERROR', e.message, 500)
 
@@ -303,8 +314,6 @@ def callback_handling():
         user = User().create_or_update_user_from_callback(user_info)
 
         ## For now dashboard is rendered directly from callbacl, this needs to be changed
-        
-
         return render_template("dashboard.html", user=user,
                                 title='Dashboard',
                                 encoded_token=jwt_helper.encode(),
