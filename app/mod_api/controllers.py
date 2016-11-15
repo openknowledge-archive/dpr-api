@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify, \
     _request_ctx_stack, render_template
 from flask import current_app as app
 from flask import redirect, Response
-from app.mod_api.models import MetaDataS3, User, MetaDataDB
+from app.mod_api.models import BitStore, User, MetaDataDB
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
 from app.utils.auth import requires_auth
 from app.utils.auth0_helper import get_user_info_with_code, \
@@ -66,7 +66,7 @@ def save_metadata(publisher, package):
         user = User.query.filter_by(user_id=user_id).first()
         if user is not None:
             if user.user_name == publisher:
-                metadata = MetaDataS3(publisher=publisher,
+                metadata = BitStore(publisher=publisher,
                                       package=package,
                                       body=request.data)
                 is_valid = metadata.validate()
@@ -126,12 +126,12 @@ def finalize_metadata(publisher, package):
         user = User.query.filter_by(user_id=user_id).first()
         if user is not None:
             if user.user_name == publisher:
-                metadata = MetaDataS3(publisher, package)
-                body = metadata.get_metadata_body()
+                bit_store = BitStore(publisher, package)
+                body = bit_store.get_metadata_body()
                 if body is not None:
-                    MetaDataDB.create_or_update(name=package,
-                                                publisher=publisher,
-                                                descriptor=body)
+                    readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
+                    MetaDataDB.create_or_update(name=package, publisher=publisher,
+                                                descriptor=body, readme=readme)
                     return jsonify({"status": "OK"}), 200
 
                 raise Exception("Failed to get data from s3")
@@ -233,10 +233,11 @@ def get_resource(publisher, package, resource):
     """
     try:
         path = request.path
-        metadata = MetaDataS3(publisher, package)
+        metadata = BitStore(publisher, package)
         if path.endswith('csv'):
             resource_key = metadata.build_s3_key(resource + '.csv')
             data = metadata.get_s3_object(resource_key)
+
             def generate():
                 for row in data.splitlines():
                     yield row + '\n'
@@ -247,6 +248,7 @@ def get_resource(publisher, package, resource):
             data = csv.DictReader(data.splitlines())
             # taking first and adding at the end to avoid last comma
             first_row = next(data)
+
             def generate():
                 yield '['
                 for row in data:
@@ -344,7 +346,6 @@ def callback_handling():
                                encoded_token=jwt_helper.encode(),
                                zappa_env=get_zappa_prefix(),
                                s3_cdn=get_s3_cdn_prefix()), 200
-
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
@@ -499,7 +500,7 @@ def get_s3_signed_url():
                                 'publisher or package can not be empty',
                                 400)
 
-        metadata = MetaDataS3(publisher=publisher, package=package)
+        metadata = BitStore(publisher=publisher, package=package)
         url = metadata.generate_pre_signed_put_obj_url(path)
         return jsonify({'key': url}), 200
     except Exception as e:

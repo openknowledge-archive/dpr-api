@@ -11,7 +11,7 @@ import unittest
 import json
 from app import create_app
 from app.database import db
-from app.mod_api.models import MetaDataS3, MetaDataDB, User
+from app.mod_api.models import BitStore, MetaDataDB, User
 
 
 class MetadataS3TestCase(unittest.TestCase):
@@ -19,18 +19,16 @@ class MetadataS3TestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
 
-    @staticmethod
-    def test_metadata_s3_key():
-        metadata = MetaDataS3(publisher="pub_test", package="test_package")
+    def test_metadata_s3_key(self):
+        metadata = BitStore(publisher="pub_test", package="test_package")
         expected = "{t}/pub_test/test_package/_v/latest/datapackage.json".\
                    format(t=metadata.prefix)
-        assert expected == metadata.build_s3_key('datapackage.json')
+        self.assertEqual(expected, metadata.build_s3_key('datapackage.json'))
 
-    @staticmethod
-    def test_metadata_s3_prefix():
-        metadata = MetaDataS3(publisher="pub_test", package="test_package")
+    def test_metadata_s3_prefix(self):
+        metadata = BitStore(publisher="pub_test", package="test_package")
         expected = "{t}/pub_test".format(t=metadata.prefix)
-        assert expected == metadata.build_s3_prefix()
+        self.assertEqual(expected, metadata.build_s3_prefix())
 
     @mock_s3
     def test_save(self):
@@ -38,9 +36,9 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test",
-                                  package="test_package",
-                                  body='hi')
+            metadata = BitStore(publisher="pub_test",
+                                package="test_package",
+                                body='hi')
             key = metadata.build_s3_key('datapackage.json')
             metadata.save()
             obs_list = list(s3.list_objects(Bucket=bucket_name, Prefix=key).\
@@ -54,9 +52,9 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test",
-                                  package="test_package",
-                                  body='hi')
+            metadata = BitStore(publisher="pub_test",
+                                package="test_package",
+                                body='hi')
             s3.put_object(
                 Bucket=bucket_name,
                 Key=metadata.build_s3_key('datapackage.json'),
@@ -69,9 +67,9 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test",
-                                  package="test_package",
-                                  body='hi')
+            metadata = BitStore(publisher="pub_test",
+                                package="test_package",
+                                body='hi')
             s3.put_object(
                 Bucket=bucket_name,
                 Key=metadata.build_s3_key('datapackage.json'),
@@ -84,9 +82,9 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test",
-                                  package="test_package",
-                                  body='hi')
+            metadata = BitStore(publisher="pub_test",
+                                package="test_package",
+                                body='hi')
             s3.put_object(Bucket=bucket_name,
                           Key='test/key.json',
                           Body=metadata.body)
@@ -98,17 +96,48 @@ class MetadataS3TestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata = MetaDataS3(publisher="pub_test",
-                                  package="test_package",
-                                  body='hi')
+
+            metadata = BitStore(publisher="pub_test",
+                                package="test_package",
+                                body='hi')
             url = metadata.generate_pre_signed_put_obj_url('datapackage.json')
             parsed = urlparse(url)
-            print (parsed)
-            print (parsed.netloc)
             print ('s3-{region}.amazonaws.com'.\
                    format(region=self.app.config['AWS_REGION']))
-            assert parsed.netloc == 's3-{region}.amazonaws.com'.\
-                                  format(region=self.app.config['AWS_REGION'])
+            assert parsed.netloc == 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION'])
+
+    @mock_s3
+    def test_get_readme_object_key(self):
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            read_me_key = bit_store.build_s3_key('readme.md')
+            s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='')
+            self.assertEqual(bit_store.get_readme_object_key(), read_me_key)
+
+    @mock_s3
+    def test_return_none_if_no_readme_found(self):
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            read_me_key = bit_store.build_s3_key('test.md')
+            s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='')
+            self.assertEqual(bit_store.get_readme_object_key(), None)
+
+    @mock_s3
+    def test_return_none_if_object_found(self):
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            read_me_key = bit_store.build_s3_key('test.md')
+            s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='')
+            self.assertEqual(bit_store.get_s3_object(read_me_key + "testing"), None)
 
 
 class MetaDataDBTestCase(unittest.TestCase):
