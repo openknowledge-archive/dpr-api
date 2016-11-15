@@ -87,7 +87,9 @@
             {% if showDataApi %}
             <td class="">
               [Local:
-              <a href="{{resource.localurl}}"><i class="icon-download-alt"></i> CSV</a>
+              <a href="/api/dataproxy/{{dataset.owner}}/{{dataset.name}}/r/{{resource.name}}.csv"><i class="icon-download-alt"></i> CSV</a>
+              &ndash;
+              <a href="/api/dataproxy/{{dataset.owner}}/{{dataset.name}}/r/{{resource.name}}.json"><i class="icon-download-alt"></i> JSON</a>
               ]
             </td>
             {% endif %}
@@ -138,7 +140,7 @@
   <div class="row moreinfo">
     <div class="col-md-8">
       <h2 id="readme">README</h2>
-      <div class="readme">{{dataset.readme_html}}</div>
+      <div class="readme">{{dataset.readme}}</div>
     </div>
     <div class="col-md-4"></div>
   </div>
