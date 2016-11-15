@@ -292,7 +292,9 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
         auth = "bearer %s" % self.jwt
-        response = self.client.get(self.url, headers=dict(Authorization=auth))
+        response = self.client.post(self.url,
+                                    data=json.dumps(dict()),
+                                    headers=dict(Authorization=auth))
         self.assertEqual(200, response.status_code)
 
     def test_throw_404_if_user_not_exists(self):
@@ -300,20 +302,26 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
         auth = "bearer %s" % self.jwt
-        response = self.client.get(self.url, headers=dict(Authorization=auth))
+        response = self.client.post(self.url,
+                                    data=json.dumps(dict()),
+                                    headers=dict(Authorization=auth))
         self.assertEqual(404, response.status_code)
 
     @patch('app.mod_api.models.BitStore.get_metadata_body')
     def test_throw_500_if_failed_to_get_data_from_s3(self, body_mock):
         body_mock.return_value = None
         auth = "bearer %s" % self.jwt
-        response = self.client.get(self.url, headers=dict(Authorization=auth))
+        response = self.client.post(self.url,
+                                    data=json.dumps(dict()),
+                                    headers=dict(Authorization=auth))
         self.assertEqual(500, response.status_code)
 
     def test_throw_403_if_user_not_permitted_for_this_operation(self):
         auth = "bearer %s" % self.jwt
         url = '/api/package/%s/%s/finalize' % ("test_publisher1", self.package)
-        response = self.client.get(url, headers=dict(Authorization=auth))
+        response = self.client.post(url,
+                                    data=json.dumps(dict()),
+                                    headers=dict(Authorization=auth))
         self.assertEqual(403, response.status_code)
 
     def tearDown(self):
@@ -465,9 +473,9 @@ class DataProxyTestCase(unittest.TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(data, 'test_header_0,test_header_1\n'\
                                      + 'test_value_0,test_value_3\n')    
+
     @patch("app.mod_api.models.BitStore.get_s3_object")
     @patch("app.mod_api.models.BitStore.build_s3_key")
-
     def test_return_200_if_all_right_for_json(self, build_key, get_s3_object):
         build_key.return_value = ''
         get_s3_object.return_value = 'test_header_0,test_header_1\n'\
@@ -525,10 +533,9 @@ class EndToEndTestCase(unittest.TestCase):
     @patch('app.mod_api.models.BitStore.generate_pre_signed_put_obj_url')
     @patch('app.mod_api.models.BitStore.save')
     def test_publish_end_to_end(self, save, signed_url, get_s3_object,
-                                get_metadata_body, create_or_update, 
+                                get_metadata_body, create_or_update,
                                 get_readme_object_key):
-        
-        #Sending Username & Secret key
+        # Sending Username & Secret key
         rv = self.client.post(self.auth_token_url,
                               data=json.dumps({
                                   'username': 'test_publisher',
@@ -536,20 +543,21 @@ class EndToEndTestCase(unittest.TestCase):
                                   'secret': 'super_secret'
                               }),
                               content_type='application/json')
-        #Testing Token received
-        self.assertIn('token', rv.data) 
+        # Testing Token received
+        self.assertIn('token', rv.data)
         self.assertEqual(200, rv.status_code)
 
-        #Sending recived token to server with Authentication Header
+        # Sending recived token to server with Authentication Header
         token = json.loads(rv.data)['token']
-        self.auth = "bearer %s" % token #Saving token for future use
+        self.auth = "bearer %s" % token  # Saving token for future use
         save.return_value = None
-        rv = self.client.put(self.meta_data_url, headers=dict(Authorization=self.auth), data=json.dumps(self.test_data_package))
-        #Testing Authentication status
-        self.assertEqual({'status':'OK'}, json.loads(rv.data))
+        rv = self.client.put(self.meta_data_url, headers=dict(Authorization=self.auth),
+                             data=json.dumps(self.test_data_package))
+        # Testing Authentication status
+        self.assertEqual({'status': 'OK'}, json.loads(rv.data))
         self.assertEqual(200, rv.status_code)
 
-        #Adding to Meta Data 
+        # Adding to Meta Data
         descriptor = {'name': 'test description'}
         with self.app.app_context():
             metadata = MetaDataDB(self.package, self.publisher)
@@ -558,29 +566,31 @@ class EndToEndTestCase(unittest.TestCase):
             db.session.commit()
         rv = self.client.get('/api/package/%s' % (self.publisher,))
         data = json.loads(rv.data)
-        #Testing Meta Data
+        # Testing Meta Data
         self.assertEqual(len(data['data']), 1)
         self.assertEqual(rv.status_code, 200)
 
-        #Get S3 link for uploading Data file
+        # Get S3 link for uploading Data file
         signed_url.return_value = 'https://trial_url'
         rv = self.client.post(self.bitstore_url,
                               data=json.dumps({
                                   'publisher': self.publisher,
-                                  'package':self.package 
+                                  'package': self.package
                               }),
                               content_type='application/json')
-        #Testing S3 link
-        self.assertEqual({'key':'https://trial_url'}, json.loads(rv.data))
+        # Testing S3 link
+        self.assertEqual({'key': 'https://trial_url'}, json.loads(rv.data))
         self.assertEqual(200, rv.status_code)
-    
-        #Finalize
+
+        # Finalize
         get_metadata_body.return_value = json.dumps(dict(name='package'))
         create_or_update.return_value = None
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
-        rv = self.client.get(self.finalize_url, headers=dict(Authorization=self.auth))
-        #Test Data
+        rv = self.client.post(self.finalize_url,
+                              data=json.dumps(dict()),
+                              headers=dict(Authorization=self.auth))
+        # Test Data
         self.assertEqual(200, rv.status_code)
 
     def tearDown(self):
