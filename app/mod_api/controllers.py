@@ -86,7 +86,7 @@ def save_metadata(publisher, package):
 
 
 @mod_api_blueprint.route("/package/<publisher>/<package>/finalize",
-                         methods=["GET"])
+                         methods=["POST"])
 @requires_auth
 def finalize_metadata(publisher, package):
     """
