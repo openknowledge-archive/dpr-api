@@ -373,8 +373,8 @@ class SaveMetaDataTestCase(unittest.TestCase):
         self.assertEqual(401, response.status_code)
 
         response = self.client.put(self.url,
-                                   headers=dict(
-                                       Authorization='bearer 123 231'))
+                                   headers=dict(Authorization=\
+                                                 'bearer 123 231'))
         self.assertEqual(401, response.status_code)
 
     @patch('app.mod_api.models.BitStore.save')
@@ -472,7 +472,7 @@ class DataProxyTestCase(unittest.TestCase):
         data = response.data
         self.assertEqual(200, response.status_code)
         self.assertEqual(data, 'test_header_0,test_header_1\n'\
-                                     + 'test_value_0,test_value_3\n')
+                                     + 'test_value_0,test_value_3\n')    
 
     @patch("app.mod_api.models.BitStore.get_s3_object")
     @patch("app.mod_api.models.BitStore.build_s3_key")
@@ -504,7 +504,6 @@ class DataProxyTestCase(unittest.TestCase):
         self.assertEqual(500, response.status_code)
         self.assertEqual(data['message'], 'failed')
 
-
 class EndToEndTestCase(unittest.TestCase):
     auth_token_url = '/api/auth/token'
     publisher = 'test_publisher'
@@ -512,7 +511,7 @@ class EndToEndTestCase(unittest.TestCase):
     meta_data_url = '/api/package/%s/%s' % (publisher, package)
     bitstore_url = '/api/auth/bitstore_upload'
     finalize_url = '/api/package/%s/%s/finalize' % (publisher, package)
-    test_data_package = {'name': 'test_package'}
+    test_data_package = {'name':'test_package'}
 
     def setUp(self):
         self.app = create_app()
@@ -527,12 +526,16 @@ class EndToEndTestCase(unittest.TestCase):
             db.session.add(self.user)
             db.session.commit()
 
+    @patch('app.mod_api.models.BitStore.get_readme_object_key')
     @patch('app.mod_api.models.MetaDataDB.create_or_update')
     @patch('app.mod_api.models.BitStore.get_metadata_body')
+    @patch('app.mod_api.models.BitStore.get_s3_object')
     @patch('app.mod_api.models.BitStore.generate_pre_signed_put_obj_url')
     @patch('app.mod_api.models.BitStore.save')
-    def test_publish_end_to_end(self, save, signed_url, body_mock, meta_mock):
-
+    def test_publish_end_to_end(self, save, signed_url, get_s3_object,
+                                get_metadata_body, create_or_update,
+                                get_readme_object_key):
+        
         # Sending Username & Secret key
         rv = self.client.post(self.auth_token_url,
                               data=json.dumps({
@@ -572,19 +575,21 @@ class EndToEndTestCase(unittest.TestCase):
         rv = self.client.post(self.bitstore_url,
                               data=json.dumps({
                                   'publisher': self.publisher,
-                                  'package':self.package
+                                  'package': self.package
                               }),
                               content_type='application/json')
         # Testing S3 link
         self.assertEqual({'key':'https://trial_url'}, json.loads(rv.data))
         self.assertEqual(200, rv.status_code)
-
+    
         # Finalize
-        body_mock.return_value = json.dumps(dict(name='package'))
-        meta_mock.return_value = None
+        get_metadata_body.return_value = json.dumps(dict(name='package'))
+        create_or_update.return_value = None
+        get_readme_object_key.return_value = ''
+        get_s3_object.return_value = ''
+        rv = self.client.get(self.finalize_url, headers=dict(Authorization=self.auth))
         # Test Data
-        # rv = self.client.get(self.finalize_url, headers=dict(Authorization=self.auth))
-        # self.assertEqual(200, rv.status_code)
+        self.assertEqual(200, rv.status_code)
 
     def tearDown(self):
         with self.app.app_context():
