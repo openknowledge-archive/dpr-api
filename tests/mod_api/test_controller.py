@@ -518,11 +518,15 @@ class EndToEndTestCase(unittest.TestCase):
             db.session.add(self.user)
             db.session.commit()
 
+    @patch('app.mod_api.models.BitStore.get_readme_object_key')
     @patch('app.mod_api.models.MetaDataDB.create_or_update')
     @patch('app.mod_api.models.BitStore.get_metadata_body')
+    @patch('app.mod_api.models.BitStore.get_s3_object')
     @patch('app.mod_api.models.BitStore.generate_pre_signed_put_obj_url')
     @patch('app.mod_api.models.BitStore.save')
-    def test_publish_end_to_end(self, save, signed_url, body_mock, meta_mock):
+    def test_publish_end_to_end(self, save, signed_url, get_s3_object,
+                                get_metadata_body, create_or_update, 
+                                get_readme_object_key):
         
         #Sending Username & Secret key
         rv = self.client.post(self.auth_token_url,
@@ -571,11 +575,13 @@ class EndToEndTestCase(unittest.TestCase):
         self.assertEqual(200, rv.status_code)
     
         #Finalize
-        body_mock.return_value = json.dumps(dict(name='package'))
-        meta_mock.return_value = None
+        get_metadata_body.return_value = json.dumps(dict(name='package'))
+        create_or_update.return_value = None
+        get_readme_object_key.return_value = ''
+        get_s3_object.return_value = ''
+        rv = self.client.get(self.finalize_url, headers=dict(Authorization=self.auth))
         #Test Data
-        # rv = self.client.get(self.finalize_url, headers=dict(Authorization=self.auth))
-        # self.assertEqual(200, rv.status_code)
+        self.assertEqual(200, rv.status_code)
 
     def tearDown(self):
         with self.app.app_context():
