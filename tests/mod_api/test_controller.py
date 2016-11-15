@@ -231,7 +231,7 @@ class GetS3SignedUrlTestCase(unittest.TestCase):
                               content_type='application/json')
         self.assertEqual(400, rv.status_code)
 
-    @patch('app.mod_api.models.MetaDataS3.generate_pre_signed_put_obj_url')
+    @patch('app.mod_api.models.BitStore.generate_pre_signed_put_obj_url')
     def test_200_if_all_right(self, signed_url):
         signed_url.return_value = 'https://trial_url'
         response = self.client.post(self.url,
@@ -274,10 +274,15 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         self.jwt = data['token']
 
     @patch('app.mod_api.models.MetaDataDB.create_or_update')
-    @patch('app.mod_api.models.MetaDataS3.get_metadata_body')
-    def test_return_200_if_all_right(self, body_mock, meta_mock):
-        body_mock.return_value = json.dumps(dict(name='package'))
-        meta_mock.return_value = None
+    @patch('app.mod_api.models.BitStore.get_metadata_body')
+    @patch('app.mod_api.models.BitStore.get_readme_object_key')
+    @patch('app.mod_api.models.BitStore.get_s3_object')
+    def test_return_200_if_all_right(self, get_metadata_body, create_or_update,
+                                     get_readme_object_key, get_s3_object):
+        get_metadata_body.return_value = json.dumps(dict(name='package'))
+        create_or_update.return_value = None
+        get_readme_object_key.return_value = ''
+        get_s3_object.return_value = ''
         auth = "bearer %s" % self.jwt
         response = self.client.get(self.url, headers=dict(Authorization=auth))
         self.assertEqual(200, response.status_code)
@@ -290,7 +295,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         response = self.client.get(self.url, headers=dict(Authorization=auth))
         self.assertEqual(404, response.status_code)
 
-    @patch('app.mod_api.models.MetaDataS3.get_metadata_body')
+    @patch('app.mod_api.models.BitStore.get_metadata_body')
     def test_throw_500_if_failed_to_get_data_from_s3(self, body_mock):
         body_mock.return_value = None
         auth = "bearer %s" % self.jwt
@@ -352,14 +357,14 @@ class SaveMetaDataTestCase(unittest.TestCase):
         response = self.client.put(self.url, headers=dict(Authorization='bearer 123 231'))
         self.assertEqual(401, response.status_code)
 
-    @patch('app.mod_api.models.MetaDataS3.save')
+    @patch('app.mod_api.models.BitStore.save')
     def test_return_200_if_all_right(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
         response = self.client.put(self.url, headers=dict(Authorization=auth), data=json.dumps({'name': 'package'}))
         self.assertEqual(200, response.status_code)
 
-    @patch('app.mod_api.models.MetaDataS3.save')
+    @patch('app.mod_api.models.BitStore.save')
     def test_return_500_for_internal_error(self, save):
         save.side_effect = Exception('some problem')
         auth = "bearer %s" % self.jwt
@@ -369,7 +374,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
         self.assertEqual(500, response.status_code)
         self.assertEqual('GENERIC_ERROR', data['error_code'])
 
-    @patch('app.mod_api.models.MetaDataS3.save')
+    @patch('app.mod_api.models.BitStore.save')
     def test_throw_400_if_meta_data_is_invalid(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
@@ -430,8 +435,8 @@ class DataProxyTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client()
 
-    @patch("app.mod_api.models.MetaDataS3.get_s3_object")
-    @patch("app.mod_api.models.MetaDataS3.build_s3_key")
+    @patch("app.mod_api.models.BitStore.get_s3_object")
+    @patch("app.mod_api.models.BitStore.build_s3_key")
     def test_return_200_if_all_right_for_csv(self, build_key, get_s3_object):
         build_key.return_value = ''
         get_s3_object.return_value = 'test_header_0,test_header_1\n'\
@@ -442,8 +447,8 @@ class DataProxyTestCase(unittest.TestCase):
         self.assertEqual(data, 'test_header_0,test_header_1\n'\
                                      + 'test_value_0,test_value_3\n')
     
-    @patch("app.mod_api.models.MetaDataS3.get_s3_object")
-    @patch("app.mod_api.models.MetaDataS3.build_s3_key")
+    @patch("app.mod_api.models.BitStore.get_s3_object")
+    @patch("app.mod_api.models.BitStore.build_s3_key")
     def test_return_200_if_all_right_for_json(self, build_key, get_s3_object):
         build_key.return_value = ''
         get_s3_object.return_value = 'test_header_0,test_header_1\n'\
@@ -460,8 +465,8 @@ class DataProxyTestCase(unittest.TestCase):
                          +'"test_header_1": "test_value_1"}'\
                          +']')
 
-    @patch("app.mod_api.models.MetaDataS3.get_s3_object")
-    @patch("app.mod_api.models.MetaDataS3.build_s3_key")
+    @patch("app.mod_api.models.BitStore.get_s3_object")
+    @patch("app.mod_api.models.BitStore.build_s3_key")
     def test_throw_500_if_not_able_to_get_data_from_s3(self, build_key, get_s3_object):
         build_key.return_value = ''
         get_s3_object.side_effect = Exception('failed')
