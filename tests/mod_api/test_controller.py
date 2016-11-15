@@ -469,3 +469,89 @@ class DataProxyTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(500, response.status_code)
         self.assertEqual(data['message'], 'failed')
+
+class EndToEndTestCase(unittest.TestCase):
+    auth_token_url = '/api/auth/token'
+    publisher = 'test_publisher'
+    package = 'test_package'
+    meta_data_url = '/api/package/%s/%s' % (publisher, package)
+    bitstore_url = '/api/auth/bitstore_upload'
+    finalize_url = '/api/package/%s/%s/finalize' % (publisher, package)
+    test_data_package = {'name':'test_package'}
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.user_id = 'trial_id'
+            self.user.email, self.user.user_name, self.user.secret = \
+                'test@test.com', 'test_publisher', 'super_secret'
+            db.session.add(self.user)
+            db.session.commit()
+
+    @patch('app.mod_api.models.MetaDataDB.create_or_update')
+    @patch('app.mod_api.models.MetaDataS3.get_metadata_body')
+    @patch('app.mod_api.models.MetaDataS3.generate_pre_signed_put_obj_url')
+    @patch('app.mod_api.models.MetaDataS3.save')
+    def test_publish_end_to_end(self, save, signed_url, body_mock, meta_mock):
+        
+        #Sending Username & Secret key
+        rv = self.client.post(self.auth_token_url,
+                              data=json.dumps({
+                                  'username': 'test_publisher',
+                                  'email': None,
+                                  'secret': 'super_secret'
+                              }),
+                              content_type='application/json')
+        #Testing Token received
+        self.assertIn('token', rv.data) 
+        self.assertEqual(200, rv.status_code)
+
+        #Sending recived token to server with Authentication Header
+        token = json.loads(rv.data)['token']
+        self.auth = "bearer %s" % token #Saving token for future use
+        save.return_value = None
+        rv = self.client.put(self.meta_data_url, headers=dict(Authorization=self.auth), data=json.dumps(self.test_data_package))
+        #Testing Authentication status
+        self.assertEqual({'status':'OK'}, json.loads(rv.data))
+        self.assertEqual(200, rv.status_code)
+
+        #Adding to Meta Data 
+        descriptor = {'name': 'test description'}
+        with self.app.app_context():
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            db.session.add(metadata)
+            db.session.commit()
+        rv = self.client.get('/api/package/%s' % (self.publisher,))
+        data = json.loads(rv.data)
+        #Testing Meta Data
+        self.assertEqual(len(data['data']), 1)
+        self.assertEqual(rv.status_code, 200)
+
+        #Get S3 link for uploading Data file
+        signed_url.return_value = 'https://trial_url'
+        rv = self.client.post(self.bitstore_url,
+                              data=json.dumps({
+                                  'publisher': self.publisher,
+                                  'package':self.package 
+                              }),
+                              content_type='application/json')
+        #Testing S3 link
+        self.assertEqual({'key':'https://trial_url'}, json.loads(rv.data))
+        self.assertEqual(200, rv.status_code)
+    
+        #Finalize
+        body_mock.return_value = json.dumps(dict(name='package'))
+        meta_mock.return_value = None
+        #Test Data
+        rv = self.client.get(self.finalize_url, headers=dict(Authorization=self.auth))
+        self.assertEqual(200, rv.status_code)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
