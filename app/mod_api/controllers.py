@@ -185,8 +185,14 @@ def get_metadata(publisher, package):
             return handle_error('DATA_NOT_FOUND',
                                 'No metadata found for the package',
                                 404)
-        metadata = json.loads(data.descriptor)
-        return jsonify({"data": metadata}), 200
+        metadata = {
+            'id': data.id,
+            'name': data.name,
+            'publisher': data.publisher,
+            'readme': data.readme or '',
+            'descriptor': json.loads(data.descriptor)
+        }
+        return jsonify(metadata), 200
     except Exception as e:
         return handle_error('GENERIC_ERROR', e.message, 500)
 
