@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import json
 import os
+
+from botocore.exceptions import ClientError, ParamValidationError
 from sqlalchemy import UniqueConstraint
 
 from sqlalchemy.dialects.postgresql import JSON
@@ -13,7 +15,7 @@ from flask import current_app as app
 from app.database import db
 
 
-class MetaDataS3(object):
+class BitStore(object):
     prefix = 'metadata'
 
     def __init__(self, publisher, package='', version='latest', body=None):
@@ -41,10 +43,24 @@ class MetaDataS3(object):
         return self.get_s3_object(key)
 
     def get_s3_object(self, key):
+        try:
+            bucket_name = app.config['S3_BUCKET_NAME']
+            s3_client = app.config['S3']
+            response = s3_client.get_object(Bucket=bucket_name, Key=key)
+            return response['Body'].read()
+        except ClientError or ParamValidationError:
+            return None
+
+    def get_readme_object_key(self):
+        readme_key = None
+        prefix = self.build_s3_key('')
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
-        response = s3_client.get_object(Bucket=bucket_name, Key=key)
-        return response['Body'].read()
+        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+        for content in response['Contents']:
+            if 'readme' in content['Key'].lower():
+                readme_key = content['Key']
+        return readme_key
 
     def get_all_metadata_name_for_publisher(self):
         bucket_name = app.config['S3_BUCKET_NAME']
@@ -133,6 +149,7 @@ class MetaDataDB(db.Model):
     descriptor = db.Column(JSON)
     status = db.Column(db.String(16))
     private = db.Column(db.Boolean)
+    readme = db.Column(db.TEXT)
 
     __table_args__ = (
         UniqueConstraint("name", "publisher"),
