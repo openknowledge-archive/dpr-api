@@ -14,52 +14,130 @@ from app.mod_api.models import User, MetaDataDB
 class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         self.publisher = 'demo'
-        self.package = 'finance-vix'
+        self.package = 'demo-package'
         self.app = create_app()
+        self.client = self.app.test_client()
 
-    def test_load(self):
-        datapackage = json.loads(open('fixtures/datapackage.json').read())
-        datapackage['owner'] = self.publisher
-        catalog = Catalog()
-        catalog.load([datapackage])
+    def test_construct_dataset(self):
+        descriptor = json.loads(open('fixtures/datapackage.json').read())
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            db.session.add(metadata)
+            db.session.commit()
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))    
+        catalog = Catalog(json.loads(response.data))
+        dataset = catalog.construct_dataset()
+        self.assertEqual(dataset.get('name'), descriptor.get('name'))
+        self.assertIn('localurl', dataset.get('resources')[0])
+        self.assertNotEqual(len(dataset.get('views')), 0)
 
-        self.assertIn('demo', catalog._cache)
-        self.assertIn(self.package, catalog._cache[self.publisher])
-        self.assertEqual(catalog._cache[self.publisher][self.package],
-                         datapackage)
+    def test_adds_local_urls(self):
+        descriptor = {
+            'name': 'test',
+            'resources': [{'name': 'first'},{'name': 'second'}]
+        }
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            db.session.add(metadata)
+            db.session.commit()
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))    
+        catalog = Catalog(json.loads(response.data))
+        dataset = catalog.construct_dataset('http://example.com/')
+        self.assertEqual(dataset.\
+                         get('resources')[0].get('localurl'),
+        'http://example.com/api/dataproxy/demo/demo-package/r/first.csv')
+        self.assertEqual(dataset.\
+                         get('resources')[1].get('localurl'),
+        'http://example.com/api/dataproxy/demo/demo-package/r/second.csv')
 
-    def test_get(self):
-        datapackage = json.loads(open('fixtures/datapackage.json').read())
-        datapackage['owner'] = self.publisher
-        catalog = Catalog()
-        catalog.load([datapackage])
-        result = catalog.get(self.publisher, self.package)
-        self.assertEqual(result, datapackage)
-        # test unknown owner
-        result = catalog.get('anon', self.package)
-        self.assertIsNone(result)
+    def test_adds_readme_if_there_is(self):
+        descriptor = {
+            'name': 'test',
+            'resources': []
+        }
+        readme = 'README'
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            metadata.readme= readme
+            db.session.add(metadata)
+            db.session.commit()
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))    
+        catalog = Catalog(json.loads(response.data))
+        dataset = catalog.construct_dataset()
+        self.assertEqual(dataset.get('readme'), 'README')
 
-    def test_query(self):
-        datapackage = json.loads(open('fixtures/datapackage.json').read())
-        datapackage['owner'] = self.publisher
-        catalog = Catalog()
-        catalog.load([datapackage])
+    def test_adds_empty_readme_if_there_is_not(self):
+        descriptor = {
+            'name': 'test',
+            'resources': []
+        }
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            db.session.add(metadata)
+            db.session.commit()
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))    
+        catalog = Catalog(json.loads(response.data))
+        dataset = catalog.construct_dataset()
+        self.assertEqual(dataset.get('readme'), '')
 
-        self.assertEqual(catalog.query(), [datapackage])
-
-    def test_by_owner(self):
-        datapackage = json.loads(open('fixtures/datapackage.json').read())
-        datapackage['owner'] = self.publisher
-        catalog = Catalog()
-        catalog.load([datapackage])
-
-        self.assertEqual(catalog.by_owner(self.publisher), [datapackage])
-        self.assertEqual(catalog.by_owner('anon'), [])
+    def test_get_views(self):
+        descriptor = {
+            'name': 'test',
+            'resources': [],
+            'views': [{"type": "graph"}]
+        }
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            db.session.add(metadata)
+            db.session.commit()
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))    
+        catalog = Catalog(json.loads(response.data))
+        views = catalog.get_views()
+        self.assertNotEqual(len(views), 0)
+        self.assertEqual(views[0].get('type'), 'graph')
+        
+    def test_get_views_if_views_dont_exist(self):
+        descriptor = {
+            'name': 'test',
+            'resources': []
+        }
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            db.session.add(metadata)
+            db.session.commit()
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))    
+        catalog = Catalog(json.loads(response.data))
+        views = catalog.get_views()
+        self.assertEqual(views, [])
 
 class WebsiteTestCase(unittest.TestCase):
     def setUp(self):
         self.publisher = 'demo'
-        self.package = 'finance-vix'
+        self.package = 'demo-package'
         self.app = create_app()
         self.client = self.app.test_client()
         with self.app.app_context():
