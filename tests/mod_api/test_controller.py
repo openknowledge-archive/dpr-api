@@ -535,7 +535,6 @@ class EndToEndTestCase(unittest.TestCase):
     def test_publish_end_to_end(self, save, signed_url, get_s3_object,
                                 get_metadata_body, create_or_update,
                                 get_readme_object_key):
-        
         # Sending Username & Secret key
         rv = self.client.post(self.auth_token_url,
                               data=json.dumps({
@@ -552,9 +551,10 @@ class EndToEndTestCase(unittest.TestCase):
         token = json.loads(rv.data)['token']
         self.auth = "bearer %s" % token  # Saving token for future use
         save.return_value = None
-        rv = self.client.put(self.meta_data_url, headers=dict(Authorization=self.auth), data=json.dumps(self.test_data_package))
+        rv = self.client.put(self.meta_data_url, headers=dict(Authorization=self.auth),
+                             data=json.dumps(self.test_data_package))
         # Testing Authentication status
-        self.assertEqual({'status':'OK'}, json.loads(rv.data))
+        self.assertEqual({'status': 'OK'}, json.loads(rv.data))
         self.assertEqual(200, rv.status_code)
 
         # Adding to Meta Data
@@ -579,15 +579,17 @@ class EndToEndTestCase(unittest.TestCase):
                               }),
                               content_type='application/json')
         # Testing S3 link
-        self.assertEqual({'key':'https://trial_url'}, json.loads(rv.data))
+        self.assertEqual({'key': 'https://trial_url'}, json.loads(rv.data))
         self.assertEqual(200, rv.status_code)
-    
+
         # Finalize
         get_metadata_body.return_value = json.dumps(dict(name='package'))
         create_or_update.return_value = None
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
-        rv = self.client.get(self.finalize_url, headers=dict(Authorization=self.auth))
+        rv = self.client.post(self.finalize_url,
+                              data=json.dumps(dict()),
+                              headers=dict(Authorization=self.auth))
         # Test Data
         self.assertEqual(200, rv.status_code)
 
