@@ -1,10 +1,16 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import json
 import os
 from sqlalchemy import UniqueConstraint
 
-from app.database import db
 from sqlalchemy.dialects.postgresql import JSON
 from flask import current_app as app
+from app.database import db
 
 
 class MetaDataS3(object):
@@ -45,9 +51,11 @@ class MetaDataS3(object):
         s3_client = app.config['S3']
         keys = []
         prefix = self.build_s3_prefix()
-        list_objects = s3_client.list_objects(Bucket=bucket_name, Prefix=prefix)
+        list_objects = s3_client.list_objects(Bucket=bucket_name,
+                                              Prefix=prefix)
         if list_objects is not None and 'Contents' in list_objects:
-            for ob in s3_client.list_objects(Bucket=bucket_name, Prefix=prefix)['Contents']:
+            for ob in s3_client.list_objects(Bucket=bucket_name,
+                                             Prefix=prefix)['Contents']:
                 keys.append(ob['Key'])
         return keys
 
@@ -57,14 +65,17 @@ class MetaDataS3(object):
                     package=self.package, version=self.version, path=path)
 
     def build_s3_prefix(self):
-        return "{prefix}/{publisher}".format(prefix=self.prefix, publisher=self.publisher)
+        return "{prefix}/{publisher}".\
+            format(prefix=self.prefix, publisher=self.publisher)
 
     def generate_pre_signed_put_obj_url(self, path):
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
         key = self.build_s3_key(path)
         params = {'Bucket': bucket_name, 'Key': key}
-        url = s3_client.generate_presigned_url('put_object', Params=params, ExpiresIn=3600)
+        url = s3_client.generate_presigned_url('put_object',
+                                               Params=params,
+                                               ExpiresIn=3600)
         return url
 
 

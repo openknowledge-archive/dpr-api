@@ -1,7 +1,13 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import json
 import os
-import sys
 from os.path import join, dirname, expanduser
+import sys
 from dotenv import load_dotenv
 
 env_variables = [
@@ -25,7 +31,8 @@ env_variables = [
 
 def write_aws_credential():
     key = "aws_access_key_id={k}\n".format(k=os.getenv('AWS_ACCESS_KEY_ID'))
-    secret = "aws_secret_access_key={k}\n".format(k=os.getenv('AWS_SECRET_ACCESS_KEY'))
+    secret = "aws_secret_access_key={k}\n".format(
+        k=os.getenv('AWS_SECRET_ACCESS_KEY'))
     region = "region={k}\n".format(k=os.getenv('AWS_REGION'))
     file_content = ['[default]\n', key, secret,
                     '[profile default]\n', 'output=json\n', region]
@@ -38,7 +45,7 @@ def write_env_for_event():
     current_dir = os.path.abspath('.')
     variables = []
     for ev in env_variables:
-        variables.append("{var}={value}\n".format(var=ev,value=os.getenv(ev)))
+        variables.append("{var}={value}\n".format(var=ev, value=os.getenv(ev)))
     with open(current_dir + '/.cred', 'w') as f:
         f.writelines(variables)
 
@@ -57,7 +64,7 @@ if __name__ == "__main__":
         dot_env_path = join(dirname(__file__), './.env')
         load_dotenv(dot_env_path)
     except Exception as e:
-        print e.message
+        print (e.message)
 
     with open(current_dir + '/zappa_settings.json', 'r') as f:
         json_data = json.load(f)

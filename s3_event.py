@@ -1,6 +1,12 @@
-import boto3
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import json
 import logging
+import boto3
 import psycopg2
 
 logger = logging.getLogger()
@@ -29,7 +35,8 @@ def write_to_rds_on_s3_metadata_put(event, context):
                         u'sourceIPAddress': u'125.18.97.185'
                     },
                 u's3': {
-                    u'configurationId': u'arn:aws:lambda:us-west-2:679343311282:function:dpr-api-stage',
+                    u'configurationId': u'arn:aws:lambda:us-west-2:\n
+                        679343311282:function:dpr-api-stage',
                     u'object': {
                         u'eTag': u'536f64155a6bde60e5ef304e5c6aa8f3',
                         u'sequencer': u'0058215D24A159AD48',
@@ -49,7 +56,8 @@ def write_to_rds_on_s3_metadata_put(event, context):
                         },
                     u'responseElements':
                         {
-                            u'x-amz-id-2': u'4qPPxycXBM8Kx4SOzvhbOkAKqXpXBAy47U3sUtj9PzrCW4qTWiDFXdZmXBlmsp02',
+                            u'x-amz-id-2': u'4qPPxycXBM8Kx4SOzvhbOkAK\n
+                                qXpXBAy47U3sUtj9PzrCW4qTWiDFXdZmXBlmsp02',
                             u'x-amz-request-id': u'9800FAFB4182CD48'
                         },
                     u'awsRegion': u'us-west-2',
@@ -65,7 +73,7 @@ def write_to_rds_on_s3_metadata_put(event, context):
 
     environment_variables = get_env()
 
-    print environment_variables
+    print (environment_variables)
 
     DSN = environment_variables.get("SQLALCHEMY_DATABASE_URI")
     AWS_ACCESS_KEY_ID = environment_variables.get('AWS_ACCESS_KEY_ID')

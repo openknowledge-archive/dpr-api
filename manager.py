@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask import current_app, json
@@ -40,10 +46,12 @@ def dropdb():
 def populate():
     data = json.loads(open('fixtures/datapackage.json').read())
     metadata = MetaDataDB("finance-vix", "demo")
-    metadata.descriptor, metadata.status, metadata.private = json.dumps(data), 'active', False
+    metadata.descriptor, metadata.status, metadata.private \
+        = json.dumps(data), 'active', False
     db.session.add(metadata)
     user = models.User()
-    user.user_id, user.email, user.user_name, user.secret = "auth0|123", "test@gmail.com", "test", "secret"
+    user.user_id, user.email, user.user_name, user.secret \
+        = "auth0|123", "test@gmail.com", "test", "secret"
 
     db.session.add(user)
     db.session.commit()
