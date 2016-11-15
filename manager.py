@@ -45,9 +45,10 @@ def dropdb():
 @manager.command
 def populate():
     data = json.loads(open('fixtures/datapackage.json').read())
-    metadata = MetaDataDB("finance-vix", "demo")
-    metadata.descriptor, metadata.status, metadata.private \
-        = json.dumps(data), 'active', False
+    readme = open('fixtures/README.md').read()
+    metadata = MetaDataDB("demo-package", "demo")
+    metadata.descriptor, metadata.status, metadata.private, metadata.readme\
+        = json.dumps(data), 'active', False, readme
     db.session.add(metadata)
     user = models.User()
     user.user_id, user.email, user.user_name, user.secret \

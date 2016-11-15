@@ -1,6 +1,6 @@
 {
-  "name": "finance-vix",
-  "title": "VIX - CBOE Volatility Index",
+  "name": "demo-package",
+  "title": "DEMO - CBOE Volatility Index",
   "homepage": "http://www.cboe.com/micro/VIX/",
   "version": "0.1.0",
   "license": "PDDL-1.0",
@@ -10,8 +10,8 @@
   }],
   "resources": [
     {
-      "name": "vix-daily",
-      "path": "data/vix-daily.csv",
+      "name": "demo-resource",
+      "path": "data/demo-resource.csv",
       "format": "csv",
       "mediatype": "text/csv",
       "schema": {
@@ -22,22 +22,22 @@
             "description": ""
           },
           {
-            "name": "VIXOpen",
+            "name": "DEMOOpen",
             "type": "number",
             "description": ""
           },
           {
-            "name": "VIXHigh",
+            "name": "DEMOHigh",
             "type": "number",
             "description": ""
           },
           {
-            "name": "VIXLow",
+            "name": "DEMOLow",
             "type": "number",
             "description": ""
           },
           {
-            "name": "VIXClose",
+            "name": "DEMOClose",
             "type": "number",
             "description": ""
           }
@@ -53,7 +53,7 @@
       "state": {
         "graphType": "lines",
         "group": "Date",
-        "series": [ "VIXClose" ]
+        "series": [ "DEMOClose" ]
       }
     }
   ]
