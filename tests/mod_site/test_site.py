@@ -9,7 +9,7 @@ from flask import json
 import unittest
 from app.database import db
 from app.mod_site.models import Catalog
-from app.mod_api.models import User, MetaDataDB
+from app.mod_api.models import User, MetaDataDB, Publisher
 
 class CatalogTestCase(unittest.TestCase):
     def setUp(self):
@@ -23,9 +23,11 @@ class CatalogTestCase(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            metadata = MetaDataDB(self.package, self.publisher)
+            publisher = Publisher(name=self.publisher)
+            metadata = MetaDataDB(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
-            db.session.add(metadata)
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))    
@@ -43,9 +45,11 @@ class CatalogTestCase(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            metadata = MetaDataDB(self.package, self.publisher)
+            publisher = Publisher(name=self.publisher)
+            metadata = MetaDataDB(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
-            db.session.add(metadata)
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))    
@@ -67,10 +71,12 @@ class CatalogTestCase(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            metadata = MetaDataDB(self.package, self.publisher)
+            publisher = Publisher(name=self.publisher)
+            metadata = MetaDataDB(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
-            metadata.readme= readme
-            db.session.add(metadata)
+            metadata.readme = readme
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))    
@@ -86,9 +92,11 @@ class CatalogTestCase(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            metadata = MetaDataDB(self.package, self.publisher)
+            publisher = Publisher(name=self.publisher)
+            metadata = MetaDataDB(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
-            db.session.add(metadata)
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))    
@@ -105,9 +113,11 @@ class CatalogTestCase(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            metadata = MetaDataDB(self.package, self.publisher)
+            publisher = Publisher(name=self.publisher)
+            metadata = MetaDataDB(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
-            db.session.add(metadata)
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))    
@@ -124,9 +134,11 @@ class CatalogTestCase(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            metadata = MetaDataDB(self.package, self.publisher)
+            publisher = Publisher(name=self.publisher)
+            metadata = MetaDataDB(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
-            db.session.add(metadata)
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))    
@@ -155,9 +167,11 @@ class WebsiteTestCase(unittest.TestCase):
     def test_data_package_page(self):
         descriptor = json.loads(open('fixtures/datapackage.json').read())
         with self.app.app_context():
-            metadata = MetaDataDB(self.package, self.publisher)
+            publisher = Publisher(name=self.publisher)
+            metadata = MetaDataDB(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
-            db.session.add(metadata)
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
             db.session.commit()
         rv = self.client.get('/{publisher}/{package}'.\
                              format(publisher=self.publisher,
@@ -179,9 +193,11 @@ class WebsiteTestCase(unittest.TestCase):
     def test_data_package_page_load_without_views(self):
         descriptor = {"data": [], "resources": []}
         with self.app.app_context():
-            metadata = MetaDataDB(self.package, self.publisher)
+            publisher = Publisher(name=self.publisher)
+            metadata = MetaDataDB(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
-            db.session.add(metadata)
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
             db.session.commit()
         rv = self.client.get('/{publisher}/{package}'.\
                              format(publisher=self.publisher,

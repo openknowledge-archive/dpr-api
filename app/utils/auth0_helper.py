@@ -13,7 +13,7 @@ import jwt
 token = None
 
 
-def get_user_info_with_code(code):
+def get_user_info_with_code(code, redirect_uri):
     json_header = {'content-type': 'application/json'}
 
     token_url = "https://{domain}/oauth/token".\
@@ -21,7 +21,7 @@ def get_user_info_with_code(code):
     token_payload = {
         'client_id': app.config['AUTH0_CLIENT_ID'],
         'client_secret': app.config['AUTH0_CLIENT_SECRET'],
-        'redirect_uri': app.config['AUTH0_CALLBACK_URL'],
+        'redirect_uri': redirect_uri,
         'code': code,
         'grant_type': 'authorization_code'
     }
