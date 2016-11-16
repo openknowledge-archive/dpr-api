@@ -92,7 +92,6 @@ def datapackage_show(publisher, package):
             return "404 Not Found", 404
     except:
         pass
-    
     catalog = Catalog(metadata)
     dataset = catalog.construct_dataset(request.url_root)
     dataViews = catalog.get_views()
