@@ -37,7 +37,6 @@ class BaseConfig(object):
     AUTH0_CLIENT_SECRET = ""
     AUTH0_DOMAIN = ""
     AUTH0_DB_NAME = ""
-    AUTH0_CALLBACK_URL = ""
     AUTH0_API_AUDIENCE = ""
 
     SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/dpr_db'
@@ -62,9 +61,9 @@ class DevelopmentConfig(BaseConfig):
                        'FLASKS3_BUCKET_NAME', 'AWS_ACCESS_KEY_ID',
                        'AWS_SECRET_ACCESS_KEY', 'AUTH0_CLIENT_ID',
                        'AUTH0_CLIENT_SECRET', 'AUTH0_DOMAIN',
-                       'AUTH0_DB_NAME', 'AUTH0_CALLBACK_URL',
-                       'AUTH0_API_AUDIENCE', 'SQLALCHEMY_DATABASE_URI',
-                       'S3_BUCKET_NAME', 'FLASKS3_BUCKET_NAME']
+                       'AUTH0_DB_NAME', 'AUTH0_API_AUDIENCE',
+                       'SQLALCHEMY_DATABASE_URI', 'S3_BUCKET_NAME',
+                       'FLASKS3_BUCKET_NAME']
     try:
         dot_env_path = join(dirname(__file__), '../.env')
         load_dotenv(dot_env_path)
@@ -86,7 +85,6 @@ class DevelopmentConfig(BaseConfig):
     AUTH0_CLIENT_SECRET = os.environ.get('AUTH0_CLIENT_SECRET')
     AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
     AUTH0_DB_NAME = os.environ.get('AUTH0_DB_NAME')
-    AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
     AUTH0_API_AUDIENCE = os.environ.get('AUTH0_API_AUDIENCE')
 
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")

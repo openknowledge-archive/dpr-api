@@ -1,5 +1,6 @@
 {
     "stage": {
+        "project_name": "dpr-api",
         "s3_bucket": "neo20iitkgp",
         "app_function": "dpr.application",
         "aws_region": "us-west-2",

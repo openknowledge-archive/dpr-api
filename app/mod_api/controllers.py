@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify, \
     _request_ctx_stack, render_template
 from flask import current_app as app
 from flask import redirect, Response
-from app.mod_api.models import BitStore, User, MetaDataDB
+from app.mod_api.models import BitStore, User, MetaDataDB, Publisher
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
 from app.utils.auth import requires_auth
 from app.utils.auth0_helper import get_user_info_with_code, \
@@ -63,12 +63,12 @@ def save_metadata(publisher, package):
     try:
         user = _request_ctx_stack.top.current_user
         user_id = user['user']
-        user = User.query.filter_by(user_id=user_id).first()
+        user = User.query.filter_by(id=user_id).first()
         if user is not None:
-            if user.user_name == publisher:
+            if user.name == publisher:
                 metadata = BitStore(publisher=publisher,
-                                      package=package,
-                                      body=request.data)
+                                    package=package,
+                                    body=request.data)
                 is_valid = metadata.validate()
                 if not is_valid:
                     return handle_error('INVALID_DATA',
@@ -123,14 +123,14 @@ def finalize_metadata(publisher, package):
     try:
         user = _request_ctx_stack.top.current_user
         user_id = user['user']
-        user = User.query.filter_by(user_id=user_id).first()
+        user = User.query.filter_by(id=user_id).first()
         if user is not None:
-            if user.user_name == publisher:
+            if user.name == publisher:
                 bit_store = BitStore(publisher, package)
                 body = bit_store.get_metadata_body()
                 if body is not None:
                     readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
-                    MetaDataDB.create_or_update(name=package, publisher=publisher,
+                    MetaDataDB.create_or_update(name=package, publisher_name=publisher,
                                                 descriptor=body, readme=readme)
                     return jsonify({"status": "OK"}), 200
 
@@ -179,8 +179,9 @@ def get_metadata(publisher, package):
             description: No metadata found for the package
     """
     try:
-        data = MetaDataDB.query.filter_by(name=package,
-                                          publisher=publisher).first()
+        data = MetaDataDB.query.join(Publisher).\
+            filter(Publisher.name == publisher, MetaDataDB.name == package).\
+            first()
         if data is None:
             return handle_error('DATA_NOT_FOUND',
                                 'No metadata found for the package',
@@ -188,7 +189,7 @@ def get_metadata(publisher, package):
         metadata = {
             'id': data.id,
             'name': data.name,
-            'publisher': data.publisher,
+            'publisher': data.publisher.name,
             'readme': data.readme or '',
             'descriptor': json.loads(data.descriptor)
         }
@@ -296,8 +297,9 @@ def get_all_metadata_names_for_publisher(publisher):
             description: No metadata found for the package
     """
     try:
-        metadata = MetaDataDB.query.with_entities(MetaDataDB.name).\
-            filter_by(publisher=publisher).all()
+        metadata = MetaDataDB.query.join(Publisher).\
+            with_entities(MetaDataDB.name).\
+            filter(Publisher.name == publisher).all()
         if len(metadata) is 0:
             return handle_error('DATA_NOT_FOUND',
                                 'No metadata found for the package',
@@ -340,7 +342,7 @@ def callback_handling():
     """
     try:
         code = request.args.get('code')
-        user_info = get_user_info_with_code(code)
+        user_info = get_user_info_with_code(code, request.base_url)
         user_id = user_info['user_id']
 
         jwt_helper = JWTHelper(app.config['API_KEY'], user_id)
@@ -416,14 +418,14 @@ def get_jwt():
                                 'secret can not be empty',
                                 400)
         elif user_name is not None:
-            user = User.query.filter_by(user_name=user_name).first()
+            user = User.query.filter_by(name=user_name).first()
             if user is None:
                 return handle_error('USER_NOT_FOUND',
                                     'user does not exists',
                                     404)
             if secret == user.secret:
                 verify = True
-                user_id = user.user_id
+                user_id = user.id
         elif email is not None:
             user = User.query.filter_by(email=email).first()
             if user is None:
@@ -432,7 +434,7 @@ def get_jwt():
                                     404)
             if secret == user.secret:
                 verify = True
-                user_id = user.user_id
+                user_id = user.id
         if verify:
             return jsonify({'token': JWTHelper(app.config['API_KEY'],
                                                user_id).encode()}),200
