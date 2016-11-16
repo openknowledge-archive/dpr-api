@@ -7,27 +7,28 @@ from __future__ import unicode_literals
 from flask import current_app as app
 
 class Catalog(object):
-    def __init__(self):
-        self._list = []
-        self._cache = {}
+    def __init__(self, metadata):
+        self.metadata = metadata
+        self.publisher = metadata.get('publisher')
+        self.package = metadata.get('name')
+        self.readme = metadata.get('readme')
+        self.descriptor = metadata.get('descriptor')
+        self.resources = self.descriptor.get('resources') or []
+    
+    def get_views(self):
+        return self.descriptor.get('views') or []
 
-    def load(self, datapackages):
-        self._list = datapackages
-        for dp in datapackages:
-            if dp['owner'] not in self._cache:
-                self._cache[dp['owner']] = {}
-            self._cache[dp['owner']][dp['name']] = dp
+    def construct_dataset(self, url_root=''):
+        clone = self.clone(self.resources)
+        for idx in range(len(self.resources)):
+            clone[idx]['localurl'] = url_root+\
+            'api/dataproxy/{publisher}/{package}/r/{resource}.csv'.\
+            format(publisher=self.publisher,
+                   package=self.package,
+                   resource=self.resources[idx]['name'])
+        self.descriptor['resources'] = clone
+        self.descriptor['readme'] = self.readme
+        return self.descriptor
 
-    def get(self, owner, id):
-        if owner in self._cache:
-            return self._cache[owner][id]
-
-    def query(self):
-        return self._list
-
-    def by_owner(self, owner):
-        result = []
-        if owner in self._cache:
-            for dp in self._cache[owner]:
-                result.append(self._cache[owner][dp])
-        return result
+    def clone(self, clone):
+        return clone[:]

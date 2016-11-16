@@ -13,7 +13,6 @@ from app.mod_api.models import User
 
 
 mod_site_blueprint = Blueprint('site', __name__)
-catalog = Catalog()
 
 
 @mod_site_blueprint.route("/", methods=["GET", "POST"])
@@ -93,18 +92,10 @@ def datapackage_show(publisher, package):
             return "404 Not Found", 404
     except:
         pass
-
-    dataset = metadata['data']
-    dataset['owner'] = publisher
-    resources = dataset['resources']
-    try:
-        dataViews = dataset['views']
-    except:
-        dataViews = []
-    for res in resources:
-        res['localurl'] = request.url_root+\
-        'api/dataproxy/{publisher}/{package}/r/{resource}.csv'.\
-        format(publisher=publisher, package=package, resource=res['name'])
+    
+    catalog = Catalog(metadata)
+    dataset = catalog.construct_dataset(request.url_root)
+    dataViews = catalog.get_views()
 
     return render_template("dataset.html", dataset=dataset, showDataApi=True,
                            jsonDataPackage=dataset, dataViews=dataViews,

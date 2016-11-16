@@ -162,7 +162,39 @@ class GetMetaDataTestCase(unittest.TestCase):
                                    (self.publisher, self.package))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['data']['name'], 'test description')
+        
+    def test_return_all_metadata_is_there(self):
+        descriptor = {'name': 'test description'}
+        readme = 'README'
+        with self.app.app_context():
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            metadata.readme = readme
+            db.session.add(metadata)
+            db.session.commit()
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(data), 5)
+        self.assertEqual(data['descriptor']['name'], 'test description')
+        self.assertEqual(data['readme'], 'README')
+        self.assertEqual(data['id'], 1)
+        self.assertEqual(data['name'], self.package)
+        self.assertEqual(data['publisher'], self.publisher)
+
+    def test_return_empty_string_if_readme_not_there(self):
+        descriptor = {'name': 'test description'}
+        with self.app.app_context():
+            metadata = MetaDataDB(self.package, self.publisher)
+            metadata.descriptor = json.dumps(descriptor)
+            db.session.add(metadata)
+            db.session.commit()
+        response = self.client.get('/api/package/%s/%s'%\
+                                   (self.publisher, self.package))
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 200) 
+        self.assertEqual(data['readme'], '')
 
     def test_return_generic_error_if_descriptor_is_not_json(self):
         descriptor = 'test description'
