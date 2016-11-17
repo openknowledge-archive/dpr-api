@@ -237,7 +237,10 @@ class UserTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
 
-            user = User(name='test_user_id')
+            user = User(id=11,
+                        name='test_user_id',
+                        secret='supersecret',
+                        auth0_id="123|auth0")
             publisher = Publisher(name='test_pub_id')
             association = PublisherUser(role="OWNER")
             association.publisher = publisher
@@ -247,13 +250,32 @@ class UserTestCase(unittest.TestCase):
             db.session.commit()
 
     def test_serialize(self):
-        user = User.query.filter_by(name='test_user_id').one().serialize
+        user = User.query.filter_by(name='test_user_id').one()\
+            .serialize
         self.assertEqual('test_user_id', user['name'])
 
     def test_user_role_on_publisher(self):
         user = User.query.filter_by(name='test_user_id').one()
         self.assertEqual(len(user.publishers), 1)
         self.assertEqual(user.publishers[0].role, 'OWNER')
+
+    def test_user_creation_from_outh0_response(self):
+        user_info = dict(email="test@test.com",
+                         username="test",
+                         user_id="124|auth0")
+        user = User.create_or_update_user_from_callback(user_info)
+        self.assertEqual(user.name, 'test')
+
+    def test_update_secret_if_it_is_supersecret(self):
+        user_info = dict(email="test@test.com",
+                         username="test",
+                         user_id="123|auth0")
+        user = User.create_or_update_user_from_callback(user_info)
+        self.assertNotEqual('supersecret', user.secret)
+
+    def test_get_userinfo_by_id(self):
+        self.assertEqual(User.get_userinfo_by_id(11).name, 'test_user_id')
+        self.assertIsNone(User.get_userinfo_by_id(2))
 
     def tearDown(self):
         with self.app.app_context():
