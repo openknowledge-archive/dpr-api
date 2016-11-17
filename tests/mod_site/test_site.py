@@ -6,6 +6,9 @@ from __future__ import unicode_literals
 
 from app import create_app
 from flask import json
+from mock import patch
+from contextlib import nested
+import re
 import unittest
 from app.database import db
 from app.mod_site.models import Catalog
@@ -216,6 +219,80 @@ class WebsiteTestCase(unittest.TestCase):
         self.assertNotIn('handsontable', rv.data)
         # cheks graph not loaded
         self.assertNotIn('vega', rv.data)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+class SignupEndToEndTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        self.signup_url_for_auth0 = "api/auth/login"
+        self.auth0_callback = 'api/auth/callback?code=xyz'
+        self.env_variables = {
+            'AUTH0_DOMAIN': 'test_auth0_domain_xyz',
+            'AUTH0_CLIENT_ID': 'test_client_id_xyz',
+            'SERVER_NAME': 'server',
+        }
+        self.auth0_url = "https://test_auth0_domain_xyz/login?client=test_client_id_xyz"
+
+        # Auth0 Callback info
+        self.auth0_user_info = {
+            'user_id': 'new_test_id',
+            'username': 'test_username_xyz',
+            'email': 'test@mail.com'
+        }
+
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            # Mocked to DB
+            self.user = User()
+            self.user.user_id = self.auth0_user_info['user_id']
+            self.user.email = self.auth0_user_info['email']
+            self.user.name = self.auth0_user_info['username']
+            db.session.add(self.user)
+            db.session.commit()
+
+    def test_end_to_end(self):
+        # Loading Home
+        rv = self.client.get('/')
+        self.assertNotIn('404', rv.data.decode("utf8"))
+
+        # Sign Up button
+        self.assertIn('Sign Up', rv.data.decode("utf8"))
+
+        search_signup_url = re.search(
+            'href="(.*?)".*Sign Up', rv.data.decode("utf8"))
+        signup_up_url = search_signup_url.groups()[0]
+
+        # Click Signup Button & Mocking Auth0 Parameter for SignUp
+        with patch.dict(self.app.config, self.env_variables):
+            rv = self.client.get(signup_up_url)
+            self.assertIn(self.auth0_url, rv.data.decode("utf8"))
+
+            # Checking Redirect to Auth0 Url
+            self.assertEqual(rv.status_code, 302)
+
+        with nested(patch('app.mod_api.controllers.get_user_info_with_code'),
+                    patch('app.mod_api.controllers.JWTHelper'),
+                    patch('app.mod_api.models.User.create_or_update_user_from_callback')) \
+                as (get_user_with_code, JWTHelper, create_user):
+
+            # Mocking Auth0 user info & Return value for Dashboard
+            get_user_with_code('xyz').side_effect = self.auth0_user_info
+            # create_user.return_value = self.user
+
+            rv = self.client.get(self.auth0_callback)
+            # Saved to User DB
+            self.assertEqual(create_user.call_count, 1)
+            self.assertEqual(JWTHelper.call_count, 1)
+            # Loading Dashbord
+            self.assertEqual(rv.status_code, 200)
+            self.assertIn('Dashboard', rv.data.decode('utf8'))
 
     def tearDown(self):
         with self.app.app_context():
