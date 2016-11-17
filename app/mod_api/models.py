@@ -143,11 +143,10 @@ class User(db.Model):
             user = User()
             user.email = user_info['email']
             user.secret = os.urandom(24).encode('hex')
-            user.user_id = user_info['user_id']
-            user.user_name = user_info['username']
+            user.name = user_info['username']
             user.auth0_id = auth0_id
 
-            publisher = Publisher(name=user.user_name)
+            publisher = Publisher(name=user.name)
             association = PublisherUser(role="OWNER")
             association.publisher = publisher
             user.publishers.append(association)
