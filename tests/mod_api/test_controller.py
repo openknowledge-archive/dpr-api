@@ -268,7 +268,8 @@ class GetS3SignedUrlTestCase(unittest.TestCase):
         rv = self.client.post(self.url,
                               data=json.dumps({
                                   'publisher': 'test_publisher',
-                                  'package': None
+                                  'package': None,
+                                  'md5': 'm'
                               }),
                               content_type='application/json')
         self.assertEqual(400, rv.status_code)
@@ -277,7 +278,8 @@ class GetS3SignedUrlTestCase(unittest.TestCase):
         rv = self.client.post(self.url,
                               data=json.dumps({
                                   'publisher': None,
-                                  'package': 'test_package'
+                                  'package': 'test_package',
+                                  'md5': 'm'
                               }),
                               content_type='application/json')
         self.assertEqual(400, rv.status_code)
@@ -288,7 +290,8 @@ class GetS3SignedUrlTestCase(unittest.TestCase):
         response = self.client.post(self.url,
                                     data=json.dumps({
                                         'publisher': 'test_publisher',
-                                        'package': 'test_package'
+                                        'package': 'test_package',
+                                        'md5': 'm'
                                     }),
                                     content_type='application/json')
         data = json.loads(response.data)
@@ -620,7 +623,8 @@ class EndToEndTestCase(unittest.TestCase):
         rv = self.client.post(self.bitstore_url,
                               data=json.dumps({
                                   'publisher': self.publisher,
-                                  'package': self.package
+                                  'package': self.package,
+                                  'md5': ''
                               }),
                               content_type='application/json')
         # Testing S3 link
