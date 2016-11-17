@@ -1,5 +1,6 @@
 flask==0.11
 Flask-SQLAlchemy==2.1
+Flask-Markdown==0.3
 zappa==0.28.2
 boto3==1.4.1
 flasgger==0.5.13
