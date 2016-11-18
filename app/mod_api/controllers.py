@@ -503,13 +503,17 @@ def get_s3_signed_url():
         publisher = data.get('publisher', None)
         package = data.get('package', None)
         path = data.get('path', None)
+        md5 = data.get('md5', None)
         if publisher is None or package is None:
             return handle_error('INVALID_INPUT',
                                 'publisher or package can not be empty',
                                 400)
-
+        if md5 is None:
+            return handle_error('INVALID_INPUT',
+                                'md5 hash can not be empty',
+                                400)
         metadata = BitStore(publisher=publisher, package=package)
-        url = metadata.generate_pre_signed_put_obj_url(path)
+        url = metadata.generate_pre_signed_put_obj_url(path, md5)
         return jsonify({'key': url}), 200
     except Exception as e:
         app.logger.error(e)

@@ -87,11 +87,11 @@ class BitStore(object):
         return "{prefix}/{publisher}".\
             format(prefix=self.prefix, publisher=self.publisher)
 
-    def generate_pre_signed_put_obj_url(self, path):
+    def generate_pre_signed_put_obj_url(self, path, md5):
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
         key = self.build_s3_key(path)
-        params = {'Bucket': bucket_name, 'Key': key}
+        params = {'Bucket': bucket_name, 'Key': key, 'ContentMD5': md5}
         url = s3_client.generate_presigned_url('put_object',
                                                Params=params,
                                                ExpiresIn=3600)

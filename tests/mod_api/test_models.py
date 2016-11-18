@@ -100,7 +100,7 @@ class BitStoreTestCase(unittest.TestCase):
             metadata = BitStore(publisher="pub_test",
                                 package="test_package",
                                 body='hi')
-            url = metadata.generate_pre_signed_put_obj_url('datapackage.json')
+            url = metadata.generate_pre_signed_put_obj_url('datapackage.json', 'm')
             parsed = urlparse(url)
             print ('s3-{region}.amazonaws.com'.\
                    format(region=self.app.config['AWS_REGION']))
