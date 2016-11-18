@@ -161,11 +161,11 @@ class WebsiteTestCase(unittest.TestCase):
 
     def test_home_page(self):
         rv = self.client.get('/')
-        self.assertNotIn('404', rv.data.decode("utf8"))
+        self.assertNotEqual(404, rv.status_code)
 
     def test_logout_page(self):
         rv = self.client.get('/logout')
-        self.assertNotIn('404', rv.data)
+        self.assertNotEqual(404, rv.status_code)
 
     def test_data_package_page(self):
         descriptor = json.loads(open('fixtures/datapackage.json').read())
@@ -179,7 +179,7 @@ class WebsiteTestCase(unittest.TestCase):
         rv = self.client.get('/{publisher}/{package}'.\
                              format(publisher=self.publisher,
                                     package=self.package))
-        self.assertNotIn('404', rv.data.decode("utf8"))
+        self.assertNotEqual(404, rv.status_code)
         self.assertIn('Data Files', rv.data.decode("utf8"))
         # cheks handsontable load
         self.assertIn('handsontable', rv.data.decode("utf8"))
@@ -187,7 +187,7 @@ class WebsiteTestCase(unittest.TestCase):
         self.assertIn('vega', rv.data.decode("utf8"))
 
         rv = self.client.get('/non-existing/demo-package')
-        self.assertIn('404', rv.data)
+        self.assertEqual(404, rv.status_code)
         # cheks handsontable not loaded
         self.assertNotIn('handsontable', rv.data)
         # cheks graph not loaded
@@ -205,7 +205,7 @@ class WebsiteTestCase(unittest.TestCase):
         rv = self.client.get('/{publisher}/{package}'.\
                              format(publisher=self.publisher,
                                     package=self.package))
-        self.assertNotIn('404', rv.data.decode("utf8"))
+        self.assertNotEqual(404, rv.status_code)
         self.assertIn('Data Files', rv.data.decode("utf8"))
         # cheks handsontable load
         self.assertIn('handsontable', rv.data.decode("utf8"))
@@ -214,7 +214,7 @@ class WebsiteTestCase(unittest.TestCase):
 
 
         rv = self.client.get('/non-existing/demo-package')
-        self.assertIn('404', rv.data)
+        self.assertEqual(404, rv.status_code)
         # cheks handsontable not loaded
         self.assertNotIn('handsontable', rv.data)
         # cheks graph not loaded
@@ -249,13 +249,6 @@ class SignupEndToEndTestCase(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            # Mocked to DB
-            #self.user = User()
-            #self.user.user_id = self.auth0_user_info['user_id']
-            #self.user.email = self.auth0_user_info['email']
-            #self.user.name = self.auth0_user_info['username']
-            # db.session.add(self.user)
-            # db.session.commit()
 
     @contextmanager
     def captured_templates(self, app):
