@@ -34,7 +34,7 @@
     <div class="col-md-8">
       <img src="{{dataset.image or 'https://assets.okfn.org/p/data/img/icon-128.png'}}"
         alt="{{dataset.title}}" class="logo" />
-      <div class="description">{{dataset.description}} &mdash; <a href="#readme">Read more</a></div>
+      <div class="description">{{dataset.readme|truncate}} <a href="#readme">Read more</a></div>
 
       <div class="actions">
         <div class="btn-group">
