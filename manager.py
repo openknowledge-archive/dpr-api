@@ -48,7 +48,7 @@ def dropdb():
 def populate():
 
     user_name, full_name, email = 'admin', 'Test Admin', 'test@test.com'
-    auth0_id = 'abc' #populate_auth0(user_name, full_name, email)
+    auth0_id = populate_auth0(user_name, full_name, email)
     populate_db(auth0_id, email, user_name, full_name)
     populate_data(user_name)
 
@@ -57,7 +57,6 @@ def populate_auth0(user_name, full_name, email):
     responses = auth0_helper.search_user('username', user_name)
     if len(responses) > 0:
         for response in responses:
-            print (response)
             auth0_helper.delete_user(response['user_id'])
     user_create = auth0_helper.create_user(email, full_name,
                                            user_name, 'Admin123')
