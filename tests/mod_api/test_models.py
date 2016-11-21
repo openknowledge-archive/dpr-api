@@ -43,8 +43,8 @@ class BitStoreTestCase(unittest.TestCase):
             metadata.save()
             obs_list = list(s3.list_objects(Bucket=bucket_name, Prefix=key).\
                             get('Contents'))
-            assert 1 == len(obs_list)
-            assert key == obs_list[0]['Key']
+            self.assertEqual(1, len(obs_list))
+            self.assertEqual(key, obs_list[0]['Key'])
 
     @mock_s3
     def test_get_metadata_body(self):
@@ -59,7 +59,7 @@ class BitStoreTestCase(unittest.TestCase):
                 Bucket=bucket_name,
                 Key=metadata.build_s3_key('datapackage.json'),
                 Body=metadata.body)
-            assert metadata.body == metadata.get_metadata_body()
+            self.assertEqual(metadata.body, metadata.get_metadata_body())
 
     @mock_s3
     def test_get_all_metadata_name_for_publisher(self):
@@ -74,7 +74,7 @@ class BitStoreTestCase(unittest.TestCase):
                 Bucket=bucket_name,
                 Key=metadata.build_s3_key('datapackage.json'),
                 Body=metadata.body)
-            assert 1 == len(metadata.get_all_metadata_name_for_publisher())
+            self.assertEqual(1, len(metadata.get_all_metadata_name_for_publisher()))
 
     @mock_s3
     def test_get_empty_metadata_name_for_publisher(self):
@@ -88,7 +88,7 @@ class BitStoreTestCase(unittest.TestCase):
             s3.put_object(Bucket=bucket_name,
                           Key='test/key.json',
                           Body=metadata.body)
-            assert 0 == len(metadata.get_all_metadata_name_for_publisher())
+            self.assertEqual(0, len(metadata.get_all_metadata_name_for_publisher()))
 
     @mock_s3
     def test_generate_pre_signed_put_obj_url(self):
@@ -102,9 +102,7 @@ class BitStoreTestCase(unittest.TestCase):
                                 body='hi')
             url = metadata.generate_pre_signed_put_obj_url('datapackage.json', 'm')
             parsed = urlparse(url)
-            print ('s3-{region}.amazonaws.com'.\
-                   format(region=self.app.config['AWS_REGION']))
-            assert parsed.netloc == 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION'])
+            self.assertEqual(parsed.netloc, 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION']))
 
     @mock_s3
     def test_get_readme_object_key(self):

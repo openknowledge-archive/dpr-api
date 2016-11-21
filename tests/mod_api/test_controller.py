@@ -60,8 +60,8 @@ class AuthTokenTestCase(unittest.TestCase):
     def test_throw_404_if_user_id_do_not_exists(self):
         rv = self.client.post(self.auth_token_url,
                               data=json.dumps({
-                                  'username': "not_found_user",
-                                  'email': None,
+                                  'username': None,
+                                  'email': 'test1@test.com',
                                   'secret': 'super_secret'
                               }),
                               content_type='application/json')
@@ -72,8 +72,8 @@ class AuthTokenTestCase(unittest.TestCase):
     def test_throw_404_if_user_email_do_not_exists(self):
         rv = self.client.post(self.auth_token_url,
                               data=json.dumps({
-                                  'username': None,
-                                  'email': 'test1@test.com',
+                                  'username': 'not_found_user',
+                                  'email': None,
                                   'secret': 'super_secret'
                               }),
                               content_type='application/json')
@@ -251,6 +251,12 @@ class GetAllMetaDataTestCase(unittest.TestCase):
         self.assertEqual(len(data['data']), 2)
         self.assertEqual(response.status_code, 200)
 
+    def test_throw_500_if_db_not_set_up(self):
+        with self.app.app_context():
+            db.drop_all()
+        response = self.client.get('/api/package/%s' % (self.publisher,))
+        self.assertEqual(response.status_code, 500)
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
@@ -283,6 +289,21 @@ class GetS3SignedUrlTestCase(unittest.TestCase):
                               }),
                               content_type='application/json')
         self.assertEqual(400, rv.status_code)
+
+    def test_throw_400_if_md5_is_None(self):
+        rv = self.client.post(self.url,
+                              data=json.dumps({
+                                  'publisher': 'test_publisher',
+                                  'package': 'test_package',
+                                  'md5': None
+                              }),
+                              content_type='application/json')
+        self.assertEqual(400, rv.status_code)
+
+    def test_throw_500_if_internal_server_errror(self):
+        rv = self.client.post(self.url,
+                              content_type='application/json')
+        self.assertEqual(500, rv.status_code)
 
     @patch('app.mod_api.models.BitStore.generate_pre_signed_put_obj_url')
     def test_200_if_all_right(self, signed_url):
@@ -432,6 +453,28 @@ class SaveMetaDataTestCase(unittest.TestCase):
         self.assertEqual(200, response.status_code)
 
     @patch('app.mod_api.models.BitStore.save')
+    def test_return_403_if_user_not_matches_publisher(self, save):
+        save.return_value = None
+        auth = "bearer %s" % self.jwt
+        response = self.client.put('/api/package/not-a-publisher/%s'%self.package,
+                                   headers=dict(Authorization=auth),
+                                   data=json.dumps({'name': 'package'}))
+        self.assertEqual(403, response.status_code)
+
+    @patch('app.mod_api.models.BitStore.save')
+    def test_return_404_if_user_not_found(self, save):
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+        save.return_value = None
+        auth = "bearer %s" % self.jwt
+        response = self.client.put(self.url,
+                                   headers=dict(Authorization=auth),
+                                   data=json.dumps({'name': 'package'}))
+
+        self.assertEqual(404, response.status_code)
+
+    @patch('app.mod_api.models.BitStore.save')
     def test_return_500_for_internal_error(self, save):
         save.side_effect = Exception('some problem')
         auth = "bearer %s" % self.jwt
@@ -448,6 +491,11 @@ class SaveMetaDataTestCase(unittest.TestCase):
         response = self.client.put(self.url, headers=dict(Authorization=auth),
                                    data=json.dumps({'name1': 'package'}))
         data = json.loads(response.data)
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(data['error_code'], 'INVALID_DATA')
+        # test metadata has no name
+        response = self.client.put(self.url, headers=dict(Authorization=auth),
+                                   data=json.dumps({'name': ''}))
         self.assertEqual(400, response.status_code)
         self.assertEqual(data['error_code'], 'INVALID_DATA')
 
@@ -646,3 +694,21 @@ class EndToEndTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+
+
+class Auth0LoginTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+
+    def test_returns_302(self):
+        response = self.client.get('/api/auth/login')
+        self.assertEqual(response.status_code, 302)
+
+    def test_redirection(self):
+        response = self.client.get('/api/auth/login')
+        self.assertIn('Redirecting...', response.data)
+
+    def test_redirected(self):
+        response = self.client.get('/api/auth/login')
+        self.assertNotEqual(response.location, 'http://localhost:5000/api/auth/login')
