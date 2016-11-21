@@ -9,8 +9,9 @@ Requirement python 2.7
 ```
 $ virtualenv env
 $ source env/bin/activate
-For dev use 
-$ pip install -r requirements.dev.txt
+For test use 
+$ pip install -r requirements.txt
+$ pip install -r requirements.test.txt
 else
 $ pip install -r requirements.txt
 ```
@@ -18,17 +19,16 @@ $ pip install -r requirements.txt
 ## Environment Setting:
 Plz put .env file in root directory and add environment variables to that
 ```
-API_KEY=
-AWS_ACCESS_KET_ID=
+AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_REGION=
 AUTH0_CLIENT_ID=
 AUTH0_CLIENT_SECRET=
 AUTH0_DOMAIN=
 AUTH0_DB_NAME=
-AUTH0_LOGIN_PAGE=
-AUTH0_CALLBACK_URL=
+AUTH0_API_AUDIENCE=
 S3_BUCKET_NAME=
+FLASKS3_BUCKET_NAME=
 SQLALCHEMY_DATABASE_URI=
 ```
 Rename the env.template file to .env file.
@@ -63,10 +63,10 @@ The lambda configuration is in zappa_settings.json
 There are different environment to deploy.
 
     # Right now only dev env config is there.
-    $ zappa deploy dev [This is for first time deployment]
+    $ zappa deploy stage [This is for first time deployment]
     
     For further deployment:
-    $  zappa update dev
+    $  zappa update stage
 
 ##### Zappa Configuration:
 ```
@@ -82,6 +82,13 @@ All api documentation is maintained by [flasgger](https://github.com/rochacbruno
 The swagger UI Url path is {host}/apidocs/index.html
     
 ## Testing:
+Before running tests plz run:
+```
+$ export FLASK_CONFIGURATION=test
+```
+. So that tests are not dependent on any env variable. By default it is dependent on
+local postgresql instance.
+
 All tests are in tests directory. We use nose for testing
 
 To run all tests plz use ```nosetests tests``` from the base directory.

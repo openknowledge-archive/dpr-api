@@ -11,7 +11,6 @@ from botocore.exceptions import ClientError, ParamValidationError
 from sqlalchemy import ForeignKey
 from sqlalchemy import UniqueConstraint
 
-from sqlalchemy.dialects.postgresql import JSON
 from flask import current_app as app
 from sqlalchemy.orm import relationship
 
@@ -108,7 +107,8 @@ class Publisher(db.Model):
 
     packages = relationship("MetaDataDB", back_populates="publisher")
 
-    users = relationship("PublisherUser", back_populates="publisher")
+    users = relationship("PublisherUser", back_populates="publisher",
+                         cascade='save-update, merge, delete, delete-orphan')
 
 
 class User(db.Model):
@@ -123,7 +123,8 @@ class User(db.Model):
     full_name = db.Column(db.TEXT)
     auth0_id = db.Column(db.TEXT, index=True)
 
-    publishers = relationship("PublisherUser", back_populates="user")
+    publishers = relationship("PublisherUser", back_populates="user",
+                              cascade='save-update, merge, delete, delete-orphan')
 
     @property
     def serialize(self):
@@ -187,13 +188,15 @@ class MetaDataDB(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     name = db.Column(db.TEXT, index=True)
-    descriptor = db.Column(JSON)
+    descriptor = db.Column(db.JSON)
     status = db.Column(db.TEXT, index=True)
     private = db.Column(db.Boolean)
     readme = db.Column(db.TEXT)
 
     publisher_id = db.Column(db.Integer, ForeignKey('publisher.id'))
-    publisher = relationship("Publisher", back_populates="packages")
+    publisher = relationship("Publisher", back_populates="packages",
+                             cascade="save-update, merge, delete, delete-orphan",
+                             single_parent=True)
 
     __table_args__ = (
         UniqueConstraint("name", "publisher_id"),

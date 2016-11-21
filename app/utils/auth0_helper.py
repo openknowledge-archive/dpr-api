@@ -51,6 +51,49 @@ def get_user(user_id):
     return response.json()
 
 
+def search_user(field, value):
+    headers = {'Authorization': "Bearer {token}".
+               format(token=get_auth0_token(None)),
+               'content-type': "application/json"}
+    url = "{AUDIENCE}users?include_fields=true&q={FIELD}:{VALUE}".\
+          format(AUDIENCE=app.config["AUTH0_API_AUDIENCE"],
+                 FIELD=field, VALUE=value)
+    response = requests.get(url=url, headers=headers)
+    if response.ok:
+        return response.json()
+    else:
+        return None
+
+
+def delete_user(user_id):
+    headers = {'Authorization': "Bearer {token}".
+               format(token=get_auth0_token(None)),
+               'content-type': "application/json"}
+    url = "{AUDIENCE}users/{USER_ID}".\
+        format(AUDIENCE=app.config["AUTH0_API_AUDIENCE"],
+               USER_ID=user_id)
+    requests.delete(url=url, headers=headers)
+
+
+def create_user(email, full_name, user_name, password):
+
+    payload = dict(user_metadata=dict(full_name=full_name),
+                   connection=app.config['AUTH0_DB_NAME'],
+                   email=email,
+                   username=user_name,
+                   password=password)
+    headers = {'Authorization': "Bearer {token}". \
+               format(token=get_auth0_token(None)),
+               'content-type': "application/json"}
+    url = "{AUDIENCE}users".format(AUDIENCE=app.config["AUTH0_API_AUDIENCE"])
+    response = requests.post(url=url, data=json.dumps(payload),
+                             headers=headers)
+    if response.ok:
+        return response.json()
+    else:
+        return None
+
+
 def update_user_secret(user_id):
     headers = {'Authorization': "Bearer {token}".\
                format(token=get_auth0_token(None)),
@@ -89,7 +132,6 @@ def get_auth0_token(jwt_token):
     token_payload = {
         'client_id': app.config['AUTH0_CLIENT_ID'],
         'client_secret': app.config['AUTH0_CLIENT_SECRET'],
-        'redirect_uri': app.config['AUTH0_CALLBACK_URL'],
         'grant_type': 'client_credentials',
         'audience': app.config['AUTH0_API_AUDIENCE']
     }
