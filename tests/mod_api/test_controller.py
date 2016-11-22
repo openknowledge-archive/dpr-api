@@ -368,20 +368,6 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
                                     headers=dict(Authorization=auth))
         self.assertEqual(200, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.get_metadata_body')
-    @patch('app.mod_api.models.BitStore.get_readme_object_key')
-    @patch('app.mod_api.models.BitStore.get_s3_object')
-    def test_abc(self, get_s3_object, get_readme_object_key,
-                 get_metadata_body):
-        get_metadata_body.return_value = json.dumps(dict(name='package'))
-        get_readme_object_key.return_value = ''
-        get_s3_object.return_value = None
-        auth = "bearer %s" % self.jwt
-        response = self.client.post(self.url,
-                                    data=json.dumps(dict()),
-                                    headers=dict(Authorization=auth))
-        self.assertEqual(200, response.status_code)
-
     def test_throw_404_if_user_not_exists(self):
         with self.app.app_context():
             db.drop_all()
