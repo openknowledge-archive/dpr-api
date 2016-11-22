@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import json
 import os
 import datetime
-from botocore.exceptions import ClientError, ParamValidationError
 from sqlalchemy import ForeignKey
 from sqlalchemy import UniqueConstraint
 
@@ -50,7 +49,7 @@ class BitStore(object):
             s3_client = app.config['S3']
             response = s3_client.get_object(Bucket=bucket_name, Key=key)
             return response['Body'].read()
-        except ClientError or ParamValidationError:
+        except Exception:
             return None
 
     def get_readme_object_key(self):

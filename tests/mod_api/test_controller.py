@@ -11,7 +11,7 @@ from mock import patch
 
 from app import create_app
 from app.database import db
-from app.mod_api.models import User, MetaDataDB, Publisher
+from app.mod_api.models import User, MetaDataDB, Publisher, PublisherUser
 
 
 class AuthTokenTestCase(unittest.TestCase):
@@ -337,6 +337,10 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
             self.user.id = self.user_id
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
+            publisher = Publisher(name=self.publisher)
+            association = PublisherUser(role="OWNER")
+            association.publisher = publisher
+            self.user.publishers.append(association)
             db.session.add(self.user)
             db.session.commit()
         response = self.client.post(self.jwt_url,
