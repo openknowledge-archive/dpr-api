@@ -11,7 +11,7 @@ from mock import patch
 
 from app import create_app
 from app.database import db
-from app.mod_api.models import User, MetaDataDB, Publisher
+from app.mod_api.models import User, MetaDataDB, Publisher, PublisherUser
 
 
 class AuthTokenTestCase(unittest.TestCase):
@@ -337,6 +337,10 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
             self.user.id = self.user_id
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
+            publisher = Publisher(name=self.publisher)
+            association = PublisherUser(role="OWNER")
+            association.publisher = publisher
+            self.user.publishers.append(association)
             db.session.add(self.user)
             db.session.commit()
         response = self.client.post(self.jwt_url,
@@ -358,6 +362,20 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         create_or_update.return_value = None
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
+        auth = "bearer %s" % self.jwt
+        response = self.client.post(self.url,
+                                    data=json.dumps(dict()),
+                                    headers=dict(Authorization=auth))
+        self.assertEqual(200, response.status_code)
+
+    @patch('app.mod_api.models.BitStore.get_metadata_body')
+    @patch('app.mod_api.models.BitStore.get_readme_object_key')
+    @patch('app.mod_api.models.BitStore.get_s3_object')
+    def test_abc(self, get_s3_object, get_readme_object_key,
+                 get_metadata_body):
+        get_metadata_body.return_value = json.dumps(dict(name='package'))
+        get_readme_object_key.return_value = ''
+        get_s3_object.return_value = None
         auth = "bearer %s" % self.jwt
         response = self.client.post(self.url,
                                     data=json.dumps(dict()),

@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import boto3
 from urlparse import urlparse
+
+from botocore.exceptions import ParamValidationError
 from moto import mock_s3
 import unittest
 import json
@@ -136,6 +138,7 @@ class BitStoreTestCase(unittest.TestCase):
             read_me_key = bit_store.build_s3_key('test.md')
             s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='')
             self.assertEqual(bit_store.get_s3_object(read_me_key + "testing"), None)
+            self.assertEqual(bit_store.get_s3_object(None), None)
 
 
 class MetaDataDBTestCase(unittest.TestCase):
