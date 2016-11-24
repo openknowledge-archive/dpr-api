@@ -283,46 +283,44 @@ class SignupEndToEndTestCase(unittest.TestCase):
             self.assertEqual(rv.status_code, 302)
 
         with nested(patch('app.mod_api.controllers.get_user_info_with_code'),
-                    patch('app.mod_api.controllers.JWTHelper'),
-                    patch('app.mod_api.models.User.create_or_update_user_from_callback')) \
-                as (get_user_with_code, JWTHelper, create_user):
+                    patch('app.mod_api.controllers.JWTHelper')) \
+                as (get_user_with_code, JWTHelper):
 
             # Mocking Auth0 user info & Return value for Dashboard
-            get_user_with_code('xyz').side_effect = self.auth0_user_info
+            with self.app.app_context():
+                get_user_with_code(
+                    'xyz').__getitem__.side_effect = self.auth0_user_info.__getitem__
 
-            with self.captured_templates(self.app) as templates:
-                rv = self.client.get(self.auth0_callback)
-                # Call to Crete or Update DB
-                self.assertEqual(create_user.call_count, 1)
-                template, context = templates[0]
-                # Checking template rendered
-                self.assertEqual('dashboard.html', template.name)
-                # Token sent along with context
-                self.assertIn('encoded_token', context)
-                # Dashboad loaded with status code 200
-                self.assertEqual(rv.status_code, 200)
+                # Testing with Captured Templates
+                with self.captured_templates(self.app) as templates:
+                    rv = self.client.get(self.auth0_callback)
+                    template, context = templates[0]
+                    user_created = User.query.filter_by(name=self.auth0_user_info['username'])
 
-        # Actions on DB
-        with self.app.app_context():
-            # Call to create the DB
-            user = User.create_or_update_user_from_callback(
-                self.auth0_user_info)
+                    # Check new user created
+                    self.assertEqual(user_created.count(), 1)
+                    new_user = user_created[0]
+                    # Verify the Secret Code Generated
+                    self.assertIsNotNone(new_user.secret)
 
-            # Verifying Returned User from Create User or Update
-            self.assertEqual(user.name, self.auth0_user_info['username'])
+                    # Verify Publishers Association
+                    self.assertEqual(len(new_user.publishers), 1)
 
-            # Get user from DB
-            user_in_db = User.query.filter_by(
-                name=self.auth0_user_info['username']).one()
+                    # Verify  Owner Association
+                    self.assertEqual(new_user.publishers[0].role, 'OWNER')
 
-            # Verifying Data in DB
-            self.assertEqual(user_in_db.name, self.auth0_user_info['username'])
-            # Verify the Secret Code Generated
-            self.assertIsNotNone(user_in_db.secret)
-            # Verify Publishers Association
-            self.assertEqual(len(user_in_db.publishers), 1)
-            # Verify  Owner Association
-            self.assertEqual(user_in_db.publishers[0].role, 'OWNER')
+                    # Checking template rendered
+                    self.assertEqual('dashboard.html', template.name)
+
+                    # Checking User Object passed with context
+                    self.assertEqual(self.auth0_user_info[
+                                     'username'], context['user'].name)
+
+                    # Token sent along with context (For login)
+                    self.assertIn('encoded_token', context)
+
+                    # Dashboad loaded with status code 200
+                    self.assertEqual(rv.status_code, 200)
 
     def tearDown(self):
         with self.app.app_context():
