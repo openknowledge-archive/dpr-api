@@ -166,6 +166,17 @@ class User(db.Model):
             return user
         return None
 
+    @staticmethod
+    def get_user_role(user_id, publisher_name):
+        try:
+            pub_user = PublisherUser.query.join(Publisher)\
+                .filter(PublisherUser.user_id == user_id,
+                        Publisher.name == publisher_name).one()
+            return pub_user.role
+        except Exception as e:
+            app.logger.error(e)
+            return None
+
 
 class PublisherUser(db.Model):
     __tablename__ = 'publisher_user'

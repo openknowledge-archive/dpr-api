@@ -418,6 +418,19 @@ class SaveMetaDataTestCase(unittest.TestCase):
             self.user.id = self.user_id
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
+
+            publisher = Publisher(name=self.publisher)
+            association = PublisherUser(role="OWNER")
+
+            publisher1 = Publisher(name="other_pub")
+            association1 = PublisherUser(role="NOT_MEMBER")
+
+            association.publisher = publisher
+            association1.publisher = publisher1
+
+            self.user.publishers.append(association)
+            self.user.publishers.append(association1)
+
             db.session.add(self.user)
             db.session.commit()
         response = self.client.post(self.jwt_url,
@@ -446,6 +459,16 @@ class SaveMetaDataTestCase(unittest.TestCase):
         response = self.client.put(self.url,
                                    headers=dict(Authorization='bearer 12 23'))
         self.assertEqual(401, response.status_code)
+
+    def test_should_throw_401_unauthorized_if_role_does_not_match(self):
+        auth = "bearer %s" % self.jwt
+        un_auth_url = '/api/package/%s/%s' % ("other_pub", self.package)
+        response = self.client.put(un_auth_url,
+                                   headers=dict(Authorization=auth),
+                                   data=json.dumps({'name': 'package'}))
+        data = json.loads(response.data)
+        self.assertEqual(403, response.status_code)
+        self.assertEqual(data["error_code"], "unauthorized")
 
     @patch('app.mod_api.models.BitStore.save')
     def test_return_200_if_all_right(self, save):
@@ -621,6 +644,12 @@ class EndToEndTestCase(unittest.TestCase):
             self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', 'test_publisher', 'super_secret'
+
+            publisher = Publisher(name=self.user.name)
+            association = PublisherUser(role="OWNER")
+            association.publisher = publisher
+
+            self.user.publishers.append(association)
             db.session.add(self.user)
             db.session.commit()
 
@@ -658,7 +687,8 @@ class EndToEndTestCase(unittest.TestCase):
         # Adding to Meta Data
         descriptor = {'name': 'test description'}
         with self.app.app_context():
-            publisher = Publisher(name=self.publisher)
+            # publisher = Publisher(name=self.publisher)
+            publisher = Publisher.query.filter_by(name=self.publisher).one()
             metadata = MetaDataDB(name=self.package)
             publisher.packages.append(metadata)
             metadata.descriptor = json.dumps(descriptor)

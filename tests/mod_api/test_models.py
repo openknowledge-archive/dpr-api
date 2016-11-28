@@ -244,8 +244,14 @@ class UserTestCase(unittest.TestCase):
                         auth0_id="123|auth0")
             publisher = Publisher(name='test_pub_id')
             association = PublisherUser(role="OWNER")
+
+            publisher1 = Publisher(name='test_pub')
+            association1 = PublisherUser(role="MEMBER")
+            association1.publisher = publisher1
+
             association.publisher = publisher
             user.publishers.append(association)
+            user.publishers.append(association1)
 
             db.session.add(user)
             db.session.commit()
@@ -257,7 +263,7 @@ class UserTestCase(unittest.TestCase):
 
     def test_user_role_on_publisher(self):
         user = User.query.filter_by(name='test_user_id').one()
-        self.assertEqual(len(user.publishers), 1)
+        self.assertEqual(len(user.publishers), 2)
         self.assertEqual(user.publishers[0].role, 'OWNER')
 
     def test_user_creation_from_outh0_response(self):
@@ -277,6 +283,14 @@ class UserTestCase(unittest.TestCase):
     def test_get_userinfo_by_id(self):
         self.assertEqual(User.get_userinfo_by_id(11).name, 'test_user_id')
         self.assertIsNone(User.get_userinfo_by_id(2))
+
+    def test_get_user_roles(self):
+        role_one = User.get_user_role(11, 'test_pub_id')
+        role_two = User.get_user_role(11, 'test_pub')
+        role_three = User.get_user_role(12, 'test_pub_none')
+        self.assertEqual(role_one, 'OWNER')
+        self.assertEqual(role_two, 'MEMBER')
+        self.assertIsNone(role_three)
 
     def tearDown(self):
         with self.app.app_context():
