@@ -95,6 +95,28 @@ class BitStore(object):
                                                ExpiresIn=3600)
         return url
 
+    def change_acl(self, acl):
+        try:
+            bucket_name = app.config['S3_BUCKET_NAME']
+            s3_client = app.config['S3']
+            prefix = "{p}/{pac}".format(p=self.build_s3_prefix(),
+                                        pac=self.package)
+            keys = []
+            list_objects = s3_client.list_objects(Bucket=bucket_name,
+                                                  Prefix=prefix)
+            if list_objects is not None and 'Contents' in list_objects:
+                for ob in s3_client.list_objects(Bucket=bucket_name,
+                                                 Prefix=prefix)['Contents']:
+                    keys.append(ob['Key'])
+
+            for key in keys:
+                s3_client.put_object_acl(Bucket=bucket_name, Key=key,
+                                         ACL=acl)
+        except Exception as e:
+            app.logger.error(e)
+            return False
+        return True
+
 
 class Publisher(db.Model):
     __tablename__ = 'publisher'
@@ -175,7 +197,7 @@ class PublisherUser(db.Model):
     user_id = db.Column(db.Integer, ForeignKey('user.id'), primary_key=True)
     publisher_id = db.Column(db.Integer, ForeignKey('publisher.id'), primary_key=True)
 
-    role = db.Column(db.TEXT, nullable=False)
+    role = db.Column(db.TEXT, nullable=False)  # role can be OWNER and MEMBER
 
     publisher = relationship("Publisher", back_populates="users")
     user = relationship("User", back_populates="publishers")
@@ -188,7 +210,7 @@ class MetaDataDB(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     name = db.Column(db.TEXT, index=True)
     descriptor = db.Column(db.JSON)
-    status = db.Column(db.TEXT, index=True)
+    status = db.Column(db.TEXT, index=True, default='active')
     private = db.Column(db.Boolean)
     readme = db.Column(db.TEXT)
 
@@ -214,3 +236,20 @@ class MetaDataDB(db.Model):
             setattr(instance, key, value)
         db.session.add(instance)
         db.session.commit()
+
+    @staticmethod
+    def change_status(publisher_name, package_name, status='deleted'):
+        if status not in ['deleted', 'active']:
+            raise Exception('Invalid status name. '
+                            'Only deleted and active are allowed')
+        try:
+            data = MetaDataDB.query.join(Publisher). \
+                filter(Publisher.name == publisher_name,
+                       MetaDataDB.name == package_name).one()
+            data.status = status
+            db.session.add(data)
+            db.session.commit()
+            return True
+        except Exception as e:
+            app.logger.error(e)
+            return False
