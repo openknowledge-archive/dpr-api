@@ -158,6 +158,26 @@ class BitStoreTestCase(unittest.TestCase):
             grant = res['Grants'][0]['Permission']
             self.assertEqual(grant, 'FULL_CONTROL')
 
+    @mock_s3
+    def test_delete_data_package(self):
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            read_me_key = bit_store.build_s3_key('test.md')
+            data_key = bit_store.build_s3_key('data.csv')
+            metadata_key = bit_store.build_s3_key('datapackage.json')
+            s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='readme')
+            s3.put_object(Bucket=bucket_name, Key=data_key, Body='data')
+            s3.put_object(Bucket=bucket_name, Key=metadata_key, Body='metedata')
+            bit_store.delete_data_package()
+            read_me_res = s3.list_objects(Bucket=bucket_name, Prefix=read_me_key)
+            self.assertTrue('Contents' not in read_me_res)
+
+            data_res = s3.list_objects(Bucket=bucket_name, Prefix=data_key)
+            self.assertTrue('Contents' not in data_res)
+
 
 class MetaDataDBTestCase(unittest.TestCase):
 
@@ -270,6 +290,22 @@ class MetaDataDBTestCase(unittest.TestCase):
     def test_return_false_if_failed_to_change_status(self):
         status = MetaDataDB.change_status(self.publisher_one, 'fake_package',
                                           status='active')
+        self.assertFalse(status)
+
+    def test_return_true_if_delete_data_package_success(self):
+        status = MetaDataDB.delete_data_package(self.publisher_one,
+                                                self.package_one)
+        self.assertTrue(status)
+        data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_one).all()
+        self.assertEqual(0, len(data))
+        data = Publisher.query.all()
+        self.assertEqual(1, len(data))
+
+    def test_return_false_if_error_occur(self):
+        status = MetaDataDB.delete_data_package("fake_package",
+                                                self.package_one)
         self.assertFalse(status)
 
     def tearDown(self):

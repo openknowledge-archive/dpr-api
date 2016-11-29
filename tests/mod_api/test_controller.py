@@ -799,3 +799,86 @@ class SoftDeleteTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+
+
+class HardDeleteTestCase(unittest.TestCase):
+    publisher_name = 'test_publisher'
+    package = 'test_package'
+    url = "/api/package/{pub}/{pac}/purge".format(pub=publisher_name,
+                                                  pac=package)
+    user_id = 1
+    jwt_url = '/api/auth/token'
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = self.user_id
+            self.user.email, self.user.name, self.user.secret = \
+                'test@test.com', self.publisher_name, 'super_secret'
+
+            self.publisher = Publisher(name=self.publisher_name)
+
+            association = PublisherUser(role="OWNER")
+            association.publisher = self.publisher
+
+            metadata = MetaDataDB(name=self.package)
+            self.publisher.packages.append(metadata)
+            self.user.publishers.append(association)
+
+            db.session.add(self.user)
+            db.session.commit()
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt = data['token']
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_return_200_if_all_goes_well(self, db_delete, bitstore_delete):
+        bitstore_delete.return_value = True
+        db_delete.return_value = True
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
+        bitstore_delete.return_value = False
+        db_delete.return_value = True
+        response = self.client.delete(self.url)
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'Failed to delete from s3')
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
+        bitstore_delete.return_value = True
+        db_delete.return_value = False
+        response = self.client.delete(self.url)
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'Failed to delete from db')
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_throw_generic_error_if_internal_error(self, db_delete, bitstore_delete):
+        bitstore_delete.side_effect = Exception('failed')
+        db_delete.return_value = False
+        response = self.client.delete(self.url)
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'failed')
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
