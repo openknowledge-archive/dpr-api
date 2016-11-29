@@ -37,6 +37,7 @@ class CatalogTestCase(unittest.TestCase):
         catalog = Catalog(json.loads(response.data))
         dataset = catalog.construct_dataset()
         self.assertEqual(dataset.get('name'), descriptor.get('name'))
+        self.assertEqual(dataset.get('owner'), self.publisher)
         self.assertIn('localurl', dataset.get('resources')[0])
         self.assertNotEqual(len(dataset.get('views')), 0)
 
