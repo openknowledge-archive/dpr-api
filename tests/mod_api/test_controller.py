@@ -716,3 +716,86 @@ class Auth0LoginTestCase(unittest.TestCase):
     def test_redirected(self):
         response = self.client.get('/api/auth/login')
         self.assertNotEqual(response.location, 'http://localhost:5000/api/auth/login')
+
+
+class SoftDeleteTestCase(unittest.TestCase):
+    publisher_name = 'test_publisher'
+    package = 'test_package'
+    url = "/api/package/{pub}/{pac}".format(pub=publisher_name,
+                                            pac=package)
+    user_id = 1
+    jwt_url = '/api/auth/token'
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = self.user_id
+            self.user.email, self.user.name, self.user.secret = \
+                'test@test.com', self.publisher_name, 'super_secret'
+
+            self.publisher = Publisher(name=self.publisher_name)
+
+            association = PublisherUser(role="OWNER")
+            association.publisher = self.publisher
+
+            metadata = MetaDataDB(name=self.package)
+            self.publisher.packages.append(metadata)
+            self.user.publishers.append(association)
+
+            db.session.add(self.user)
+            db.session.commit()
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt = data['token']
+
+    @patch('app.mod_api.models.BitStore.change_acl')
+    @patch('app.mod_api.models.MetaDataDB.change_status')
+    def test_return_200_if_all_goes_well(self, change_status, change_acl):
+        change_acl.return_value = True
+        change_status.return_value = True
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    @patch('app.mod_api.models.BitStore.change_acl')
+    @patch('app.mod_api.models.MetaDataDB.change_status')
+    def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
+        change_acl.return_value = False
+        change_status.return_value = True
+        response = self.client.delete(self.url)
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'Failed to change acl')
+
+    @patch('app.mod_api.models.BitStore.change_acl')
+    @patch('app.mod_api.models.MetaDataDB.change_status')
+    def test_throw_500_if_change_status_fails(self, change_status, change_acl):
+        change_acl.return_value = True
+        change_status.return_value = False
+        response = self.client.delete(self.url)
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'Failed to change status')
+
+    @patch('app.mod_api.models.BitStore.change_acl')
+    @patch('app.mod_api.models.MetaDataDB.change_status')
+    def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
+        change_acl.side_effect = Exception('failed')
+        change_status.return_value = False
+        response = self.client.delete(self.url)
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'failed')
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()

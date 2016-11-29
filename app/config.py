@@ -39,7 +39,7 @@ class BaseConfig(object):
     AUTH0_DB_NAME = ""
     AUTH0_API_AUDIENCE = ""
 
-    SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/dpr_db'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/dpr_db_test'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     S3_BUCKET_NAME = "test"
 

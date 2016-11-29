@@ -140,6 +140,24 @@ class BitStoreTestCase(unittest.TestCase):
             self.assertEqual(bit_store.get_s3_object(read_me_key + "testing"), None)
             self.assertEqual(bit_store.get_s3_object(None), None)
 
+    @mock_s3
+    def test_change_acl(self):
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            read_me_key = bit_store.build_s3_key('test.md')
+            data_key = bit_store.build_s3_key('data.csv')
+            metadata_key = bit_store.build_s3_key('datapackage.json')
+            s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='')
+            s3.put_object(Bucket=bucket_name, Key=data_key, Body='')
+            s3.put_object(Bucket=bucket_name, Key=metadata_key, Body='')
+            bit_store.change_acl("private")
+            res = s3.get_object_acl(Bucket=bucket_name, Key=read_me_key)
+            grant = res['Grants'][0]['Permission']
+            self.assertEqual(grant, 'FULL_CONTROL')
+
 
 class MetaDataDBTestCase(unittest.TestCase):
 
@@ -222,6 +240,37 @@ class MetaDataDBTestCase(unittest.TestCase):
             .filter(Publisher.name == pub,
                     MetaDataDB.name == name).all()
         self.assertEqual(len(metadata), 1)
+
+    def test_change_status(self):
+        data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_one).one()
+        self.assertEqual('active', data.status)
+
+        MetaDataDB.change_status(self.publisher_one, self.package_one)
+
+        data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_one).one()
+        self.assertEqual('deleted', data.status)
+
+        MetaDataDB.change_status(self.publisher_one, self.package_one,
+                                 status='active')
+
+        data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_one).one()
+        self.assertEqual('active', data.status)
+
+    def test_raise_exception_if_wrong_status_given(self):
+        self.assertRaises(Exception, MetaDataDB.change_status,
+                          self.publisher_one, self.package_one,
+                          status='active1')
+
+    def test_return_false_if_failed_to_change_status(self):
+        status = MetaDataDB.change_status(self.publisher_one, 'fake_package',
+                                          status='active')
+        self.assertFalse(status)
 
     def tearDown(self):
         with self.app.app_context():

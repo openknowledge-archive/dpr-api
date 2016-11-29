@@ -85,6 +85,52 @@ def save_metadata(publisher, package):
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
+@mod_api_blueprint.route("/package/<publisher>/<package>", methods=["DELETE"])
+def delete_data_package(publisher, package):
+    """
+    DPR data package soft delete operation operation.
+    This API is responsible for mark for delete of data package
+    ---
+    tags:
+        - package
+    parameters:
+        - in: path
+          name: publisher
+          type: string
+          required: true
+          description: publisher name
+        - in: path
+          name: package
+          type: string
+          required: true
+          description: package name
+    responses:
+        500:
+            description: Internal Server Error
+        200:
+            description: Success Message
+            schema:
+                id: put_package_success
+                properties:
+                    status:
+                        type: string
+                        default: OK
+    """
+    try:
+        bitstore = BitStore(publisher=publisher, package=package)
+        status_acl = bitstore.change_acl('private')
+        status_db = MetaDataDB.change_status(publisher, package)
+        if status_acl and status_db:
+            return jsonify({"status": "OK"}), 200
+        if not status_acl:
+            raise Exception('Failed to change acl')
+        if not status_db:
+            raise Exception('Failed to change status')
+    except Exception as e:
+        app.logger.error(e)
+        return handle_error('GENERIC_ERROR', e.message, 500)
+
+
 @mod_api_blueprint.route("/package/<publisher>/<package>/finalize",
                          methods=["POST"])
 @requires_auth
@@ -343,11 +389,9 @@ def callback_handling():
     try:
         code = request.args.get('code')
         user_info = get_user_info_with_code(code, request.base_url)
-        user_id = user_info['user_id']
-
-        jwt_helper = JWTHelper(app.config['API_KEY'], user_id)
 
         user = User().create_or_update_user_from_callback(user_info)
+        jwt_helper = JWTHelper(app.config['API_KEY'], user.id)
 
         return render_template("dashboard.html", user=user,
                                title='Dashboard',
