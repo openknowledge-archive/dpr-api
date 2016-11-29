@@ -11,9 +11,8 @@ from flask import current_app as app
 from flask import redirect, Response
 from app.mod_api.models import BitStore, User, MetaDataDB, Publisher
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
-from app.utils.auth import requires_auth
-from app.utils.auth0_helper import get_user_info_with_code, \
-     get_user, update_user_secret_from_user_info
+from app.utils.auth import requires_auth, requires_roles
+from app.utils.auth0_helper import get_user_info_with_code
 from app.utils.jwt_utilities import JWTHelper
 
 mod_api_blueprint = Blueprint('api', __name__, url_prefix='/api')
@@ -21,6 +20,7 @@ mod_api_blueprint = Blueprint('api', __name__, url_prefix='/api')
 
 @mod_api_blueprint.route("/package/<publisher>/<package>", methods=["PUT"])
 @requires_auth
+@requires_roles(["MEMBER", 'OWNER'])
 def save_metadata(publisher, package):
     """
     DPR metadata put operation.
@@ -61,25 +61,16 @@ def save_metadata(publisher, package):
                         default: OK
     """
     try:
-        user = _request_ctx_stack.top.current_user
-        user_id = user['user']
-        user = User.query.filter_by(id=user_id).first()
-        if user is not None:
-            if user.name == publisher:
-                metadata = BitStore(publisher=publisher,
-                                    package=package,
-                                    body=request.data)
-                is_valid = metadata.validate()
-                if not is_valid:
-                    return handle_error('INVALID_DATA',
-                                        'Missing required field in metadata',
-                                        400)
-                metadata.save()
-                return jsonify({"status": "OK"}), 200
-            return handle_error('NOT_PERMITTED',
-                                'user name and publisher not matched',
-                                403)
-        return handle_error('USER_NOT_FOUND', 'user not found', 404)
+        metadata = BitStore(publisher=publisher,
+                            package=package,
+                            body=request.data)
+        is_valid = metadata.validate()
+        if not is_valid:
+            return handle_error('INVALID_DATA',
+                                'Missing required field in metadata',
+                                400)
+        metadata.save()
+        return jsonify({"status": "OK"}), 200
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
