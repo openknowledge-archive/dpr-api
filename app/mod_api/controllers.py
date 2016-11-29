@@ -87,6 +87,35 @@ def save_metadata(publisher, package):
 
 @mod_api_blueprint.route("/package/<publisher>/<package>", methods=["DELETE"])
 def delete_data_package(publisher, package):
+    """
+    DPR data package soft delete operation operation.
+    This API is responsible for mark for delete of data package
+    ---
+    tags:
+        - package
+    parameters:
+        - in: path
+          name: publisher
+          type: string
+          required: true
+          description: publisher name
+        - in: path
+          name: package
+          type: string
+          required: true
+          description: package name
+    responses:
+        500:
+            description: Internal Server Error
+        200:
+            description: Success Message
+            schema:
+                id: put_package_success
+                properties:
+                    status:
+                        type: string
+                        default: OK
+    """
     try:
         bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.change_acl('private')
