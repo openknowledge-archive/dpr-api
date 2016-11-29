@@ -26,6 +26,7 @@ class Catalog(object):
             format(publisher=self.publisher,
                    package=self.package,
                    resource=self.resources[idx]['name'])
+        self.descriptor['owner'] = self.publisher
         self.descriptor['resources'] = clone
         self.descriptor['readme'] = self.readme
         return self.descriptor
