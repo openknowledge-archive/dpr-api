@@ -95,6 +95,27 @@ class BitStore(object):
                                                ExpiresIn=3600)
         return url
 
+    def delete_data_package(self):
+        try:
+            bucket_name = app.config['S3_BUCKET_NAME']
+            s3_client = app.config['S3']
+
+            prefix = "{p}/{pac}".format(p=self.build_s3_prefix(),
+                                        pac=self.package)
+            keys = []
+            list_objects = s3_client.list_objects(Bucket=bucket_name,
+                                                  Prefix=prefix)
+            if list_objects is not None and 'Contents' in list_objects:
+                for ob in s3_client.list_objects(Bucket=bucket_name,
+                                                 Prefix=prefix)['Contents']:
+                    keys.append(dict(Key=ob['Key']))
+
+            s3_client.delete_objects(Bucket=bucket_name, Delete=dict(Objects=keys))
+            return True
+        except Exception as e:
+            app.logger.error(e)
+            return False
+
     def change_acl(self, acl):
         try:
             bucket_name = app.config['S3_BUCKET_NAME']
@@ -248,6 +269,21 @@ class MetaDataDB(db.Model):
                        MetaDataDB.name == package_name).one()
             data.status = status
             db.session.add(data)
+            db.session.commit()
+            return True
+        except Exception as e:
+            app.logger.error(e)
+            return False
+
+    @staticmethod
+    def delete_data_package(publisher_name, package_name):
+        try:
+            data = MetaDataDB.query.join(Publisher). \
+                filter(Publisher.name == publisher_name,
+                       MetaDataDB.name == package_name).one()
+            package_id = data.id
+            meta_data = MetaDataDB.query.get(package_id)
+            db.session.delete(meta_data)
             db.session.commit()
             return True
         except Exception as e:

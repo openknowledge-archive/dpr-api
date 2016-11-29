@@ -12,8 +12,7 @@ from flask import redirect, Response
 from app.mod_api.models import BitStore, User, MetaDataDB, Publisher
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
 from app.utils.auth import requires_auth
-from app.utils.auth0_helper import get_user_info_with_code, \
-     get_user, update_user_secret_from_user_info
+from app.utils.auth0_helper import get_user_info_with_code
 from app.utils.jwt_utilities import JWTHelper
 
 mod_api_blueprint = Blueprint('api', __name__, url_prefix='/api')
@@ -126,6 +125,52 @@ def delete_data_package(publisher, package):
             raise Exception('Failed to change acl')
         if not status_db:
             raise Exception('Failed to change status')
+    except Exception as e:
+        app.logger.error(e)
+        return handle_error('GENERIC_ERROR', e.message, 500)
+
+
+@mod_api_blueprint.route("/package/<publisher>/<package>/purge", methods=["DELETE"])
+def purge_data_package(publisher, package):
+    """
+    DPR data package hard delete operation.
+    This API is responsible for deletion of data package
+    ---
+    tags:
+        - package
+    parameters:
+        - in: path
+          name: publisher
+          type: string
+          required: true
+          description: publisher name
+        - in: path
+          name: package
+          type: string
+          required: true
+          description: package name
+    responses:
+        500:
+            description: Internal Server Error
+        200:
+            description: Success Message
+            schema:
+                id: put_package_success
+                properties:
+                    status:
+                        type: string
+                        default: OK
+    """
+    try:
+        bitstore = BitStore(publisher=publisher, package=package)
+        status_acl = bitstore.delete_data_package()
+        status_db = MetaDataDB.delete_data_package(publisher, package)
+        if status_acl and status_db:
+            return jsonify({"status": "OK"}), 200
+        if not status_acl:
+            raise Exception('Failed to delete from s3')
+        if not status_db:
+            raise Exception('Failed to delete from db')
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
