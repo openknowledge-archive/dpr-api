@@ -111,7 +111,7 @@ class BitStore(object):
                     keys.append(dict(Key=ob['Key']))
 
             s3_client.delete_objects(Bucket=bucket_name, Delete=dict(Objects=keys))
-
+            return True
         except Exception as e:
             app.logger.error(e)
             return False

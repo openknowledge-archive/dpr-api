@@ -171,12 +171,36 @@ class BitStoreTestCase(unittest.TestCase):
             s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='readme')
             s3.put_object(Bucket=bucket_name, Key=data_key, Body='data')
             s3.put_object(Bucket=bucket_name, Key=metadata_key, Body='metedata')
-            bit_store.delete_data_package()
+            status = bit_store.delete_data_package()
             read_me_res = s3.list_objects(Bucket=bucket_name, Prefix=read_me_key)
             self.assertTrue('Contents' not in read_me_res)
 
             data_res = s3.list_objects(Bucket=bucket_name, Prefix=data_key)
             self.assertTrue('Contents' not in data_res)
+            self.assertTrue(status)
+
+    @mock_s3
+    def test_should_return_true_delete_data_package_if_data_not_exists(self):
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            read_me_key = bit_store.build_s3_key('test.md')
+            data_key = bit_store.build_s3_key('data.csv')
+            metadata_key = bit_store.build_s3_key('datapackage.json')
+
+            status = bit_store.delete_data_package()
+            read_me_res = s3.list_objects(Bucket=bucket_name, Prefix=read_me_key)
+            self.assertTrue('Contents' not in read_me_res)
+
+            data_res = s3.list_objects(Bucket=bucket_name, Prefix=data_key)
+            self.assertTrue('Contents' not in data_res)
+
+            metadata_res = s3.list_objects(Bucket=bucket_name, Prefix=metadata_key)
+            self.assertTrue('Contents' not in metadata_res)
+
+            self.assertTrue(status)
 
 
 class MetaDataDBTestCase(unittest.TestCase):
