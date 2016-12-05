@@ -146,6 +146,7 @@ class Publisher(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     name = db.Column(db.TEXT, unique=True, index=True, nullable=False)
     title = db.Column(db.Text)
+    private = db.Column(db.BOOLEAN, default=False)
 
     packages = relationship("MetaDataDB", back_populates="publisher")
 
@@ -164,6 +165,7 @@ class User(db.Model):
     name = db.Column(db.TEXT, unique=True, index=True, nullable=False)
     full_name = db.Column(db.TEXT)
     auth0_id = db.Column(db.TEXT, index=True)
+    sysadmin = db.Column(db.BOOLEAN, default=False)
 
     publishers = relationship("PublisherUser", back_populates="user",
                               cascade='save-update, merge, delete, delete-orphan')
@@ -232,7 +234,7 @@ class MetaDataDB(db.Model):
     name = db.Column(db.TEXT, index=True)
     descriptor = db.Column(db.JSON)
     status = db.Column(db.TEXT, index=True, default='active')
-    private = db.Column(db.Boolean)
+    private = db.Column(db.BOOLEAN, default=False)
     readme = db.Column(db.TEXT)
 
     publisher_id = db.Column(db.Integer, ForeignKey('publisher.id'))
@@ -289,3 +291,14 @@ class MetaDataDB(db.Model):
         except Exception as e:
             app.logger.error(e)
             return False
+
+    @staticmethod
+    def get_package(publisher_name, package_name):
+        try:
+            instance = MetaDataDB.query.join(Publisher) \
+                .filter(MetaDataDB.name == package_name,
+                        Publisher.name == publisher_name).first()
+            return instance
+        except Exception as e:
+            app.logger.error(e)
+            return None

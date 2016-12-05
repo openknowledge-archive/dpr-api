@@ -418,6 +418,11 @@ class SaveMetaDataTestCase(unittest.TestCase):
             self.user.id = self.user_id
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
+            self.pub = Publisher(name=self.publisher)
+            association = PublisherUser(role="OWNER")
+            association.publisher = self.pub
+            self.user.publishers.append(association)
+
             db.session.add(self.user)
             db.session.commit()
         response = self.client.post(self.jwt_url,
@@ -756,21 +761,32 @@ class SoftDeleteTestCase(unittest.TestCase):
                                     content_type='application/json')
         data = json.loads(response.data)
         self.jwt = data['token']
+        self.auth = "bearer %s" % self.jwt
 
     @patch('app.mod_api.models.BitStore.change_acl')
     @patch('app.mod_api.models.MetaDataDB.change_status')
     def test_return_200_if_all_goes_well(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
-        response = self.client.delete(self.url)
+
+        response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         self.assertEqual(response.status_code, 200)
+
+    @patch('app.mod_api.models.BitStore.change_acl')
+    @patch('app.mod_api.models.MetaDataDB.change_status')
+    def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
+        change_acl.return_value = True
+        change_status.return_value = True
+
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, 403)
 
     @patch('app.mod_api.models.BitStore.change_acl')
     @patch('app.mod_api.models.MetaDataDB.change_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
         change_acl.return_value = False
         change_status.return_value = True
-        response = self.client.delete(self.url)
+        response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to change acl')
@@ -780,7 +796,7 @@ class SoftDeleteTestCase(unittest.TestCase):
     def test_throw_500_if_change_status_fails(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = False
-        response = self.client.delete(self.url)
+        response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to change status')
@@ -790,7 +806,7 @@ class SoftDeleteTestCase(unittest.TestCase):
     def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
         change_acl.side_effect = Exception('failed')
         change_status.return_value = False
-        response = self.client.delete(self.url)
+        response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'failed')
