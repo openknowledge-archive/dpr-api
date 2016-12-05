@@ -774,6 +774,15 @@ class SoftDeleteTestCase(unittest.TestCase):
 
     @patch('app.mod_api.models.BitStore.change_acl')
     @patch('app.mod_api.models.MetaDataDB.change_status')
+    def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
+        change_acl.return_value = True
+        change_status.return_value = True
+
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, 403)
+
+    @patch('app.mod_api.models.BitStore.change_acl')
+    @patch('app.mod_api.models.MetaDataDB.change_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
         change_acl.return_value = False
         change_status.return_value = True
