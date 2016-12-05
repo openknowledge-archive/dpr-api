@@ -12,6 +12,7 @@ from flask import redirect, Response
 from app.mod_api.models import BitStore, User, MetaDataDB, Publisher
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
 from app.utils.auth import requires_auth
+from app.utils.authorization import is_allowed
 from app.utils.auth0_helper import get_user_info_with_code
 from app.utils.jwt_utilities import JWTHelper
 
@@ -85,6 +86,7 @@ def save_metadata(publisher, package):
 
 
 @mod_api_blueprint.route("/package/<publisher>/<package>", methods=["DELETE"])
+@is_allowed('Package::Delete')
 def delete_data_package(publisher, package):
     """
     DPR data package soft delete operation operation.
