@@ -89,11 +89,11 @@ $ export FLASK_CONFIGURATION=test
 . So that tests are not dependent on any env variable. By default it is dependent on
 local postgresql instance.
 
-All tests are in tests directory. We use nose for testing
+All tests are in tests directory. We use pytest for testing
 
-To run all tests plz use ```nosetests tests``` from the base directory.
-If want to run specific module use i.e. ```nosetests tests/test_basics.py```
+To run all tests plz use ```pytest tests``` from the base directory.
 
-* Some times nosetests got chached by bash so tests may fail as it points to /usr/local/nosetests
- not the virtual env nosetest
- then plz run ```./env/bin/nosetests tests```
+* Some times pytest got chached by bash so tests may fail as it points to /usr/local/pytest
+ not the virtual env pytest
+ then plz run ```./env/bin/pytest tests```
+
