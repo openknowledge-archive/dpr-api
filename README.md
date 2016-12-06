@@ -91,9 +91,13 @@ local postgresql instance.
 
 All tests are in tests directory. We use pytest for testing
 
-To run all tests plz use ```pytest tests``` from the base directory.
+To run all tests please run this in the base directory:
 
-* Some times pytest got chached by bash so tests may fail as it points to /usr/local/pytest
+```
+pytest tests
+```
+
+* Some times pytest got cached by bash so tests may fail as it points to /usr/local/pytest
  not the virtual env pytest
  then plz run ```./env/bin/pytest tests```
 
