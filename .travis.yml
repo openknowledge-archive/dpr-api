@@ -19,7 +19,7 @@ python:
 services:
   - postgresql
 addons:
-  postgresql: "9.4"
+  postgresql: "9.5"
 
 before_script:
   - psql -U postgres -c "create user dpr_user password 'secret' createdb;"
@@ -41,4 +41,4 @@ deploy:
   script: python zappa_deploy.py
   on:
     repo: frictionlessdata/dpr-api
-    branch: master
+    branch: deploy

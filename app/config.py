@@ -29,15 +29,7 @@ class BaseConfig(object):
             }
         ]
     }
-    AWS_ACCESS_KEY_ID = ""
-    AWS_SECRET_ACCESS_KEY = ""
     AWS_REGION = "eu-west-1"
-
-    AUTH0_CLIENT_ID = ""
-    AUTH0_CLIENT_SECRET = ""
-    AUTH0_DOMAIN = ""
-    AUTH0_DB_NAME = ""
-    AUTH0_API_AUDIENCE = ""
 
     SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/dpr_db_test'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
