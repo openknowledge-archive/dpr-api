@@ -85,6 +85,24 @@ class AuthorizationTestCase(unittest.TestCase):
         self.assertEqual(publisher_roles, roles['System']['LoggedIn'] +
                          roles['Publisher']['Viewer'])
 
+    def test_should_return_logged_in_roles_if_publisher_is_None(self):
+        publisher_roles = get_roles(11, None)
+        self.assertEqual(publisher_roles, roles['System']['LoggedIn'])
+
+    def test_should_return_logged_in_roles_if_package_is_None(self):
+        package_roles = get_roles(11, None)
+        self.assertEqual(package_roles, roles['System']['LoggedIn'])
+
+    def test_should_return_package_owner_roles_if_user_is_owner_of_package(self):
+        instance = MetaDataDB.get_package(self.publisher.name, 'test_package')
+        package_roles = get_roles(11, instance)
+        self.assertEqual(package_roles, roles['Package']['Owner'])
+
+    def test_should_return_package_editor_roles_if_user_is_member_of_package(self):
+        instance = MetaDataDB.get_package(self.publisher1.name, 'test_package')
+        package_roles = get_roles(11, instance)
+        self.assertEqual(package_roles, roles['Package']['Editor'])
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
