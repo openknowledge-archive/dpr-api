@@ -85,6 +85,70 @@ def save_metadata(publisher, package):
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
+@mod_api_blueprint.route("/package/<publisher>/<package>/tag", methods=["POST"])
+@requires_auth
+@is_allowed('Package::Update')
+def tag_data_package(publisher, package):
+    """
+    DPR metadata put operation.
+    This API is responsible for tagging data package
+    ---
+    tags:
+        - package
+    parameters:
+        - in: path
+          name: publisher
+          type: string
+          required: true
+          description: publisher name
+        - in: path
+          name: package
+          type: string
+          required: true
+          description: package name
+        - in: body
+          name: version
+          type: string
+          required: true
+          description: version value
+    responses:
+        400:
+            description: JWT is invalid or req body is not valid
+        401:
+            description: Invalid Header for JWT
+        403:
+            description: User not allowed for operation
+        404:
+            description: User not found
+        500:
+            description: Internal Server Error
+        200:
+            description: Success Message
+            schema:
+                id: put_package_success
+                properties:
+                    status:
+                        type: string
+                        description: Status of the operation
+                        default: OK
+    """
+    try:
+        data = request.get_json()
+        if 'version' not in data:
+            return handle_error('ATTRIBUTE_MISSING', 'version not found', 400)
+
+        bitstore = BitStore(publisher, package)
+        status_db = MetaDataDB.create_or_update_version(publisher, package, data['version'])
+        status_bitstore = bitstore.copy_to_new_version(data['version'])
+
+        if status_db is False or status_bitstore is False:
+            raise Exception("failed to tag data package")
+        return jsonify({"status": "OK"}), 200
+    except Exception as e:
+        app.logger.error(e)
+        return handle_error('GENERIC_ERROR', e.message, 500)
+
+
 @mod_api_blueprint.route("/package/<publisher>/<package>", methods=["DELETE"])
 @is_allowed('Package::Delete')
 def delete_data_package(publisher, package):

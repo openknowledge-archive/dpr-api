@@ -23,7 +23,7 @@ class BitStore(object):
     """
     prefix = 'metadata'
 
-    def __init__(self, publisher, package='', version='latest', body=None):
+    def __init__(self, publisher, package, version='latest', body=None):
         self.publisher = publisher
         self.package = package
         self.version = version
@@ -91,7 +91,7 @@ class BitStore(object):
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
         keys = []
-        prefix = self.build_s3_prefix()
+        prefix = self.build_s3_base_prefix()
         list_objects = s3_client.list_objects(Bucket=bucket_name,
                                               Prefix=prefix)
         if list_objects is not None and 'Contents' in list_objects:
@@ -101,18 +101,20 @@ class BitStore(object):
         return keys
 
     def build_s3_key(self, path):
-        return "{prefix}/{publisher}/{package}/_v/{version}/{path}"\
-            .format(prefix=self.prefix, publisher=self.publisher,
-                    package=self.package, version=self.version, path=path)
+        return "{prefix}/{path}"\
+            .format(prefix=self.build_s3_versioned_prefix(),
+                    path=path)
 
-    def build_s3_prefix(self):
-        """
-        This method builds key prefix for given package and publisher
-        :return: The prefix
-        :rtype: String
-        """
-        return "{prefix}/{publisher}".\
-            format(prefix=self.prefix, publisher=self.publisher)
+    def build_s3_base_prefix(self):
+        return "{prefix}/{publisher}/{package}".\
+            format(prefix=self.prefix,
+                   publisher=self.publisher,
+                   package=self.package)
+
+    def build_s3_versioned_prefix(self):
+        return "{prefix}/_v/{version}". \
+            format(prefix=self.build_s3_base_prefix(),
+                   version=self.version)
 
     def generate_pre_signed_put_obj_url(self, path, md5):
         """
@@ -142,14 +144,13 @@ class BitStore(object):
             bucket_name = app.config['S3_BUCKET_NAME']
             s3_client = app.config['S3']
 
-            prefix = "{p}/{pac}".format(p=self.build_s3_prefix(),
-                                        pac=self.package)
             keys = []
             list_objects = s3_client.list_objects(Bucket=bucket_name,
-                                                  Prefix=prefix)
+                                                  Prefix=self.build_s3_base_prefix())
             if list_objects is not None and 'Contents' in list_objects:
-                for ob in s3_client.list_objects(Bucket=bucket_name,
-                                                 Prefix=prefix)['Contents']:
+                for ob in s3_client \
+                    .list_objects(Bucket=bucket_name,
+                                  Prefix=self.build_s3_base_prefix())['Contents']:
                     keys.append(dict(Key=ob['Key']))
 
             s3_client.delete_objects(Bucket=bucket_name, Delete=dict(Objects=keys))
@@ -168,14 +169,14 @@ class BitStore(object):
         try:
             bucket_name = app.config['S3_BUCKET_NAME']
             s3_client = app.config['S3']
-            prefix = "{p}/{pac}".format(p=self.build_s3_prefix(),
-                                        pac=self.package)
+
             keys = []
             list_objects = s3_client.list_objects(Bucket=bucket_name,
-                                                  Prefix=prefix)
+                                                  Prefix=self.build_s3_base_prefix())
             if list_objects is not None and 'Contents' in list_objects:
-                for ob in s3_client.list_objects(Bucket=bucket_name,
-                                                 Prefix=prefix)['Contents']:
+                for ob in s3_client \
+                    .list_objects(Bucket=bucket_name,
+                                  Prefix=self.build_s3_base_prefix())['Contents']:
                     keys.append(ob['Key'])
 
             for key in keys:
@@ -185,6 +186,29 @@ class BitStore(object):
             app.logger.error(e)
             return False
         return True
+
+    def copy_to_new_version(self, version):
+        try:
+            bucket_name = app.config['S3_BUCKET_NAME']
+            s3_client = app.config['S3']
+            latest_keys = []
+            list_objects = s3_client.list_objects(Bucket=bucket_name,
+                                                  Prefix=self.build_s3_versioned_prefix())
+            if list_objects is not None and 'Contents' in list_objects:
+                for ob in s3_client \
+                    .list_objects(Bucket=bucket_name,
+                                  Prefix=self.build_s3_versioned_prefix())['Contents']:
+                    latest_keys.append(ob['Key'])
+            for key in latest_keys:
+                versioned_key = key.replace('/latest/', '/{0}/'.format(version))
+                copy_source = {'Bucket': bucket_name, 'Key': key}
+                s3_client.copy_object(Bucket=bucket_name,
+                                      Key=versioned_key,
+                                      CopySource=copy_source)
+            return True
+        except Exception as e:
+            app.logger.error(e)
+            return False
 
 
 class Publisher(db.Model):
@@ -304,6 +328,7 @@ class MetaDataDB(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     name = db.Column(db.TEXT, index=True)
+    version = db.Column(db.TEXT, index=True, default='latest')
     descriptor = db.Column(db.JSON)
     status = db.Column(db.TEXT, index=True, default='active')
     private = db.Column(db.BOOLEAN, default=False)
@@ -315,8 +340,35 @@ class MetaDataDB(db.Model):
                              single_parent=True)
 
     __table_args__ = (
-        UniqueConstraint("name", "publisher_id"),
+        UniqueConstraint("name", "version", "publisher_id"),
     )
+
+    @staticmethod
+    def create_or_update_version(publisher_name, package_name, version):
+        try:
+            data_latest = MetaDataDB.query.join(Publisher). \
+                filter(Publisher.name == publisher_name,
+                       MetaDataDB.name == package_name,
+                       MetaDataDB.version == 'latest').one()
+            instance = MetaDataDB.query.join(Publisher). \
+                filter(Publisher.name == publisher_name,
+                       MetaDataDB.name == package_name,
+                       MetaDataDB.version == version).first()
+            update_props = ['name', 'version', 'descriptor', 'status',
+                            'private', 'readme', 'publisher_id']
+            if instance is None:
+                instance = MetaDataDB()
+
+            for update_prop in update_props:
+                setattr(instance, update_prop, getattr(data_latest, update_prop))
+            instance.version = version
+
+            db.session.add(instance)
+            db.session.commit()
+            return True
+        except Exception as e:
+            app.logger.error(e)
+            return False
 
     @staticmethod
     def create_or_update(name, publisher_name, **kwargs):

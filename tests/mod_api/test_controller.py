@@ -899,3 +899,167 @@ class HardDeleteTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+
+
+class TagDataPackageTestCase(unittest.TestCase):
+    publisher_name = 'test_publisher'
+    package = 'test_package'
+    url = "/api/package/{pub}/{pac}/tag".format(pub=publisher_name,
+                                                pac=package)
+    user_id = 1
+    user_not_allowed_id = 2
+    user_not_allowed_name = 'other_publisher'
+    user_member_id = 3
+    user_member_name = 'member_publisher'
+    jwt_url = '/api/auth/token'
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = self.user_id
+            self.user.email, self.user.name, self.user.secret = \
+                'test@test.com', self.publisher_name, 'super_secret'
+
+            self.publisher = Publisher(name=self.publisher_name)
+
+            association = PublisherUser(role="OWNER")
+            association.publisher = self.publisher
+
+            metadata = MetaDataDB(name=self.package)
+            self.publisher.packages.append(metadata)
+            self.user.publishers.append(association)
+
+            self.user_not_allowed = User()
+            self.user_not_allowed.id = self.user_not_allowed_id
+            self.user_not_allowed.email, self.user_not_allowed.name, \
+                self.user_not_allowed.secret = \
+                'test1@test.com', self.user_not_allowed_name, 'super_secret'
+
+            self.publisher_not_allowed = Publisher(name=self.user_not_allowed_name)
+
+            association_not_allowed = PublisherUser(role="OWNER")
+            association_not_allowed.publisher = self.publisher_not_allowed
+
+            metadata = MetaDataDB(name=self.package)
+            self.publisher_not_allowed.packages.append(metadata)
+            self.user_not_allowed.publishers.append(association_not_allowed)
+
+            self.user_member = User()
+            self.user_member.id = self.user_member_id
+            self.user_member.email, self.user_member.name, self.user_member.secret = \
+                'tes2t@test.com', self.user_member_name, 'super_secret'
+
+            association_member = PublisherUser(role="MEMBER")
+            association_member.publisher = self.publisher
+            self.user_member.publishers.append(association_member)
+
+            db.session.add(self.user)
+            db.session.add(self.user_not_allowed)
+            db.session.commit()
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt = data['token']
+        self.auth = "bearer %s" % self.jwt
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_return_200_if_all_goes_well(self, create_or_update_version, copy_to_new_version):
+        copy_to_new_version.return_value = True
+        create_or_update_version.return_value = True
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=self.auth))
+        self.assertEqual(response.status_code, 200)
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_throw_400_if_version_missing(self, create_or_update_version, copy_to_new_version):
+        copy_to_new_version.return_value = True
+        create_or_update_version.return_value = True
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version_fail': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=self.auth))
+        self.assertEqual(response.status_code, 400)
+        data = json.loads(response.data)
+        self.assertEqual('ATTRIBUTE_MISSING', data['error_code'])
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_throw_500_if_failed_to_tag(self, create_or_update_version, copy_to_new_version):
+        copy_to_new_version.return_value = False
+        create_or_update_version.return_value = True
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=self.auth))
+        self.assertEqual(response.status_code, 500)
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_throw_403_if_not_owner_or_member_of_publisher(self, create_or_update_version,
+                                                           copy_to_new_version):
+        copy_to_new_version.return_value = False
+        create_or_update_version.return_value = True
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.user_not_allowed_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        jwt_not_allowed = data['token']
+        auth_not_allowed = "bearer %s" % jwt_not_allowed
+
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=auth_not_allowed))
+        self.assertEqual(response.status_code, 403)
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_allow_if_member_of_publisher(self, create_or_update_version,
+                                          copy_to_new_version):
+        copy_to_new_version.return_value = False
+        create_or_update_version.return_value = True
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.user_member_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        jwt_allowed = data['token']
+        auth_allowed = "bearer %s" % jwt_allowed
+
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=auth_allowed))
+        self.assertEqual(response.status_code, 500)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
