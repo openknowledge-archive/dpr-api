@@ -5,8 +5,16 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from flask import current_app as app
+from flask import url_for
+
 
 class Catalog(object):
+    """
+    This model responsible for formatting data at view layer.
+    This model takes returns from
+    >>> url_for("get_metadata", publisher='pub', package='package')
+    as a constructor argument.
+    """
     def __init__(self, metadata):
         self.metadata = metadata
         self.publisher = metadata.get('publisher')

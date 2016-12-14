@@ -11,7 +11,8 @@ from mock import patch
 
 from app import create_app
 from app.database import db
-from app.mod_api.models import User, MetaDataDB, Publisher, PublisherUser
+from app.mod_api.models import User, MetaDataDB, Publisher, \
+    PublisherUser, UserRoleEnum
 
 
 class AuthTokenTestCase(unittest.TestCase):
@@ -338,7 +339,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
             publisher = Publisher(name=self.publisher)
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = publisher
             self.user.publishers.append(association)
             db.session.add(self.user)
@@ -419,7 +420,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
             self.pub = Publisher(name=self.publisher)
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.pub
             self.user.publishers.append(association)
 
@@ -744,7 +745,7 @@ class SoftDeleteTestCase(unittest.TestCase):
 
             self.publisher = Publisher(name=self.publisher_name)
 
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
 
             metadata = MetaDataDB(name=self.package)
@@ -838,7 +839,7 @@ class HardDeleteTestCase(unittest.TestCase):
 
             self.publisher = Publisher(name=self.publisher_name)
 
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
 
             metadata = MetaDataDB(name=self.package)

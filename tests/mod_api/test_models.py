@@ -6,14 +6,13 @@ from __future__ import unicode_literals
 
 import boto3
 from urlparse import urlparse
-
-from botocore.exceptions import ParamValidationError
 from moto import mock_s3
 import unittest
 import json
 from app import create_app
 from app.database import db
-from app.mod_api.models import BitStore, MetaDataDB, User, Publisher, PublisherUser
+from app.mod_api.models import BitStore, MetaDataDB, User, \
+    Publisher, PublisherUser, UserRoleEnum
 
 
 class BitStoreTestCase(unittest.TestCase):
@@ -219,13 +218,13 @@ class MetaDataDBTestCase(unittest.TestCase):
 
             user1 = User(name=self.publisher_one)
             publisher1 = Publisher(name=self.publisher_one)
-            association1 = PublisherUser(role="OWNER")
+            association1 = PublisherUser(role=UserRoleEnum.owner)
             association1.publisher = publisher1
             user1.publishers.append(association1)
 
             user2 = User(name=self.publisher_two)
             publisher2 = Publisher(name=self.publisher_two)
-            association2 = PublisherUser(role="OWNER")
+            association2 = PublisherUser(role=UserRoleEnum.owner)
             association2.publisher = publisher2
             user2.publishers.append(association2)
 
@@ -338,6 +337,27 @@ class MetaDataDBTestCase(unittest.TestCase):
             db.drop_all()
 
 
+class PublisherUserTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.app = create_app()
+        self.app.app_context().push()
+
+    def test_throw_error_if_role_is_invalid(self):
+        with self.app.test_request_context():
+            db.drop_all()
+            db.create_all()
+            publisher = Publisher(name='test_pub_id')
+            association = PublisherUser()
+            association.publisher = publisher
+            self.assertRaises(ValueError, association.role, "NOT_MEMBER")
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+
 class UserTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -352,7 +372,7 @@ class UserTestCase(unittest.TestCase):
                         secret='supersecret',
                         auth0_id="123|auth0")
             publisher = Publisher(name='test_pub_id')
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = publisher
             user.publishers.append(association)
 
@@ -367,7 +387,7 @@ class UserTestCase(unittest.TestCase):
     def test_user_role_on_publisher(self):
         user = User.query.filter_by(name='test_user_id').one()
         self.assertEqual(len(user.publishers), 1)
-        self.assertEqual(user.publishers[0].role, 'OWNER')
+        self.assertEqual(user.publishers[0].role, UserRoleEnum.owner)
 
     def test_user_creation_from_outh0_response(self):
         user_info = dict(email="test@test.com",
