@@ -288,7 +288,7 @@ class PublisherUser(db.Model):
     user_id = db.Column(db.Integer, ForeignKey('user.id'), primary_key=True)
     publisher_id = db.Column(db.Integer, ForeignKey('publisher.id'), primary_key=True)
 
-    role = db.Column(db.Enum(UserRoleEnum), nullable=False)
+    role = db.Column(db.Enum(UserRoleEnum, native_enum=False), nullable=False)
     """role can only OWNER or MEMBER"""
 
     publisher = relationship("Publisher", back_populates="users")
