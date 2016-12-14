@@ -8,7 +8,8 @@ import unittest
 from app.database import db
 from app import create_app
 from app.utils.authorization import get_roles, roles
-from app.mod_api.models import MetaDataDB, User, Publisher, PublisherUser
+from app.mod_api.models import MetaDataDB, User, Publisher, \
+    PublisherUser, UserRoleEnum
 
 
 class AuthorizationTestCase(unittest.TestCase):
@@ -34,11 +35,11 @@ class AuthorizationTestCase(unittest.TestCase):
             self.publisher1 = Publisher(name="test_publisher")
             self.publisher1.packages.append(MetaDataDB(name='test_package'))
 
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
             self.user.publishers.append(association)
 
-            association1 = PublisherUser(role="MEMBER")
+            association1 = PublisherUser(role=UserRoleEnum.member)
             association1.publisher = self.publisher1
             self.user.publishers.append(association1)
 

@@ -12,7 +12,7 @@ import re
 import unittest
 from app.database import db
 from app.mod_site.models import Catalog
-from app.mod_api.models import User, MetaDataDB, Publisher
+from app.mod_api.models import User, MetaDataDB, Publisher, UserRoleEnum
 
 class CatalogTestCase(unittest.TestCase):
     def setUp(self):
@@ -308,7 +308,7 @@ class SignupEndToEndTestCase(unittest.TestCase):
                     self.assertEqual(len(new_user.publishers), 1)
 
                     # Verify  Owner Association
-                    self.assertEqual(new_user.publishers[0].role, 'OWNER')
+                    self.assertEqual(new_user.publishers[0].role, UserRoleEnum.owner)
 
                     # Checking template rendered
                     self.assertEqual('dashboard.html', template.name)

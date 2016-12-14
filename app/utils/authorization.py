@@ -8,7 +8,8 @@ from functools import wraps
 from flask import request
 
 from app.utils.auth import get_user_from_jwt, handle_error
-from app.mod_api.models import User, MetaDataDB, Publisher, PublisherUser
+from app.mod_api.models import User, MetaDataDB, Publisher, \
+    PublisherUser, UserRoleEnum
 
 
 roles = {
@@ -97,9 +98,9 @@ def get_publisher_roles(user_id, entity):
     try:
         user_role = PublisherUser.query.join(User).join(Publisher)\
             .filter(User.id == user_id, Publisher.name == entity.name).one()
-        if user_role.role == 'OWNER':
+        if user_role.role == UserRoleEnum.owner:
             publisher_roles.extend(roles[role_parent]['Owner'])
-        elif user_role.role == 'MEMBER':
+        elif user_role.role == UserRoleEnum.member:
             publisher_roles.extend(roles[role_parent]['Editor'])
     except:
         publisher_roles.extend(roles['System']['LoggedIn'])
@@ -115,9 +116,9 @@ def get_package_roles(user_id, entity):
         user_role = PublisherUser.query.join(User).join(Publisher)\
             .filter(User.id == user_id, Publisher.name == entity.publisher.name)\
             .one()
-        if user_role.role == 'OWNER':
+        if user_role.role == UserRoleEnum.owner:
             package_roles.extend(roles[role_parent]['Owner'])
-        elif user_role.role == 'MEMBER':
+        elif user_role.role == UserRoleEnum.member:
             package_roles.extend(roles[role_parent]['Editor'])
     except:
         package_roles.extend(roles['System']['LoggedIn'])

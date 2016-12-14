@@ -7,9 +7,10 @@ from __future__ import unicode_literals
 import json
 import os
 import datetime
+
+import enum
 from sqlalchemy import ForeignKey
 from sqlalchemy import UniqueConstraint
-
 from flask import current_app as app
 from sqlalchemy.orm import relationship
 
@@ -250,7 +251,7 @@ class User(db.Model):
             user.auth0_id = auth0_id
 
             publisher = Publisher(name=user.name)
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = publisher
             user.publishers.append(association)
 
@@ -270,6 +271,11 @@ class User(db.Model):
         return None
 
 
+class UserRoleEnum(enum.Enum):
+    owner = "OWNER"
+    member = "MEMBER"
+
+
 class PublisherUser(db.Model):
     """
     This class is association object between user and publisher
@@ -282,7 +288,7 @@ class PublisherUser(db.Model):
     user_id = db.Column(db.Integer, ForeignKey('user.id'), primary_key=True)
     publisher_id = db.Column(db.Integer, ForeignKey('publisher.id'), primary_key=True)
 
-    role = db.Column(db.TEXT, nullable=False)
+    role = db.Column(db.Enum(UserRoleEnum), nullable=False)
     """role can only OWNER or MEMBER"""
 
     publisher = relationship("Publisher", back_populates="users")
