@@ -926,7 +926,7 @@ class TagDataPackageTestCase(unittest.TestCase):
 
             self.publisher = Publisher(name=self.publisher_name)
 
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
 
             metadata = MetaDataDB(name=self.package)
@@ -941,7 +941,7 @@ class TagDataPackageTestCase(unittest.TestCase):
 
             self.publisher_not_allowed = Publisher(name=self.user_not_allowed_name)
 
-            association_not_allowed = PublisherUser(role="OWNER")
+            association_not_allowed = PublisherUser(role=UserRoleEnum.owner)
             association_not_allowed.publisher = self.publisher_not_allowed
 
             metadata = MetaDataDB(name=self.package)
@@ -953,7 +953,7 @@ class TagDataPackageTestCase(unittest.TestCase):
             self.user_member.email, self.user_member.name, self.user_member.secret = \
                 'tes2t@test.com', self.user_member_name, 'super_secret'
 
-            association_member = PublisherUser(role="MEMBER")
+            association_member = PublisherUser(role=UserRoleEnum.member)
             association_member.publisher = self.publisher
             self.user_member.publishers.append(association_member)
 
@@ -1015,8 +1015,6 @@ class TagDataPackageTestCase(unittest.TestCase):
     @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
     def test_throw_403_if_not_owner_or_member_of_publisher(self, create_or_update_version,
                                                            copy_to_new_version):
-        copy_to_new_version.return_value = False
-        create_or_update_version.return_value = True
         response = self.client.post(self.jwt_url,
                                     data=json.dumps({
                                         'username': self.user_not_allowed_name,
@@ -1034,6 +1032,8 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     content_type='application/json',
                                     headers=dict(Authorization=auth_not_allowed))
         self.assertEqual(response.status_code, 403)
+        self.assertFalse(copy_to_new_version.called)
+        self.assertFalse(create_or_update_version.called)
 
     @patch('app.mod_api.models.BitStore.copy_to_new_version')
     @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
