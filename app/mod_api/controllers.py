@@ -21,6 +21,7 @@ mod_api_blueprint = Blueprint('api', __name__, url_prefix='/api')
 
 @mod_api_blueprint.route("/package/<publisher>/<package>", methods=["PUT"])
 @requires_auth
+@is_allowed('Package::Create')
 def save_metadata(publisher, package):
     """
     DPR metadata put operation.
@@ -133,6 +134,8 @@ def delete_data_package(publisher, package):
 
 
 @mod_api_blueprint.route("/package/<publisher>/<package>/purge", methods=["DELETE"])
+@requires_auth
+@is_allowed('Package::Purge')
 def purge_data_package(publisher, package):
     """
     DPR data package hard delete operation.
@@ -181,6 +184,7 @@ def purge_data_package(publisher, package):
 @mod_api_blueprint.route("/package/<publisher>/<package>/finalize",
                          methods=["POST"])
 @requires_auth
+@is_allowed('Package::Create')
 def finalize_metadata(publisher, package):
     """
     DPR metadata finalize operation.

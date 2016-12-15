@@ -60,8 +60,7 @@ def is_allowed(action):
                 instance = Publisher.query.filter_by(name=publisher_name).one()
             else:
                 return handle_error("INVALID_ENTITY", "{e} is not a valid one".format(e=entity_str), 401)
-            if instance is None:
-                return handle_error("INVALID_INPUT", "Could not find publisher or package", 404)
+
             status = is_role_allowed(user_id, instance, action)
             if not status:
                 return handle_error("NOT_ALLOWED", "The operation is not allowed", 403)
@@ -77,11 +76,13 @@ def is_role_allowed(user_id, entity, action):
 
 def get_roles(user_id, entity):
     local_roles = []
-    if user_id is None:
-        if entity.private is False:
+    user = None
+    if user_id is not None:
+        user = User.query.get(user_id)
+    if user is None:
+        if entity is not None and entity.private is False:
             local_roles.extend(roles['System']['Anonymous'])
     else:
-        user = User.query.get(user_id)
         if user.sysadmin is True:
             local_roles.extend(roles['System']['Sysadmin'])
         else:
@@ -89,6 +90,8 @@ def get_roles(user_id, entity):
                 local_roles.extend(get_publisher_roles(user_id=user_id, entity=entity))
             if isinstance(entity, MetaDataDB):
                 local_roles.extend(get_package_roles(user_id=user_id, entity=entity))
+            elif entity is None:
+                local_roles.extend(roles['System']['LoggedIn'])
     return local_roles
 
 
