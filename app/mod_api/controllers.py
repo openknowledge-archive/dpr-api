@@ -11,8 +11,7 @@ from flask import current_app as app
 from flask import redirect, Response
 from app.mod_api.models import BitStore, User, MetaDataDB, Publisher
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
-from app.utils.auth import requires_auth
-from app.utils.authorization import is_allowed
+from app.mod_api.annotations import requires_auth, is_allowed
 from app.utils.auth0_helper import get_user_info_with_code
 from app.utils.jwt_utilities import JWTHelper
 

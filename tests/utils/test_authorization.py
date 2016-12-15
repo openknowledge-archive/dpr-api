@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import unittest
 from app.database import db
 from app import create_app
-from app.utils.authorization import get_roles, roles
+from app.utils.authorization import is_allowed
 from app.mod_api.models import MetaDataDB, User, Publisher, \
     PublisherUser, UserRoleEnum
 
@@ -26,28 +26,37 @@ class AuthorizationTestCase(unittest.TestCase):
                              name=self.user_name,
                              secret='supersecret',
                              auth0_id="123|auth0")
-            self.sysadmin = User(id=12,
-                                 name='admin',
-                                 sysadmin=True)
+
             self.publisher = Publisher(name=self.user_name)
             self.publisher.packages.append(MetaDataDB(name='test_package'))
+
+            association = PublisherUser(role=UserRoleEnum.owner)
+            association.publisher = self.publisher
+
+            self.user.publishers.append(association)
 
             self.publisher1 = Publisher(name="test_publisher")
             self.publisher1.packages.append(MetaDataDB(name='test_package'))
 
-            association = PublisherUser(role=UserRoleEnum.owner)
-            association.publisher = self.publisher
-            self.user.publishers.append(association)
-
             association1 = PublisherUser(role=UserRoleEnum.member)
             association1.publisher = self.publisher1
+
             self.user.publishers.append(association1)
 
             db.session.add(self.user)
+
+            self.sysadmin = User(id=12,
+                                 name='admin',
+                                 sysadmin=True)
             db.session.add(self.sysadmin)
 
+            self.random_user = User(id=13,
+                                    name='random')
+            db.session.add(self.random_user)
+
             self.publisher2 = Publisher(name="test_publisher1", private=True)
-            self.publisher2.packages.append(MetaDataDB(name='test_package'))
+            self.publisher2.packages.append(MetaDataDB(name='test_package',
+                                                       private=True))
             db.session.add(self.publisher2)
 
             self.publisher3 = Publisher(name="test_publisher2", private=False)
@@ -56,52 +65,162 @@ class AuthorizationTestCase(unittest.TestCase):
 
             db.session.commit()
 
-    def test_should_return_anonymous_roles_if_user_id_is_none_and_entity_is_public(self):
-        anonymous_roles = get_roles(None, self.publisher1)
-        self.assertEqual(anonymous_roles, roles['System']['Anonymous'])
+    def test_publisher_read_is_allowed_if_user_is_owner(self):
+        allowed = is_allowed(11, self.publisher, 'Publisher::Read')
+        self.assertTrue(allowed)
 
-    def test_should_return_blank_roles_if_user_id_is_none_and_entity_is_private(self):
-        anonymous_roles = get_roles(None, self.publisher2)
-        self.assertEqual(anonymous_roles, [])
+    def test_publisher_read_is_allowed_if_user_is_member(self):
+        allowed = is_allowed(11, self.publisher1, 'Publisher::Read')
+        self.assertTrue(allowed)
 
-    def test_sys_admin_roles(self):
-        sysadmin_roles = get_roles(12, None)
-        self.assertEqual(sysadmin_roles, roles['System']['Sysadmin'])
+    def test_publisher_read_is_allowed_if_user_is_sysadmin(self):
+        allowed = is_allowed(12, self.publisher, 'Publisher::Read')
+        self.assertTrue(allowed)
 
-    def test_publisher_owner_roles(self):
-        publisher_roles = get_roles(11, self.publisher)
-        self.assertEqual(publisher_roles, roles['Publisher']['Owner'])
+    def test_publisher_read_is_allowed_if_user_is_anonymous(self):
+        allowed = is_allowed(None, self.publisher, 'Publisher::Read')
+        self.assertTrue(allowed)
 
-    def test_publisher_member_roles(self):
-        publisher_roles = get_roles(11, self.publisher1)
-        self.assertEqual(publisher_roles, roles['Publisher']['Editor'])
+    def test_publisher_read_is_not_allowed_if_user_is_anonymous_and_package_private(self):
+        allowed = is_allowed(None, self.publisher2, 'Publisher::Read')
+        self.assertFalse(allowed)
 
-    def test_publisher_viewer_roles_for_private(self):
-        publisher_roles = get_roles(11, self.publisher2)
-        self.assertEqual(publisher_roles, roles['System']['LoggedIn'])
+    def test_publisher_delete_is_allowed_if_user_is_owner(self):
+        allowed = is_allowed(11, self.publisher, 'Publisher::Delete')
+        self.assertTrue(allowed)
 
-    def test_publisher_viewer_roles_for_public(self):
-        publisher_roles = get_roles(11, self.publisher3)
-        self.assertEqual(publisher_roles, roles['System']['LoggedIn'] +
-                         roles['Publisher']['Viewer'])
+    def test_publisher_delete_is_allowed_if_user_is_sysadmin(self):
+        allowed = is_allowed(12, self.publisher, 'Publisher::Delete')
+        self.assertTrue(allowed)
 
-    def test_should_return_logged_in_roles_if_publisher_is_None(self):
-        publisher_roles = get_roles(11, None)
-        self.assertEqual(publisher_roles, roles['System']['LoggedIn'])
+    def test_publisher_delete_is_not_allowed_if_user_is_member(self):
+        allowed = is_allowed(11, self.publisher1, 'Publisher::Delete')
+        self.assertFalse(allowed)
 
-    def test_should_return_logged_in_roles_if_package_is_None(self):
-        package_roles = get_roles(11, None)
-        self.assertEqual(package_roles, roles['System']['LoggedIn'])
+    def test_publisher_delete_is_not_allowed_if_user_is_anonymous(self):
+        allowed = is_allowed(None, self.publisher1, 'Publisher::Delete')
+        self.assertFalse(allowed)
 
-    def test_should_return_package_owner_roles_if_user_is_owner_of_package(self):
-        instance = MetaDataDB.get_package(self.publisher.name, 'test_package')
-        package_roles = get_roles(11, instance)
-        self.assertEqual(package_roles, roles['Package']['Owner'])
+    def test_publisher_add_member_is_allowed_if_user_is_owner(self):
+        allowed = is_allowed(11, self.publisher, 'Publisher::AddMember')
+        self.assertTrue(allowed)
 
-    def test_should_return_package_editor_roles_if_user_is_member_of_package(self):
-        instance = MetaDataDB.get_package(self.publisher1.name, 'test_package')
-        package_roles = get_roles(11, instance)
-        self.assertEqual(package_roles, roles['Package']['Editor'])
+    def test_publisher_add_member_is_allowed_if_user_is_sysadmin(self):
+        allowed = is_allowed(12, self.publisher, 'Publisher::AddMember')
+        self.assertTrue(allowed)
+
+    def test_publisher_add_member_is_allowed_if_user_is_member(self):
+        allowed = is_allowed(11, self.publisher1, 'Publisher::AddMember')
+        self.assertTrue(allowed)
+
+    def test_publisher_add_member_is_not_allowed_if_user_is_anonymous(self):
+        allowed = is_allowed(None, self.publisher1, 'Publisher::AddMember')
+        self.assertFalse(allowed)
+
+    def test_package_read_is_allowed_if_user_is_owner(self):
+        package = MetaDataDB.query.join(Publisher)\
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher.name).one()
+        allowed = is_allowed(11, package, 'Package::Read')
+        self.assertTrue(allowed)
+
+    def test_package_read_is_allowed_if_user_is_member(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher1.name).one()
+        allowed = is_allowed(11, package, 'Package::Read')
+        self.assertTrue(allowed)
+
+    def test_package_read_is_allowed_if_user_is_sysadmin(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher.name).one()
+        allowed = is_allowed(12, package, 'Package::Read')
+        self.assertTrue(allowed)
+
+    def test_package_read_is_allowed_if_user_is_anonymous(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher.name).one()
+        allowed = is_allowed(None, package, 'Package::Read')
+        self.assertTrue(allowed)
+
+    def test_package_read_is_not_allowed_if_user_is_anonymous_and_package_private(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher2.name).one()
+        allowed = is_allowed(None, package, 'Package::Read')
+        self.assertFalse(allowed)
+
+    def test_package_delete_is_allowed_if_user_is_owner(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher.name).one()
+        allowed = is_allowed(11, package, 'Package::Purge')
+        self.assertTrue(allowed)
+
+    def test_package_delete_is_allowed_if_user_is_sysadmin(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher.name).one()
+        allowed = is_allowed(12, package, 'Package::Purge')
+        self.assertTrue(allowed)
+
+    def test_package_delete_is_not_allowed_if_user_is_member(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher1.name).one()
+        allowed = is_allowed(11, package, 'Package::Purge')
+        self.assertFalse(allowed)
+
+    def test_package_delete_is_not_allowed_if_user_is_anonymous(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher.name).one()
+        allowed = is_allowed(None, package, 'Package::Purge')
+        self.assertFalse(allowed)
+
+    def test_package_add_member_is_allowed_if_user_is_owner(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher.name).one()
+        allowed = is_allowed(11, package, 'Package::Delete')
+        self.assertTrue(allowed)
+
+    def test_package_add_member_is_allowed_if_user_is_sysadmin(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher.name).one()
+        allowed = is_allowed(12, package, 'Package::Delete')
+        self.assertTrue(allowed)
+
+    def test_package_add_member_is_allowed_if_user_is_member(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher1.name).one()
+        allowed = is_allowed(11, package, 'Package::Delete')
+        self.assertTrue(allowed)
+
+    def test_package_add_member_is_not_allowed_if_user_is_anonymous(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher1.name).one()
+        allowed = is_allowed(None, package, 'Package::Delete')
+        self.assertFalse(allowed)
+
+    def test_package_create_is_not_allowed_if_user_is_logged_in(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher1.name).one()
+        allowed = is_allowed(13, package, 'Package::Create')
+        self.assertTrue(allowed)
+
+    def test_publisher_create_is_not_allowed_if_user_is_logged_in(self):
+        package = MetaDataDB.query.join(Publisher) \
+            .filter(MetaDataDB.name == 'test_package',
+                    Publisher.name == self.publisher1.name).one()
+        allowed = is_allowed(13, package, 'Publisher::Create')
+        self.assertTrue(allowed)
 
     def tearDown(self):
         with self.app.app_context():
