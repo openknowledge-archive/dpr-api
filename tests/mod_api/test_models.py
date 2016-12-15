@@ -16,7 +16,6 @@ from app.mod_api.models import BitStore, MetaDataDB, User, \
 
 
 class BitStoreTestCase(unittest.TestCase):
-
     def setUp(self):
         self.app = create_app()
 
@@ -28,8 +27,8 @@ class BitStoreTestCase(unittest.TestCase):
 
     def test_metadata_s3_prefix(self):
         metadata = BitStore(publisher="pub_test", package="test_package")
-        expected = "{t}/pub_test".format(t=metadata.prefix)
-        self.assertEqual(expected, metadata.build_s3_prefix())
+        expected = "{t}/pub_test/test_package".format(t=metadata.prefix)
+        self.assertEqual(expected, metadata.build_s3_base_prefix())
 
     @mock_s3
     def test_save(self):
@@ -201,9 +200,37 @@ class BitStoreTestCase(unittest.TestCase):
 
             self.assertTrue(status)
 
+    @mock_s3
+    def test_should_copy_all_object_from_latest_to_tag(self):
+        numeric_version = 0.8
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+
+            read_me_key = bit_store.build_s3_key('test.md')
+            data_key = bit_store.build_s3_key('data.csv')
+            metadata_key = bit_store.build_s3_key('datapackage.json')
+            s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='readme')
+            s3.put_object(Bucket=bucket_name, Key=data_key, Body='data')
+            s3.put_object(Bucket=bucket_name, Key=metadata_key, Body='metedata')
+
+            bit_store.copy_to_new_version(numeric_version)
+
+            bit_store_numeric = BitStore('test_pub', 'test_package',
+                                         numeric_version)
+            objects_nu = s3.list_objects(Bucket=bucket_name,
+                                         Prefix=bit_store_numeric
+                                         .build_s3_versioned_prefix())
+            objects_old = s3.list_objects(Bucket=bucket_name,
+                                          Prefix=bit_store
+                                          .build_s3_versioned_prefix())
+            self.assertEqual(len(objects_nu['Contents']),
+                             len(objects_old['Contents']))
+
 
 class MetaDataDBTestCase(unittest.TestCase):
-
     def setUp(self):
         self.publisher_one = 'test_publisher1'
         self.publisher_two = 'test_publisher2'
@@ -331,6 +358,47 @@ class MetaDataDBTestCase(unittest.TestCase):
                                                 self.package_one)
         self.assertFalse(status)
 
+    def test_should_populate_new_versioned_data_package(self):
+        MetaDataDB.create_or_update_version(self.publisher_one,
+                                            self.package_two, 'tag_one')
+        latest_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'latest').one()
+        tagged_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'tag_one').one()
+        self.assertEqual(latest_data.name, tagged_data.name)
+        self.assertEqual('tag_one', tagged_data.version)
+
+    def test_should_update_data_package_if_preexists(self):
+        with self.app.test_request_context():
+            pub = Publisher.query.filter_by(name=self.publisher_one).one()
+            pub.packages.append(MetaDataDB(name=self.package_two,
+                                           version='tag_one',
+                                           readme='old_readme'))
+            db.session.add(pub)
+            db.session.commit()
+        latest_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'latest').one()
+        tagged_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'tag_one').one()
+        self.assertNotEqual(latest_data.readme, tagged_data.readme)
+
+        MetaDataDB.create_or_update_version(self.publisher_one,
+                                            self.package_two,
+                                            'tag_one')
+        tagged_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'tag_one').one()
+        self.assertEqual(latest_data.readme, tagged_data.readme)
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
@@ -359,7 +427,6 @@ class PublisherUserTestCase(unittest.TestCase):
 
 
 class UserTestCase(unittest.TestCase):
-
     def setUp(self):
         self.app = create_app()
         self.app.app_context().push()
@@ -380,7 +447,7 @@ class UserTestCase(unittest.TestCase):
             db.session.commit()
 
     def test_serialize(self):
-        user = User.query.filter_by(name='test_user_id').one()\
+        user = User.query.filter_by(name='test_user_id').one() \
             .serialize
         self.assertEqual('test_user_id', user['name'])
 
