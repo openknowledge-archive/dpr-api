@@ -631,7 +631,7 @@ class EndToEndTestCase(unittest.TestCase):
 
             self.publisherObj = Publisher(name=self.publisher)
 
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisherObj
             self.user.publishers.append(association)
 
@@ -857,7 +857,7 @@ class HardDeleteTestCase(unittest.TestCase):
             association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
 
-            association1 = PublisherUser(role="MEMBER")
+            association1 = PublisherUser(role=UserRoleEnum.member)
             association1.publisher = self.publisher
 
             metadata = MetaDataDB(name=self.package)
@@ -938,7 +938,6 @@ class HardDeleteTestCase(unittest.TestCase):
         auth = "bearer %s" % self.jwt_member
         response = self.client.delete(self.url, headers=dict(Authorization=auth))
         self.assertEqual(response.status_code, 403)
-
 
     def tearDown(self):
         with self.app.app_context():
