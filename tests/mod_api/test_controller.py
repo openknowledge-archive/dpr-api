@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 
 import unittest
 import json
-
+import boto3
 from mock import patch
-
+from moto import mock_s3
 from app import create_app
 from app.database import db
 from app.mod_api.models import User, MetaDataDB, Publisher, \
-    PublisherUser, UserRoleEnum
+    PublisherUser, UserRoleEnum, BitStore
 
 
 class AuthTokenTestCase(unittest.TestCase):
@@ -917,6 +917,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client()
         with self.app.app_context():
+            self.bucket_name = self.app.config['S3_BUCKET_NAME']
             db.drop_all()
             db.create_all()
             self.user = User()
@@ -1011,10 +1012,18 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     headers=dict(Authorization=self.auth))
         self.assertEqual(response.status_code, 500)
 
-    @patch('app.mod_api.models.BitStore.copy_to_new_version')
-    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
-    def test_throw_403_if_not_owner_or_member_of_publisher(self, create_or_update_version,
-                                                           copy_to_new_version):
+    @mock_s3
+    def test_throw_403_if_not_owner_or_member_of_publisher(self):
+        s3 = boto3.client('s3')
+        s3.create_bucket(Bucket=self.bucket_name)
+        bit_store = BitStore('test_pub', 'test_package')
+        read_me_key = bit_store.build_s3_key('test.md')
+        data_key = bit_store.build_s3_key('data.csv')
+        metadata_key = bit_store.build_s3_key('datapackage.json')
+        s3.put_object(Bucket=self.bucket_name, Key=read_me_key, Body='readme')
+        s3.put_object(Bucket=self.bucket_name, Key=data_key, Body='data')
+        s3.put_object(Bucket=self.bucket_name, Key=metadata_key, Body='metedata')
+
         response = self.client.post(self.jwt_url,
                                     data=json.dumps({
                                         'username': self.user_not_allowed_name,
@@ -1032,8 +1041,18 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     content_type='application/json',
                                     headers=dict(Authorization=auth_not_allowed))
         self.assertEqual(response.status_code, 403)
-        self.assertFalse(copy_to_new_version.called)
-        self.assertFalse(create_or_update_version.called)
+
+        with self.app.app_context():
+            data_latest = MetaDataDB.query.join(Publisher). \
+                filter(Publisher.name == self.publisher_name,
+                       MetaDataDB.name == self.package).all()
+            self.assertEqual(1, len(data_latest))
+        bit_store_tagged = BitStore('test_pub', 'test_package',
+                                    'tag_one')
+        objects_nu = s3.list_objects(Bucket=self.bucket_name,
+                                     Prefix=bit_store_tagged
+                                     .build_s3_versioned_prefix())
+        self.assertTrue('Contents' not in objects_nu)
 
     @patch('app.mod_api.models.BitStore.copy_to_new_version')
     @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
