@@ -13,7 +13,7 @@ from app.database import db
 from app.mod_api import models
 from app import create_app
 from app.mod_api.models import MetaDataDB, Publisher, \
-    PublisherUser, User, BitStore
+    PublisherUser, User, BitStore, UserRoleEnum
 from app.utils import auth0_helper
 
 dot_env_path = join(dirname(__file__), '.env')
@@ -80,7 +80,7 @@ def populate_db(auth0_id, email, user_name, full_name):
           "c053521f4f3331908d89df39bba922190a69f0ea99f7ca00"
 
     publisher = Publisher(name=user_name)
-    association = PublisherUser(role="OWNER")
+    association = PublisherUser(role=UserRoleEnum.owner)
     association.publisher = publisher
     user.publishers.append(association)
 
