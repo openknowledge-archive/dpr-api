@@ -4,27 +4,12 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from functools import wraps
-from flask import request, _request_ctx_stack
-from flask import current_app as app
 from app.utils import handle_error
 from app.utils.jwt_utilities import JWTHelper
 
 
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        status, data = get_user_from_jwt(request)
-        if status:
-            _request_ctx_stack.top.current_user = data
-            return f(*args, **kwargs)
-        else:
-            return data
-    return decorated
-
-
-def get_user_from_jwt(req):
-    jwt_helper = JWTHelper(app.config['API_KEY'])
+def get_user_from_jwt(req, api_key):
+    jwt_helper = JWTHelper(api_key)
 
     auth = req.headers.get('Authorization', None)
 
