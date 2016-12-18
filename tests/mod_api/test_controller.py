@@ -6,12 +6,13 @@ from __future__ import unicode_literals
 
 import unittest
 import json
-
+import boto3
 from mock import patch
-
+from moto import mock_s3
 from app import create_app
 from app.database import db
-from app.mod_api.models import User, MetaDataDB, Publisher, PublisherUser
+from app.mod_api.models import User, MetaDataDB, Publisher, \
+    PublisherUser, UserRoleEnum, BitStore
 
 
 class AuthTokenTestCase(unittest.TestCase):
@@ -338,7 +339,8 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
             publisher = Publisher(name=self.publisher)
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
+            publisher.packages.append(MetaDataDB(name=self.package))
             association.publisher = publisher
             self.user.publishers.append(association)
             db.session.add(self.user)
@@ -368,7 +370,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
                                     headers=dict(Authorization=auth))
         self.assertEqual(200, response.status_code)
 
-    def test_throw_404_if_user_not_exists(self):
+    def test_throw_403_if_user_not_exists_so_operation_not_permitted(self):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
@@ -376,7 +378,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         response = self.client.post(self.url,
                                     data=json.dumps(dict()),
                                     headers=dict(Authorization=auth))
-        self.assertEqual(404, response.status_code)
+        self.assertEqual(403, response.status_code)
 
     @patch('app.mod_api.models.BitStore.get_metadata_body')
     def test_throw_500_if_failed_to_get_data_from_s3(self, body_mock):
@@ -418,6 +420,11 @@ class SaveMetaDataTestCase(unittest.TestCase):
             self.user.id = self.user_id
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
+            self.pub = Publisher(name=self.publisher)
+            association = PublisherUser(role=UserRoleEnum.owner)
+            association.publisher = self.pub
+            self.user.publishers.append(association)
+
             db.session.add(self.user)
             db.session.commit()
         response = self.client.post(self.jwt_url,
@@ -466,7 +473,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
         self.assertEqual(403, response.status_code)
 
     @patch('app.mod_api.models.BitStore.save')
-    def test_return_404_if_user_not_found(self, save):
+    def test_return_403_if_user_not_found_so_not_permitted_this_action(self, save):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
@@ -476,7 +483,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
                                    headers=dict(Authorization=auth),
                                    data=json.dumps({'name': 'package'}))
 
-        self.assertEqual(404, response.status_code)
+        self.assertEqual(403, response.status_code)
 
     @patch('app.mod_api.models.BitStore.save')
     def test_return_500_for_internal_error(self, save):
@@ -620,7 +627,14 @@ class EndToEndTestCase(unittest.TestCase):
             self.user = User()
             self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
-                'test@test.com', 'test_publisher', 'super_secret'
+                'test@test.com', self.publisher, 'super_secret'
+
+            self.publisherObj = Publisher(name=self.publisher)
+
+            association = PublisherUser(role=UserRoleEnum.owner)
+            association.publisher = self.publisherObj
+            self.user.publishers.append(association)
+
             db.session.add(self.user)
             db.session.commit()
 
@@ -658,11 +672,11 @@ class EndToEndTestCase(unittest.TestCase):
         # Adding to Meta Data
         descriptor = {'name': 'test description'}
         with self.app.app_context():
-            publisher = Publisher(name=self.publisher)
+            p = Publisher.query.filter_by(name=self.publisher).one()
             metadata = MetaDataDB(name=self.package)
-            publisher.packages.append(metadata)
+            p.packages.append(metadata)
             metadata.descriptor = json.dumps(descriptor)
-            db.session.add(publisher)
+            db.session.add(p)
             db.session.commit()
         rv = self.client.get('/api/package/%s' % (self.publisher,))
         data = json.loads(rv.data)
@@ -739,7 +753,7 @@ class SoftDeleteTestCase(unittest.TestCase):
 
             self.publisher = Publisher(name=self.publisher_name)
 
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
 
             metadata = MetaDataDB(name=self.package)
@@ -756,21 +770,32 @@ class SoftDeleteTestCase(unittest.TestCase):
                                     content_type='application/json')
         data = json.loads(response.data)
         self.jwt = data['token']
+        self.auth = "bearer %s" % self.jwt
 
     @patch('app.mod_api.models.BitStore.change_acl')
     @patch('app.mod_api.models.MetaDataDB.change_status')
     def test_return_200_if_all_goes_well(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
-        response = self.client.delete(self.url)
+
+        response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         self.assertEqual(response.status_code, 200)
+
+    @patch('app.mod_api.models.BitStore.change_acl')
+    @patch('app.mod_api.models.MetaDataDB.change_status')
+    def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
+        change_acl.return_value = True
+        change_status.return_value = True
+
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, 403)
 
     @patch('app.mod_api.models.BitStore.change_acl')
     @patch('app.mod_api.models.MetaDataDB.change_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
         change_acl.return_value = False
         change_status.return_value = True
-        response = self.client.delete(self.url)
+        response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to change acl')
@@ -780,7 +805,7 @@ class SoftDeleteTestCase(unittest.TestCase):
     def test_throw_500_if_change_status_fails(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = False
-        response = self.client.delete(self.url)
+        response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to change status')
@@ -790,10 +815,312 @@ class SoftDeleteTestCase(unittest.TestCase):
     def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
         change_acl.side_effect = Exception('failed')
         change_status.return_value = False
-        response = self.client.delete(self.url)
+        response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'failed')
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+
+class HardDeleteTestCase(unittest.TestCase):
+    publisher_name = 'test_publisher'
+    package = 'test_package'
+    url = "/api/package/{pub}/{pac}/purge".format(pub=publisher_name,
+                                                  pac=package)
+    user_id = 1
+    user_id_member = 2
+    user_member_name = 'test_user'
+    jwt_url = '/api/auth/token'
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = self.user_id
+            self.user.email, self.user.name, self.user.secret = \
+                'test@test.com', self.publisher_name, 'super_secret'
+
+            self.user_member = User()
+            self.user_member.id = self.user_id_member
+            self.user_member.email, self.user_member.name, self.user_member.secret = \
+                'test1@test.com', self.user_member_name, 'super_secret'
+
+            self.publisher = Publisher(name=self.publisher_name)
+
+            association = PublisherUser(role=UserRoleEnum.owner)
+            association.publisher = self.publisher
+
+            association1 = PublisherUser(role=UserRoleEnum.member)
+            association1.publisher = self.publisher
+
+            metadata = MetaDataDB(name=self.package)
+            self.publisher.packages.append(metadata)
+            self.user.publishers.append(association)
+            self.user_member.publishers.append(association1)
+
+            db.session.add(self.user)
+            db.session.add(self.user_member)
+            db.session.commit()
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt = data['token']
+
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                       'username': self.user_member_name,
+                                       'secret': 'super_secret'
+                                   }),
+                                   content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt_member = data['token']
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_return_200_if_all_goes_well(self, db_delete, bitstore_delete):
+        bitstore_delete.return_value = True
+        db_delete.return_value = True
+        auth = "bearer %s" % self.jwt
+        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        self.assertEqual(response.status_code, 200)
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
+        bitstore_delete.return_value = False
+        db_delete.return_value = True
+        auth = "bearer %s" % self.jwt
+        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'Failed to delete from s3')
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
+        bitstore_delete.return_value = True
+        db_delete.return_value = False
+        auth = "bearer %s" % self.jwt
+        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'Failed to delete from db')
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_throw_generic_error_if_internal_error(self, db_delete, bitstore_delete):
+        bitstore_delete.side_effect = Exception('failed')
+        db_delete.return_value = False
+        auth = "bearer %s" % self.jwt
+        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(data['message'], 'failed')
+
+    @patch('app.mod_api.models.BitStore.delete_data_package')
+    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    def test_should_throw_403_if_user_is_not_owner_of_the_package(self,
+                                                                  db_delete,
+                                                                  bitstore_delete):
+        bitstore_delete.return_value = True
+        db_delete.return_value = True
+        auth = "bearer %s" % self.jwt_member
+        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        self.assertEqual(response.status_code, 403)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+
+class TagDataPackageTestCase(unittest.TestCase):
+    publisher_name = 'test_publisher'
+    package = 'test_package'
+    url = "/api/package/{pub}/{pac}/tag".format(pub=publisher_name,
+                                                pac=package)
+    user_id = 1
+    user_not_allowed_id = 2
+    user_not_allowed_name = 'other_publisher'
+    user_member_id = 3
+    user_member_name = 'member_publisher'
+    jwt_url = '/api/auth/token'
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            self.bucket_name = self.app.config['S3_BUCKET_NAME']
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = self.user_id
+            self.user.email, self.user.name, self.user.secret = \
+                'test@test.com', self.publisher_name, 'super_secret'
+
+            self.publisher = Publisher(name=self.publisher_name)
+
+            association = PublisherUser(role=UserRoleEnum.owner)
+            association.publisher = self.publisher
+
+            metadata = MetaDataDB(name=self.package)
+            self.publisher.packages.append(metadata)
+            self.user.publishers.append(association)
+
+            self.user_not_allowed = User()
+            self.user_not_allowed.id = self.user_not_allowed_id
+            self.user_not_allowed.email, self.user_not_allowed.name, \
+                self.user_not_allowed.secret = \
+                'test1@test.com', self.user_not_allowed_name, 'super_secret'
+
+            self.publisher_not_allowed = Publisher(name=self.user_not_allowed_name)
+
+            association_not_allowed = PublisherUser(role=UserRoleEnum.owner)
+            association_not_allowed.publisher = self.publisher_not_allowed
+
+            metadata = MetaDataDB(name=self.package)
+            self.publisher_not_allowed.packages.append(metadata)
+            self.user_not_allowed.publishers.append(association_not_allowed)
+
+            self.user_member = User()
+            self.user_member.id = self.user_member_id
+            self.user_member.email, self.user_member.name, self.user_member.secret = \
+                'tes2t@test.com', self.user_member_name, 'super_secret'
+
+            association_member = PublisherUser(role=UserRoleEnum.member)
+            association_member.publisher = self.publisher
+            self.user_member.publishers.append(association_member)
+
+            db.session.add(self.user)
+            db.session.add(self.user_not_allowed)
+            db.session.commit()
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt = data['token']
+        self.auth = "bearer %s" % self.jwt
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_return_200_if_all_goes_well(self, create_or_update_version, copy_to_new_version):
+        copy_to_new_version.return_value = True
+        create_or_update_version.return_value = True
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=self.auth))
+        self.assertEqual(response.status_code, 200)
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_throw_400_if_version_missing(self, create_or_update_version, copy_to_new_version):
+        copy_to_new_version.return_value = True
+        create_or_update_version.return_value = True
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version_fail': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=self.auth))
+        self.assertEqual(response.status_code, 400)
+        data = json.loads(response.data)
+        self.assertEqual('ATTRIBUTE_MISSING', data['error_code'])
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_throw_500_if_failed_to_tag(self, create_or_update_version, copy_to_new_version):
+        copy_to_new_version.return_value = False
+        create_or_update_version.return_value = True
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=self.auth))
+        self.assertEqual(response.status_code, 500)
+
+    @mock_s3
+    def test_throw_403_if_not_owner_or_member_of_publisher(self):
+        s3 = boto3.client('s3')
+        s3.create_bucket(Bucket=self.bucket_name)
+        bit_store = BitStore('test_pub', 'test_package')
+        read_me_key = bit_store.build_s3_key('test.md')
+        data_key = bit_store.build_s3_key('data.csv')
+        metadata_key = bit_store.build_s3_key('datapackage.json')
+        s3.put_object(Bucket=self.bucket_name, Key=read_me_key, Body='readme')
+        s3.put_object(Bucket=self.bucket_name, Key=data_key, Body='data')
+        s3.put_object(Bucket=self.bucket_name, Key=metadata_key, Body='metedata')
+
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.user_not_allowed_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        jwt_not_allowed = data['token']
+        auth_not_allowed = "bearer %s" % jwt_not_allowed
+
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=auth_not_allowed))
+        self.assertEqual(response.status_code, 403)
+
+        with self.app.app_context():
+            data_latest = MetaDataDB.query.join(Publisher). \
+                filter(Publisher.name == self.publisher_name,
+                       MetaDataDB.name == self.package).all()
+            self.assertEqual(1, len(data_latest))
+        bit_store_tagged = BitStore('test_pub', 'test_package',
+                                    'tag_one')
+        objects_nu = s3.list_objects(Bucket=self.bucket_name,
+                                     Prefix=bit_store_tagged
+                                     .build_s3_versioned_prefix())
+        self.assertTrue('Contents' not in objects_nu)
+
+    @patch('app.mod_api.models.BitStore.copy_to_new_version')
+    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    def test_allow_if_member_of_publisher(self, create_or_update_version,
+                                          copy_to_new_version):
+        copy_to_new_version.return_value = False
+        create_or_update_version.return_value = True
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.user_member_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        jwt_allowed = data['token']
+        auth_allowed = "bearer %s" % jwt_allowed
+
+        response = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=auth_allowed))
+        self.assertEqual(response.status_code, 500)
 
     def tearDown(self):
         with self.app.app_context():

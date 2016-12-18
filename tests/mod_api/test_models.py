@@ -6,18 +6,16 @@ from __future__ import unicode_literals
 
 import boto3
 from urlparse import urlparse
-
-from botocore.exceptions import ParamValidationError
 from moto import mock_s3
 import unittest
 import json
 from app import create_app
 from app.database import db
-from app.mod_api.models import BitStore, MetaDataDB, User, Publisher, PublisherUser
+from app.mod_api.models import BitStore, MetaDataDB, User, \
+    Publisher, PublisherUser, UserRoleEnum
 
 
 class BitStoreTestCase(unittest.TestCase):
-
     def setUp(self):
         self.app = create_app()
 
@@ -29,8 +27,8 @@ class BitStoreTestCase(unittest.TestCase):
 
     def test_metadata_s3_prefix(self):
         metadata = BitStore(publisher="pub_test", package="test_package")
-        expected = "{t}/pub_test".format(t=metadata.prefix)
-        self.assertEqual(expected, metadata.build_s3_prefix())
+        expected = "{t}/pub_test/test_package".format(t=metadata.prefix)
+        self.assertEqual(expected, metadata.build_s3_base_prefix())
 
     @mock_s3
     def test_save(self):
@@ -158,9 +156,81 @@ class BitStoreTestCase(unittest.TestCase):
             grant = res['Grants'][0]['Permission']
             self.assertEqual(grant, 'FULL_CONTROL')
 
+    @mock_s3
+    def test_delete_data_package(self):
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            read_me_key = bit_store.build_s3_key('test.md')
+            data_key = bit_store.build_s3_key('data.csv')
+            metadata_key = bit_store.build_s3_key('datapackage.json')
+            s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='readme')
+            s3.put_object(Bucket=bucket_name, Key=data_key, Body='data')
+            s3.put_object(Bucket=bucket_name, Key=metadata_key, Body='metedata')
+            status = bit_store.delete_data_package()
+            read_me_res = s3.list_objects(Bucket=bucket_name, Prefix=read_me_key)
+            self.assertTrue('Contents' not in read_me_res)
+
+            data_res = s3.list_objects(Bucket=bucket_name, Prefix=data_key)
+            self.assertTrue('Contents' not in data_res)
+            self.assertTrue(status)
+
+    @mock_s3
+    def test_should_return_true_delete_data_package_if_data_not_exists(self):
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+            read_me_key = bit_store.build_s3_key('test.md')
+            data_key = bit_store.build_s3_key('data.csv')
+            metadata_key = bit_store.build_s3_key('datapackage.json')
+
+            status = bit_store.delete_data_package()
+            read_me_res = s3.list_objects(Bucket=bucket_name, Prefix=read_me_key)
+            self.assertTrue('Contents' not in read_me_res)
+
+            data_res = s3.list_objects(Bucket=bucket_name, Prefix=data_key)
+            self.assertTrue('Contents' not in data_res)
+
+            metadata_res = s3.list_objects(Bucket=bucket_name, Prefix=metadata_key)
+            self.assertTrue('Contents' not in metadata_res)
+
+            self.assertTrue(status)
+
+    @mock_s3
+    def test_should_copy_all_object_from_latest_to_tag(self):
+        numeric_version = 0.8
+        with self.app.app_context():
+            bit_store = BitStore('test_pub', 'test_package')
+            s3 = boto3.client('s3')
+            bucket_name = self.app.config['S3_BUCKET_NAME']
+            s3.create_bucket(Bucket=bucket_name)
+
+            read_me_key = bit_store.build_s3_key('test.md')
+            data_key = bit_store.build_s3_key('data.csv')
+            metadata_key = bit_store.build_s3_key('datapackage.json')
+            s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='readme')
+            s3.put_object(Bucket=bucket_name, Key=data_key, Body='data')
+            s3.put_object(Bucket=bucket_name, Key=metadata_key, Body='metedata')
+
+            bit_store.copy_to_new_version(numeric_version)
+
+            bit_store_numeric = BitStore('test_pub', 'test_package',
+                                         numeric_version)
+            objects_nu = s3.list_objects(Bucket=bucket_name,
+                                         Prefix=bit_store_numeric
+                                         .build_s3_versioned_prefix())
+            objects_old = s3.list_objects(Bucket=bucket_name,
+                                          Prefix=bit_store
+                                          .build_s3_versioned_prefix())
+            self.assertEqual(len(objects_nu['Contents']),
+                             len(objects_old['Contents']))
+
 
 class MetaDataDBTestCase(unittest.TestCase):
-
     def setUp(self):
         self.publisher_one = 'test_publisher1'
         self.publisher_two = 'test_publisher2'
@@ -175,13 +245,13 @@ class MetaDataDBTestCase(unittest.TestCase):
 
             user1 = User(name=self.publisher_one)
             publisher1 = Publisher(name=self.publisher_one)
-            association1 = PublisherUser(role="OWNER")
+            association1 = PublisherUser(role=UserRoleEnum.owner)
             association1.publisher = publisher1
             user1.publishers.append(association1)
 
             user2 = User(name=self.publisher_two)
             publisher2 = Publisher(name=self.publisher_two)
-            association2 = PublisherUser(role="OWNER")
+            association2 = PublisherUser(role=UserRoleEnum.owner)
             association2.publisher = publisher2
             user2.publishers.append(association2)
 
@@ -272,6 +342,84 @@ class MetaDataDBTestCase(unittest.TestCase):
                                           status='active')
         self.assertFalse(status)
 
+    def test_return_true_if_delete_data_package_success(self):
+        status = MetaDataDB.delete_data_package(self.publisher_one,
+                                                self.package_one)
+        self.assertTrue(status)
+        data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_one).all()
+        self.assertEqual(0, len(data))
+        data = Publisher.query.all()
+        self.assertEqual(1, len(data))
+
+    def test_return_false_if_error_occur(self):
+        status = MetaDataDB.delete_data_package("fake_package",
+                                                self.package_one)
+        self.assertFalse(status)
+
+    def test_should_populate_new_versioned_data_package(self):
+        MetaDataDB.create_or_update_version(self.publisher_one,
+                                            self.package_two, 'tag_one')
+        latest_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'latest').one()
+        tagged_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'tag_one').one()
+        self.assertEqual(latest_data.name, tagged_data.name)
+        self.assertEqual('tag_one', tagged_data.version)
+
+    def test_should_update_data_package_if_preexists(self):
+        with self.app.test_request_context():
+            pub = Publisher.query.filter_by(name=self.publisher_one).one()
+            pub.packages.append(MetaDataDB(name=self.package_two,
+                                           version='tag_one',
+                                           readme='old_readme'))
+            db.session.add(pub)
+            db.session.commit()
+        latest_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'latest').one()
+        tagged_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'tag_one').one()
+        self.assertNotEqual(latest_data.readme, tagged_data.readme)
+
+        MetaDataDB.create_or_update_version(self.publisher_one,
+                                            self.package_two,
+                                            'tag_one')
+        tagged_data = MetaDataDB.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   MetaDataDB.name == self.package_two,
+                   MetaDataDB.version == 'tag_one').one()
+        self.assertEqual(latest_data.readme, tagged_data.readme)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+
+class PublisherUserTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.app = create_app()
+        self.app.app_context().push()
+
+    def test_throw_error_if_role_is_invalid(self):
+        with self.app.test_request_context():
+            db.drop_all()
+            db.create_all()
+            publisher = Publisher(name='test_pub_id')
+            association = PublisherUser()
+            association.publisher = publisher
+            self.assertRaises(ValueError, association.role, "NOT_MEMBER")
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
@@ -279,7 +427,6 @@ class MetaDataDBTestCase(unittest.TestCase):
 
 
 class UserTestCase(unittest.TestCase):
-
     def setUp(self):
         self.app = create_app()
         self.app.app_context().push()
@@ -292,7 +439,7 @@ class UserTestCase(unittest.TestCase):
                         secret='supersecret',
                         auth0_id="123|auth0")
             publisher = Publisher(name='test_pub_id')
-            association = PublisherUser(role="OWNER")
+            association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = publisher
             user.publishers.append(association)
 
@@ -300,14 +447,14 @@ class UserTestCase(unittest.TestCase):
             db.session.commit()
 
     def test_serialize(self):
-        user = User.query.filter_by(name='test_user_id').one()\
+        user = User.query.filter_by(name='test_user_id').one() \
             .serialize
         self.assertEqual('test_user_id', user['name'])
 
     def test_user_role_on_publisher(self):
         user = User.query.filter_by(name='test_user_id').one()
         self.assertEqual(len(user.publishers), 1)
-        self.assertEqual(user.publishers[0].role, 'OWNER')
+        self.assertEqual(user.publishers[0].role, UserRoleEnum.owner)
 
     def test_user_creation_from_outh0_response(self):
         user_info = dict(email="test@test.com",

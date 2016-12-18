@@ -1,14 +1,14 @@
 """empty message
 
-Revision ID: eed3fb2b5e60
-Revises: 9f755c367f6d
-Create Date: 2016-11-21 13:19:21.451097
+Revision ID: 8bf484e84d87
+Revises: None
+Create Date: 2016-12-07 20:02:24.060279
 
 """
 
 # revision identifiers, used by Alembic.
-revision = 'eed3fb2b5e60'
-down_revision = '9f755c367f6d'
+revision = '8bf484e84d87'
+down_revision = None
 
 from alembic import op
 import sqlalchemy as sa
@@ -21,6 +21,7 @@ def upgrade():
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('name', sa.TEXT(), nullable=False),
     sa.Column('title', sa.Text(), nullable=True),
+    sa.Column('private', sa.BOOLEAN(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_publisher_name'), 'publisher', ['name'], unique=True)
@@ -32,6 +33,7 @@ def upgrade():
     sa.Column('name', sa.TEXT(), nullable=False),
     sa.Column('full_name', sa.TEXT(), nullable=True),
     sa.Column('auth0_id', sa.TEXT(), nullable=True),
+    sa.Column('sysadmin', sa.BOOLEAN(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_user_auth0_id'), 'user', ['auth0_id'], unique=False)
@@ -43,7 +45,7 @@ def upgrade():
     sa.Column('name', sa.TEXT(), nullable=True),
     sa.Column('descriptor', sa.JSON(), nullable=True),
     sa.Column('status', sa.TEXT(), nullable=True),
-    sa.Column('private', sa.Boolean(), nullable=True),
+    sa.Column('private', sa.BOOLEAN(), nullable=True),
     sa.Column('readme', sa.TEXT(), nullable=True),
     sa.Column('publisher_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['publisher_id'], [u'publisher.id'], ),

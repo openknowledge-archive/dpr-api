@@ -11,9 +11,8 @@ from flask import current_app as app
 from flask import redirect, Response
 from app.mod_api.models import BitStore, User, MetaDataDB, Publisher
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
-from app.utils.auth import requires_auth
-from app.utils.auth0_helper import get_user_info_with_code, \
-     get_user, update_user_secret_from_user_info
+from app.mod_api.annotations import requires_auth, is_allowed
+from app.utils.auth0_helper import get_user_info_with_code
 from app.utils.jwt_utilities import JWTHelper
 
 mod_api_blueprint = Blueprint('api', __name__, url_prefix='/api')
@@ -21,6 +20,7 @@ mod_api_blueprint = Blueprint('api', __name__, url_prefix='/api')
 
 @mod_api_blueprint.route("/package/<publisher>/<package>", methods=["PUT"])
 @requires_auth
+@is_allowed('Package::Create')
 def save_metadata(publisher, package):
     """
     DPR metadata put operation.
@@ -85,7 +85,72 @@ def save_metadata(publisher, package):
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
+@mod_api_blueprint.route("/package/<publisher>/<package>/tag", methods=["POST"])
+@requires_auth
+@is_allowed('Package::Update')
+def tag_data_package(publisher, package):
+    """
+    DPR metadata put operation.
+    This API is responsible for tagging data package
+    ---
+    tags:
+        - package
+    parameters:
+        - in: path
+          name: publisher
+          type: string
+          required: true
+          description: publisher name
+        - in: path
+          name: package
+          type: string
+          required: true
+          description: package name
+        - in: body
+          name: version
+          type: string
+          required: true
+          description: version value
+    responses:
+        400:
+            description: JWT is invalid or req body is not valid
+        401:
+            description: Invalid Header for JWT
+        403:
+            description: User not allowed for operation
+        404:
+            description: User not found
+        500:
+            description: Internal Server Error
+        200:
+            description: Success Message
+            schema:
+                id: put_package_success
+                properties:
+                    status:
+                        type: string
+                        description: Status of the operation
+                        default: OK
+    """
+    try:
+        data = request.get_json()
+        if 'version' not in data:
+            return handle_error('ATTRIBUTE_MISSING', 'version not found', 400)
+
+        bitstore = BitStore(publisher, package)
+        status_db = MetaDataDB.create_or_update_version(publisher, package, data['version'])
+        status_bitstore = bitstore.copy_to_new_version(data['version'])
+
+        if status_db is False or status_bitstore is False:
+            raise Exception("failed to tag data package")
+        return jsonify({"status": "OK"}), 200
+    except Exception as e:
+        app.logger.error(e)
+        return handle_error('GENERIC_ERROR', e.message, 500)
+
+
 @mod_api_blueprint.route("/package/<publisher>/<package>", methods=["DELETE"])
+@is_allowed('Package::Delete')
 def delete_data_package(publisher, package):
     """
     DPR data package soft delete operation operation.
@@ -131,9 +196,58 @@ def delete_data_package(publisher, package):
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
+@mod_api_blueprint.route("/package/<publisher>/<package>/purge", methods=["DELETE"])
+@requires_auth
+@is_allowed('Package::Purge')
+def purge_data_package(publisher, package):
+    """
+    DPR data package hard delete operation.
+    This API is responsible for deletion of data package
+    ---
+    tags:
+        - package
+    parameters:
+        - in: path
+          name: publisher
+          type: string
+          required: true
+          description: publisher name
+        - in: path
+          name: package
+          type: string
+          required: true
+          description: package name
+    responses:
+        500:
+            description: Internal Server Error
+        200:
+            description: Success Message
+            schema:
+                id: put_package_success
+                properties:
+                    status:
+                        type: string
+                        default: OK
+    """
+    try:
+        bitstore = BitStore(publisher=publisher, package=package)
+        status_acl = bitstore.delete_data_package()
+        status_db = MetaDataDB.delete_data_package(publisher, package)
+        if status_acl and status_db:
+            return jsonify({"status": "OK"}), 200
+        if not status_acl:
+            raise Exception('Failed to delete from s3')
+        if not status_db:
+            raise Exception('Failed to delete from db')
+    except Exception as e:
+        app.logger.error(e)
+        return handle_error('GENERIC_ERROR', e.message, 500)
+
+
 @mod_api_blueprint.route("/package/<publisher>/<package>/finalize",
                          methods=["POST"])
 @requires_auth
+@is_allowed('Package::Create')
 def finalize_metadata(publisher, package):
     """
     DPR metadata finalize operation.
