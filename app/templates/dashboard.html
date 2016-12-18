@@ -12,72 +12,50 @@ window.history.pushState("", "Dashboard", "/");
 </script>
 {% endblock %}
 {% block content %}
+<div class="container">	
 	<div class="row">
 		<div align="center">
-            
             <div class="user-info-block">
                 <div class="user-heading">
-                    <h3>{{user.user_name}}</h3>
-                    <span class="glyphicon glyphicon-user"></span>
-                    <span class="help-block">{{user.user_name}}</span>
+					<br>
+                    <img src="{{user.email | gravatar(size=50)}}" />
+					<br>
+					<br>
                     <span class="glyphicon glyphicon-envelope"></span>
-                    <span class="help-block">{{user.email}}</span>
-                    
+                    <span class="help-block">{{user.email}}</span>               
                 </div>
   	    	</div>
   	    </div>
 	</div>
+	<div>
+		<h1>
+			Welcome {{user.name}}!
+		</h1>
+		<h5>Your Secret Token: {{user.secret}}</h5>
+	</div>
+	<div>
+		<h3>Start publishing your data packages in 3 easy steps:</h3>
+		<br>
+{% filter markdown %}
 
-    <div class="row">
-            
-            
-            <div class="listing-tab col-md-12">
-                  <!-- Nav tabs -->
-                  <ul class="nav nav-tabs" id="myTabs" role="tablist">
-                    <li role="presentation" class="active"><a href="#userinfo" aria-controls="track" role="tab" data-toggle="tab">User Profile</a></li>
-                    <li role="presentation"><a href="#access" aria-controls="albums" role="tab" data-toggle="tab">Secret Key</a></li>
-                    <li role="presentation"><a href="#publish" aria-controls="albums" role="tab" data-toggle="tab">Publish Datapackage</a></li>
-                  </ul>
-                
-                  <!-- Tab panes -->
-                  <div class="tab-content">
-                    <div role="tabpanel" class="tab-pane active" id="userinfo">
-                    <span class="glyphicon glyphicon-user"></span>
-                    <span class="">{{user.user_name}}</span>
-                    <span class="help-block"></span>
-                    <span class="glyphicon glyphicon-envelope"></span>
-                    <span class="">{{user.email}}</span>   
-                    </div>
-                    <div role="tabpanel" class="tab-pane" id="access">
-                    <span class="glyphicon glyphicon-wrench"></span>
-                    <span class="">{{user.secret}}</span>
-                        
-                  </div>
-                  <div role="tabpanel" class="tab-pane" id="publish">
-                    You can publish the Data Package using Datapackage Manager.
+Install dpmpy, the data package manager  command line tool:
 
-                    	<div class="panel panel-info">
-    						<div class="panel-heading">
-        						<h3 class="panel-title">Step 1</h3>
-    						</div>
-    						<div class="panel-body">Create the Data Package. For more information on creating Datapackage follow this <a href="http://frictionlessdata.io/data-packages/">link</a>. </div>
-						</div>
+	$ [sudo] pip install git+https://github.com/frictionlessdata/dpm-py.git
 
-						<div class="panel panel-info">
-    						<div class="panel-heading">
-        						<h3 class="panel-title">Step 2</h3>
-    						</div>
-    						<div class="panel-body">Install the Datapackage Manager. Follow this <a href="https://github.com/frictionlessdata/dpmpy">link</a> for more information.</div>
-						</div>
-						<div class="panel panel-info">
-    						<div class="panel-heading">
-        						<h3 class="panel-title">Step 3</h3>
-    						</div>
-    						<div class="panel-body">Supply Configuration file as mentioned in step 2 and Publish.<span class="help-block">Use your Secret key in Configuration file for Publishing Packages</span></div>
-    						
-						</div>
-					</div>
-            
-    </div>
+Set your configuration:
 
+	$ dpmpy configure
+	> Username:  # {{user.name}}
+	# Use your secret token here (also visible at the top of the page)
+	> Your password:  # {{user.secret}}
+	# Use server url Eg: https://staging.datapackaged.com/
+	> Server URL:
+
+Publish
+
+	$ cd your-data-package-directory/
+	$ dpmpy publish
+{% endfilter %}
+	</div>
+</div>
 {% endblock %}
