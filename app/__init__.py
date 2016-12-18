@@ -11,6 +11,7 @@ from botocore.client import Config
 from flasgger import Swagger
 from flask import Flask
 from flaskext.markdown import Markdown
+from flask_gravatar import Gravatar
 from werkzeug.utils import import_string
 from .database import db
 from app.mod_api.controllers import mod_api_blueprint
@@ -55,4 +56,5 @@ def create_app():
 
     Swagger(app)
     Markdown(app)
+    Gravatar(app)
     return app
