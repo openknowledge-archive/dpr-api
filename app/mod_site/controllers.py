@@ -9,7 +9,7 @@ from flask import current_app as app
 import jwt
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix
 from app.mod_site.models import Catalog
-from app.mod_api.models import User
+from app.mod_api.models import User, BitStore
 
 
 mod_site_blueprint = Blueprint('site', __name__)
@@ -96,7 +96,11 @@ def datapackage_show(publisher, package):
     dataset = catalog.construct_dataset(request.url_root)
     dataViews = catalog.get_views()
 
-    return render_template("dataset.html", dataset=dataset, showDataApi=True,
-                           jsonDataPackage=dataset, dataViews=dataViews,
-                           zappa_env=get_zappa_prefix(),
+    bitstore = BitStore(publisher, package)
+    datapackage_json_url_in_s3 = bitstore.build_s3_key('')
+
+    return render_template("dataset.html", dataset=dataset,
+                           datapackageUrl=datapackage_json_url_in_s3,
+                           showDataApi=True, jsonDataPackage=dataset,
+                           dataViews=dataViews, zappa_env=get_zappa_prefix(),
                            s3_cdn=get_s3_cdn_prefix()), 200
