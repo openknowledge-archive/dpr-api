@@ -1,0 +1,7 @@
+{% extends "index.html" %}
+{% block scripts %}
+<script>
+    localStorage.removeItem('encoded_token');
+    window.location = window.location.origin;
+</script>
+{% endblock %}

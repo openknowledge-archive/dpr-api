@@ -16,7 +16,7 @@ mod_site_blueprint = Blueprint('site', __name__)
 
 
 @mod_site_blueprint.route("/", methods=["GET", "POST"])
-def home():
+def index():
     """
     Loads home page
     ---
@@ -28,24 +28,30 @@ def home():
       200:
         description: Succesfuly loaded home page
     """
-    if request.method == "POST":
-        encoded_token = request.form.get('encoded_token', '')
-        if encoded_token:
-            try:
-                payload = jwt.decode(encoded_token, app.config['API_KEY'])
-            except Exception as e:
-                app.logger.error(e)
-                return redirect(get_zappa_prefix()+'/api/auth/login', code=302)
-            user = User().get_userinfo_by_id(payload['user'])
-            if user:
-                return render_template("dashboard.html", user=user,
-                                       title='Dashboard',
-                                       zappa_env=get_zappa_prefix(),
-                                       s3_cdn=get_s3_cdn_prefix()), 200
-        return redirect(get_zappa_prefix() + '/api/auth/login', code=302)
-    return render_template("index.html", title='Home',
-                           zappa_env=get_zappa_prefix(),
-                           s3_cdn=get_s3_cdn_prefix()), 200
+    try:
+        if request.method == "POST":
+            encoded_token = request.form.get('encoded_token', '')
+            if encoded_token:
+                try:
+                    payload = jwt.decode(encoded_token, app.config['API_KEY'])
+                except Exception as e:
+                    app.logger.error(e)
+                    return redirect(url_for('.logout'))
+                user = User().get_userinfo_by_id(payload['user'])
+                if user:
+                    return render_template("dashboard.html", user=user,
+                                           title='Dashboard',
+                                           zappa_env=get_zappa_prefix(),
+                                           s3_cdn=get_s3_cdn_prefix()), 200
+            return redirect(url_for('.logout'))
+        return render_template("index.html", title='Home',
+                               zappa_env=get_zappa_prefix(),
+                               s3_cdn=get_s3_cdn_prefix(),
+                               auth0_client_id=app.config['AUTH0_CLIENT_ID'],
+                               auth0_domain=app.config['AUTH0_DOMAIN']), 200
+    except Exception:
+        return redirect(url_for('.logout'))
+
 
 @mod_site_blueprint.route("/logout", methods=["GET"])
 def logout():
@@ -58,7 +64,12 @@ def logout():
       302:
         description: Load the Home Page
     """
-    return redirect(url_for('.home'), code=302)
+    return render_template("logout.html", title='Home',
+                           zappa_env=get_zappa_prefix(),
+                           s3_cdn=get_s3_cdn_prefix(),
+                           auth0_client_id=app.config['AUTH0_CLIENT_ID'],
+                           auth0_domain=app.config['AUTH0_DOMAIN']), 200
+
 
 @mod_site_blueprint.route("/<publisher>/<package>", methods=["GET"])
 def datapackage_show(publisher, package):
