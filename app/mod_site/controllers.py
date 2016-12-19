@@ -108,7 +108,7 @@ def datapackage_show(publisher, package):
     dataViews = catalog.get_views()
 
     bitstore = BitStore(publisher, package)
-    datapackage_json_url_in_s3 = bitstore.build_s3_key('')
+    datapackage_json_url_in_s3 = bitstore.build_s3_key('datapackage.json')
 
     return render_template("dataset.html", dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,
