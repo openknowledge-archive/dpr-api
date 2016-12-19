@@ -6,7 +6,6 @@
     if (jwt != null){
         post_encoded_token(document.URL, {"encoded_token":jwt})
     }
-    alert(document.URL)
 var lock = new Auth0Lock("{{ auth0_client_id }}", "{{ auth0_domain }}", {
     auth: {
       redirectUrl: document.URL + 'api/auth/callback',
