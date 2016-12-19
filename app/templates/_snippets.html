@@ -67,11 +67,11 @@
   <hr/>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  
+
   <button>Switch View</button>
   <input id="search" placeholder="Search" type="search" style="float:right; display: none">
   <div class="viewer" style="display: none"></div>
-  <div class="vis"></div>
+  <div class="vis" id="root"></div>
   <div class="resources" id="data">
     <h2>Data Files</h2>
     <div class="resource-listing">
@@ -148,6 +148,7 @@
   <script type="text/javascript">
     var DataPackageData = {{ jsonDataPackage|tojson }};
     var DataViews = {{ dataViews|tojson }};
+    var DataPackageJsonUrl = "{{ datapackageUrl }}";
   </script>
 </div><!-- / dataset show -->
 {%- endmacro %}
