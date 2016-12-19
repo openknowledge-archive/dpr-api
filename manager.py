@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import requests
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask import current_app, json
@@ -49,7 +50,13 @@ def populate():
 
     user_name, full_name, email = 'admin', 'Test Admin', 'test@test.com'
     auth0_id = populate_auth0(user_name, full_name, email)
-    populate_db(auth0_id, email, user_name, full_name)
+    populate_db(auth0_id, email, user_name, full_name,
+                'c053521f4f3331908d89df39bba922190a69f0ea99f7ca00')
+
+    user_name, full_name, email = 'core', 'Test Admin', 'core@test.com'
+    auth0_id = populate_auth0(user_name, full_name, email)
+    populate_db(auth0_id, email, user_name, full_name,
+                'c053521f4f3331908d89df39bba922190a69f0ea99f7ca12')
     populate_data(user_name)
 
 
@@ -63,7 +70,7 @@ def populate_auth0(user_name, full_name, email):
     return user_create['user_id']
 
 
-def populate_db(auth0_id, email, user_name, full_name):
+def populate_db(auth0_id, email, user_name, full_name, secret):
     user = User.query.filter_by(name=user_name).first()
 
     publisher = Publisher.query.filter_by(name=user_name).first()
@@ -76,8 +83,7 @@ def populate_db(auth0_id, email, user_name, full_name):
 
     user = User()
     user.auth0_id, user.email, user.name, user.full_name, user.secret \
-        = auth0_id, email, user_name, full_name, \
-          "c053521f4f3331908d89df39bba922190a69f0ea99f7ca00"
+        = auth0_id, email, user_name, full_name, secret
 
     publisher = Publisher(name=user_name)
     association = PublisherUser(role=UserRoleEnum.owner)
