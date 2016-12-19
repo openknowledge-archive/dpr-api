@@ -271,18 +271,6 @@ class SignupEndToEndTestCase(unittest.TestCase):
         # Sign Up button
         self.assertIn('Sign Up', rv.data.decode("utf8"))
 
-        search_signup_url = re.search(
-            'href="(.*?)".*Sign Up', rv.data.decode("utf8"))
-        signup_up_url = search_signup_url.groups()[0]
-
-        # Click Signup Button & Mocking Auth0 Parameter for SignUp
-        with patch.dict(self.app.config, self.env_variables):
-            rv = self.client.get(signup_up_url)
-            self.assertIn(self.auth0_url, rv.data.decode("utf8"))
-
-            # Checking Redirect to Auth0 Url
-            self.assertEqual(rv.status_code, 302)
-
         with nested(patch('app.mod_api.controllers.get_user_info_with_code'),
                     patch('app.mod_api.controllers.JWTHelper')) \
                 as (get_user_with_code, JWTHelper):

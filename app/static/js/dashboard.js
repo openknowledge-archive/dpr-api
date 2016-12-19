@@ -8,4 +8,4 @@ post_encoded_token = function(url, fields) {
         }
     }
     $form.submit();
-}
+};
