@@ -97,5 +97,6 @@ if __name__ == '__main__':
     create_zappa_settings(stage_name=env)
     write_aws_credential()
     run_zappa(env)
+    check_output(['python', 'manager.py', 'createdb'])
     check_output(['python', 'manager.py', 'populate'])
 
