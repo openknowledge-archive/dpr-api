@@ -52,12 +52,12 @@ def populate():
     auth0_id = populate_auth0(user_name, full_name, email)
     populate_db(auth0_id, email, user_name, full_name,
                 'c053521f4f3331908d89df39bba922190a69f0ea99f7ca00')
+    populate_data(user_name)
 
     user_name, full_name, email = 'core', 'Test Admin', 'core@test.com'
     auth0_id = populate_auth0(user_name, full_name, email)
     populate_db(auth0_id, email, user_name, full_name,
                 'c053521f4f3331908d89df39bba922190a69f0ea99f7ca12')
-    populate_data(user_name)
 
 
 def populate_auth0(user_name, full_name, email):
@@ -74,24 +74,22 @@ def populate_db(auth0_id, email, user_name, full_name, secret):
     user = User.query.filter_by(name=user_name).first()
 
     publisher = Publisher.query.filter_by(name=user_name).first()
-    if publisher:
+    if publisher is None or user is None:
         db.session.delete(publisher)
-        db.session.commit()
-    if user:
         db.session.delete(user)
         db.session.commit()
 
-    user = User()
-    user.auth0_id, user.email, user.name, user.full_name, user.secret \
-        = auth0_id, email, user_name, full_name, secret
+        user = User()
+        user.auth0_id, user.email, user.name, user.full_name, user.secret \
+            = auth0_id, email, user_name, full_name, secret
 
-    publisher = Publisher(name=user_name)
-    association = PublisherUser(role=UserRoleEnum.owner)
-    association.publisher = publisher
-    user.publishers.append(association)
+        publisher = Publisher(name=user_name)
+        association = PublisherUser(role=UserRoleEnum.owner)
+        association.publisher = publisher
+        user.publishers.append(association)
 
-    db.session.add(user)
-    db.session.commit()
+        db.session.add(user)
+        db.session.commit()
 
 
 def populate_data(publisher_name):
