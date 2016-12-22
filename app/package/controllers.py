@@ -75,7 +75,7 @@ def save_metadata(publisher, package):
                     return handle_error('INVALID_DATA',
                                         'Missing required field in metadata',
                                         400)
-                metadata.save()
+                metadata.save_metadata()
                 return jsonify({"status": "OK"}), 200
             return handle_error('NOT_PERMITTED',
                                 'user name and publisher not matched',
