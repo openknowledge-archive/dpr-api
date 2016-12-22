@@ -37,14 +37,15 @@ class BitStore(object):
             return False
         return True
 
-    def save(self):
+    def save_metadata(self, acl='public-read'):
         """
         This method put metadata object to S3
         """
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
         key = self.build_s3_key('datapackage.json')
-        s3_client.put_object(Bucket=bucket_name, Key=key, Body=self.body)
+        s3_client.put_object(Bucket=bucket_name, Key=key,
+                             Body=self.body, ACL=acl)
 
     def get_metadata_body(self):
         """
@@ -121,18 +122,20 @@ class BitStore(object):
             format(base_url=domain_name,
                    key=self.build_s3_key(path))
 
-    def generate_pre_signed_put_obj_url(self, path, md5):
+    def generate_pre_signed_put_obj_url(self, path, md5, acl='public-read'):
         """
         This method produce a pre-signed url for a specific key to be used
         for uploading data at client side
         :param path: The relative path of the object
         :param md5: The md5 hash of the file to be uploaded
+        :param acl: The canned acl to be used while put object operation
         :return: Pre-signed URL
         """
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
         key = self.build_s3_key(path)
-        params = {'Bucket': bucket_name, 'Key': key, 'ContentMD5': md5}
+        params = {'Bucket': bucket_name, 'Key': key,
+                  'ContentMD5': md5, 'ACL': acl}
         url = s3_client.generate_presigned_url('put_object',
                                                Params=params,
                                                ExpiresIn=3600)
