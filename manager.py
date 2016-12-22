@@ -75,8 +75,10 @@ def populate_db(auth0_id, email, user_name, full_name, secret):
 
     publisher = Publisher.query.filter_by(name=user_name).first()
     if publisher is None or user is None:
-        db.session.delete(publisher)
-        db.session.delete(user)
+        if publisher is not None:
+            db.session.delete(publisher)
+        if user is not None:
+            db.session.delete(user)
         db.session.commit()
 
         user = User()
@@ -94,8 +96,14 @@ def populate_db(auth0_id, email, user_name, full_name, secret):
 
 def populate_data(publisher_name):
     data = json.loads(open('fixtures/datapackage.json').read())
-    data_csv = open('fixtures//data/demo-resource.csv').read()
+    data_csv = open('fixtures/data/demo-resource.csv').read()
     readme = open('fixtures/README.md').read()
+    package = MetaDataDB.query.join(Publisher)\
+        .filter_by(MetaDataDB.name == "demo-package",
+                   Publisher.name == publisher_name).first()
+    if package:
+        db.session.delete(MetaDataDB.query.get(package.id))
+        db.session.commit()
     publisher = Publisher.query.filter_by(name=publisher_name).one()
     metadata = MetaDataDB(name="demo-package")
     metadata.descriptor, metadata.status, metadata.private, metadata.readme \
