@@ -116,6 +116,11 @@ class BitStore(object):
             format(prefix=self.build_s3_base_prefix(),
                    version=self.version)
 
+    def build_s3_object_url(self, domain_name, path):
+        return 'bits.{base_url}.s3.amazonaws.com/{key}'.\
+            format(base_url=domain_name,
+                   key=self.build_s3_key(path))
+
     def generate_pre_signed_put_obj_url(self, path, md5):
         """
         This method produce a pre-signed url for a specific key to be used
