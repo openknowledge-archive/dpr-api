@@ -454,7 +454,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
                                    headers=dict(Authorization='bearer 12 23'))
         self.assertEqual(401, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.mod_api.models.BitStore.save_metadata')
     def test_return_200_if_all_right(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
@@ -463,7 +463,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
                                    data=json.dumps({'name': 'package'}))
         self.assertEqual(200, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.mod_api.models.BitStore.save_metadata')
     def test_return_403_if_user_not_matches_publisher(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
@@ -472,7 +472,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
                                    data=json.dumps({'name': 'package'}))
         self.assertEqual(403, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.mod_api.models.BitStore.save_metadata')
     def test_return_403_if_user_not_found_so_not_permitted_this_action(self, save):
         with self.app.app_context():
             db.drop_all()
@@ -485,7 +485,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
 
         self.assertEqual(403, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.mod_api.models.BitStore.save_metadata')
     def test_return_500_for_internal_error(self, save):
         save.side_effect = Exception('some problem')
         auth = "bearer %s" % self.jwt
@@ -495,7 +495,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
         self.assertEqual(500, response.status_code)
         self.assertEqual('GENERIC_ERROR', data['error_code'])
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.mod_api.models.BitStore.save_metadata')
     def test_throw_400_if_meta_data_is_invalid(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
@@ -639,7 +639,7 @@ class EndToEndTestCase(unittest.TestCase):
     @patch('app.mod_api.models.BitStore.get_metadata_body')
     @patch('app.mod_api.models.BitStore.get_s3_object')
     @patch('app.mod_api.models.BitStore.generate_pre_signed_put_obj_url')
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.mod_api.models.BitStore.save_metadata')
     def test_publish_end_to_end(self, save, signed_url, get_s3_object,
                                 get_metadata_body, create_or_update,
                                 get_readme_object_key):
