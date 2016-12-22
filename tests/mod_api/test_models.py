@@ -148,6 +148,9 @@ class BitStoreTestCase(unittest.TestCase):
     @mock_s3
     def test_change_acl(self):
         with self.app.app_context():
+            public_grants = ['READ', 'FULL_CONTROL']
+            private_grants = ['FULL_CONTROL']
+
             bit_store = BitStore('test_pub', 'test_package', body='test')
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
@@ -158,27 +161,20 @@ class BitStoreTestCase(unittest.TestCase):
 
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
 
-            grants = list()
             for grant in res['Grants']:
-                grants.append(grant['Permission'])
-            self.assertTrue('READ' in grants)
+                self.assertTrue(grant['Permission'] in public_grants)
 
             bit_store.change_acl("private")
-            new_grants = list()
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
 
             for grant in res['Grants']:
-                new_grants.append(grant['Permission'])
-            self.assertTrue('READ' not in new_grants)
+                self.assertTrue(grant['Permission'] in private_grants)
 
             bit_store.change_acl("public-read")
-
-            new_grants = list()
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
 
             for grant in res['Grants']:
-                new_grants.append(grant['Permission'])
-            self.assertTrue('READ' in new_grants)
+                self.assertTrue(grant['Permission'] in public_grants)
 
     @mock_s3
     def test_delete_data_package(self):
