@@ -19,7 +19,7 @@ def get_s3_cdn_prefix():
     env = os.getenv('STAGE', '')
     if env is not '':
         s3_bucket_name = os.getenv('FLASKS3_BUCKET_NAME')
-        return 'http://%s.s3.amazonaws.com' % (s3_bucket_name, )
+        return 'https://%s.s3.amazonaws.com' % (s3_bucket_name, )
     return env
 
 
