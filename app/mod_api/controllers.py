@@ -289,6 +289,7 @@ def finalize_metadata(publisher, package):
                 bit_store = BitStore(publisher, package)
                 body = bit_store.get_metadata_body()
                 if body is not None:
+                    bit_store.change_acl('public-read')
                     readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
                     MetaDataDB.create_or_update(name=package, publisher_name=publisher,
                                                 descriptor=body, readme=readme)
