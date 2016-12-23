@@ -47,11 +47,10 @@ class BitStoreTestCase(unittest.TestCase):
             self.assertEqual(key, obs_list[0]['Key'])
             res = s3.get_object_acl(Bucket=bucket_name, Key=key)
 
-            grants = list()
+            public_grants = ['READ', 'FULL_CONTROL']
+
             for grant in res['Grants']:
-                grants.append(grant['Permission'])
-            self.assertTrue('READ' in grants)
-            self.assertTrue('FULL_CONTROL' in grants)
+                self.assertTrue(grant['Permission'] in public_grants)
 
     @mock_s3
     def test_get_metadata_body(self):
