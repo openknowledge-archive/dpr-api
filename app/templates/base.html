@@ -75,10 +75,10 @@
             <nav role="navigation" class="navbar top-navbar">
               <div id="bs-example-navbar-collapse-1" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
-                  <li><a href="{{ zappa_env }}/apidocs/index.html">API</a></li>
+                  <li><a href="/apidocs/index.html">API</a></li>
                   <li><a href="http://frictionlessdata.io/">About</a></li>
                   {% if user %}
-                  <li><a id="logout" href="{{ zappa_env }}/logout">Logout</a></li>
+                  <li><a id="logout" href="/logout">Logout</a></li>
                   {% endif %}
                   <li><a href="http://okfn.org/"><img src="//a.okfn.org/img/oki/landscape-rgb-165x43.png" alt="logo" style="height: 33px; margin-top: -7px;" /></a></li>
                 </ul>
@@ -163,6 +163,7 @@
 <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/vega/vega.min.js"></script>
 <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/vega-embed/vega-embed.js"></script>
 <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/vega-lite/vega-lite.min.js"></script>
+<script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/plotly/plotly.min.js"></script>
 <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/bundle.js"></script>
 {% block scripts %}{% endblock %}
 
