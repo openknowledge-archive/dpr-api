@@ -132,7 +132,7 @@ class BitStore(object):
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
         key = self.build_s3_key(path)
-        params = {'Bucket': bucket_name, 'Key': key, 'ContentMD5': md5}
+        params = {'Bucket': bucket_name, 'Key': key}
         url = s3_client.generate_presigned_url('put_object',
                                                Params=params,
                                                ExpiresIn=3600)
