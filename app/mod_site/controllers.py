@@ -36,14 +36,14 @@ def index():
                     payload = jwt.decode(encoded_token, app.config['API_KEY'])
                 except Exception as e:
                     app.logger.error(e)
-                    return redirect(url_for('.logout'))
+                    return redirect(request.headers['Host'] + '/logout')
                 user = User().get_userinfo_by_id(payload['user'])
                 if user:
                     return render_template("dashboard.html", user=user,
                                            title='Dashboard',
                                            zappa_env=get_zappa_prefix(),
                                            s3_cdn=get_s3_cdn_prefix()), 200
-            return redirect(url_for('.logout'))
+                return redirect(request.headers['Host'] + '/logout')
         return render_template("index.html", title='Home',
                                zappa_env=get_zappa_prefix(),
                                s3_cdn=get_s3_cdn_prefix(),
