@@ -57,7 +57,8 @@ class Auth0(object):
         self.client_id = app.config['AUTH0_CLIENT_ID']
         self.client_secret = app.config['AUTH0_CLIENT_SECRET']
         self.auth0_domain = app.config["AUTH0_DOMAIN"]
-        self.auth0_audience = "https://{domain}/api/v2".format(domain=self.auth0_domain)
+        self.auth0_audience = "https://{domain}/api/v2/".format(domain=self.auth0_domain)
+        self.auth0_api = "https://{domain}/api/v2".format(domain=self.auth0_domain)
         self.jwt_token = self.get_auth0_token()
         self.headers = {'Authorization': "Bearer {token}".format(token=self.jwt_token),
                         'content-type': "application/json"}
@@ -113,7 +114,7 @@ class Auth0(object):
 
     def get_user(self, user_id):
         url = "{AUDIENCE}/users/{user_id}". \
-            format(AUDIENCE=self.auth0_audience,
+            format(AUDIENCE=self.auth0_api,
                    user_id=user_id)
         response = requests.request("GET", url, headers=self.headers)
         return response.json()
@@ -121,7 +122,7 @@ class Auth0(object):
     def search_user(self, field, value):
 
         url = "{AUDIENCE}/users?include_fields=true&q={FIELD}:{VALUE}". \
-            format(AUDIENCE=self.auth0_audience,
+            format(AUDIENCE=self.auth0_api,
                    FIELD=field, VALUE=value)
         response = requests.get(url=url, headers=self.headers)
         if response.ok:
@@ -132,7 +133,7 @@ class Auth0(object):
     def delete_user(self, user_id):
 
         url = "{AUDIENCE}/users/{USER_ID}". \
-            format(AUDIENCE=self.auth0_audience,
+            format(AUDIENCE=self.auth0_api,
                    USER_ID=user_id)
         requests.delete(url=url, headers=self.headers)
 
@@ -144,7 +145,7 @@ class Auth0(object):
                        username=user_name,
                        password=password)
 
-        url = "{AUDIENCE}/users".format(AUDIENCE=self.auth0_audience)
+        url = "{AUDIENCE}/users".format(AUDIENCE=self.auth0_api)
         response = requests.post(url=url, data=json.dumps(payload),
                                  headers=self.headers)
         if response.ok:
