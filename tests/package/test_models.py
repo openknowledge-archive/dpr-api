@@ -11,7 +11,7 @@ import unittest
 import json
 from app import create_app
 from app.database import db
-from app.mod_api.models import BitStore, MetaDataDB, User, \
+from app.package.models import BitStore, MetaDataDB, User, \
     Publisher, PublisherUser, UserRoleEnum
 
 

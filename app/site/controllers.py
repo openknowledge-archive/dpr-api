@@ -8,14 +8,14 @@ from flask import Blueprint, render_template, json, request, redirect, url_for
 from flask import current_app as app
 import jwt
 from app.utils import get_zappa_prefix, get_s3_cdn_prefix
-from app.mod_site.models import Catalog
-from app.mod_api.models import User, BitStore
+from app.site.models import Catalog
+from app.package.models import User, BitStore
 
 
-mod_site_blueprint = Blueprint('site', __name__)
+site_blueprint = Blueprint('site', __name__)
 
 
-@mod_site_blueprint.route("/", methods=["GET", "POST"])
+@site_blueprint.route("/", methods=["GET", "POST"])
 def index():
     """
     Loads home page
@@ -36,14 +36,14 @@ def index():
                     payload = jwt.decode(encoded_token, app.config['API_KEY'])
                 except Exception as e:
                     app.logger.error(e)
-                    return redirect(url_for('.logout'))
+                    return redirect(request.headers['Host'] + '/logout')
                 user = User().get_userinfo_by_id(payload['user'])
                 if user:
                     return render_template("dashboard.html", user=user,
                                            title='Dashboard',
                                            zappa_env=get_zappa_prefix(),
                                            s3_cdn=get_s3_cdn_prefix()), 200
-            return redirect(url_for('.logout'))
+                return redirect(request.headers['Host'] + '/logout')
         return render_template("index.html", title='Home',
                                zappa_env=get_zappa_prefix(),
                                s3_cdn=get_s3_cdn_prefix(),
@@ -53,7 +53,7 @@ def index():
         return redirect(url_for('.logout'))
 
 
-@mod_site_blueprint.route("/logout", methods=["GET"])
+@site_blueprint.route("/logout", methods=["GET"])
 def logout():
     """
     Loads Home page if user already login
@@ -71,7 +71,7 @@ def logout():
                            auth0_domain=app.config['AUTH0_DOMAIN']), 200
 
 
-@mod_site_blueprint.route("/<publisher>/<package>", methods=["GET"])
+@site_blueprint.route("/<publisher>/<package>", methods=["GET"])
 def datapackage_show(publisher, package):
     """
     Loads datapackage page for given owner
@@ -108,7 +108,9 @@ def datapackage_show(publisher, package):
     dataViews = catalog.get_views()
 
     bitstore = BitStore(publisher, package)
-    datapackage_json_url_in_s3 = bitstore.build_s3_key('datapackage.json')
+    datapackage_json_url_in_s3 = bitstore.\
+        build_s3_object_url(request.headers['Host'],
+                            'datapackage.json')
 
     return render_template("dataset.html", dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,

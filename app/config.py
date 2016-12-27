@@ -37,6 +37,7 @@ class BaseConfig(object):
 
     AUTH0_DOMAIN = ""
     AUTH0_CLIENT_ID = ''
+    AUTH0_CLIENT_SECRET = ""
 
     SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/dpr_db_test'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -60,7 +61,7 @@ class DevelopmentConfig(BaseConfig):
                        'FLASKS3_BUCKET_NAME', 'AWS_ACCESS_KEY_ID',
                        'AWS_SECRET_ACCESS_KEY', 'AUTH0_CLIENT_ID',
                        'AUTH0_CLIENT_SECRET', 'AUTH0_DOMAIN',
-                       'AUTH0_DB_NAME', 'AUTH0_API_AUDIENCE',
+                       'AUTH0_DB_NAME',
                        'SQLALCHEMY_DATABASE_URI', 'S3_BUCKET_NAME',
                        'FLASKS3_BUCKET_NAME']
     try:

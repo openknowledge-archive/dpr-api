@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import unittest
-from app.database import db
+
 from app import create_app
-from app.utils.authorization import is_allowed
-from app.mod_api.models import MetaDataDB, User, Publisher, \
+from app.auth.authorization import is_allowed
+from app.database import db
+from app.package.models import MetaDataDB, User, Publisher, \
     PublisherUser, UserRoleEnum
 
 
