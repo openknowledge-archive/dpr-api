@@ -14,8 +14,9 @@ from flaskext.markdown import Markdown
 from flask_gravatar import Gravatar
 from werkzeug.utils import import_string
 from .database import db
-from app.mod_api.controllers import mod_api_blueprint
-from app.mod_site.controllers import mod_site_blueprint
+from app.auth.controllers import auth_blueprint
+from app.package.controllers import package_blueprint
+from app.site.controllers import site_blueprint
 
 app_config = {
     "base": "app.config.BaseConfig",
@@ -40,8 +41,9 @@ def create_app():
 
     db.init_app(app)
 
-    app.register_blueprint(mod_api_blueprint)
-    app.register_blueprint(mod_site_blueprint)
+    app.register_blueprint(package_blueprint)
+    app.register_blueprint(auth_blueprint)
+    app.register_blueprint(site_blueprint)
 
     s3 = boto3.client('s3',
                       region_name=app.config['AWS_REGION'],

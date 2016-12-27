@@ -8,11 +8,11 @@ from app import create_app
 from flask import json, template_rendered
 from contextlib import nested, contextmanager
 from mock import patch
-import re
 import unittest
 from app.database import db
-from app.mod_site.models import Catalog
-from app.mod_api.models import User, MetaDataDB, Publisher, UserRoleEnum
+from app.site.models import Catalog
+from app.package.models import User, MetaDataDB, Publisher, UserRoleEnum
+
 
 class CatalogTestCase(unittest.TestCase):
     def setUp(self):
@@ -150,6 +150,13 @@ class CatalogTestCase(unittest.TestCase):
         views = catalog.get_views()
         self.assertEqual(views, [])
 
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+
 class WebsiteTestCase(unittest.TestCase):
     def setUp(self):
         self.publisher = 'demo'
@@ -225,6 +232,8 @@ class WebsiteTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+            db.engine.dispose()
+
 
 class SignupEndToEndTestCase(unittest.TestCase):
 
@@ -271,10 +280,10 @@ class SignupEndToEndTestCase(unittest.TestCase):
         # Sign Up button
         self.assertIn('Sign Up', rv.data.decode("utf8"))
 
-        with nested(patch('app.mod_api.controllers.get_user_info_with_code'),
-                    patch('app.mod_api.controllers.JWTHelper')) \
-                as (get_user_with_code, JWTHelper):
-
+        with nested(patch("app.auth.models.Auth0.get_auth0_token"),
+                    patch('app.auth.models.Auth0.get_user_info_with_code'),
+                    patch('app.auth.models.JWT')) \
+                as (get_auth0_token, get_user_with_code, JWTHelper):
             # Mocking Auth0 user info & Return value for Dashboard
             with self.app.app_context():
                 get_user_with_code(
@@ -315,3 +324,4 @@ class SignupEndToEndTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+            db.engine.dispose()

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from functools import wraps
-from flask import request, _request_ctx_stack
+
 from flask import current_app as app
-from app.utils.auth import get_user_from_jwt, handle_error
-from app.utils.authorization import is_allowed as ia
-from app.mod_api.models import MetaDataDB, Publisher
+from flask import request, _request_ctx_stack
+
+from app.auth.authorization import is_allowed as ia
+from app.package.models import MetaDataDB, Publisher
+from app.utils import handle_error
+from app.utils.auth_helper import get_user_from_jwt
 
 
 def requires_auth(f):

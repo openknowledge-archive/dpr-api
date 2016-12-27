@@ -11,128 +11,8 @@ from mock import patch
 from moto import mock_s3
 from app import create_app
 from app.database import db
-from app.mod_api.models import User, MetaDataDB, Publisher, \
+from app.package.models import User, MetaDataDB, Publisher, \
     PublisherUser, UserRoleEnum, BitStore
-
-
-class AuthTokenTestCase(unittest.TestCase):
-    auth_token_url = '/api/auth/token'
-
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
-        with self.app.app_context():
-            db.drop_all()
-            db.create_all()
-            self.user = User()
-            self.user.user_id = 'trial_id'
-            self.user.email, self.user.name, self.user.secret = \
-                'test@test.com', 'test_user', 'super_secret'
-            db.session.add(self.user)
-            db.session.commit()
-
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-
-    def test_throw_400_if_user_name_and_email_is_none(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': None,
-                                  'email': None
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        assert rv.status_code == 400
-        assert data['error_code'] == 'INVALID_INPUT'
-
-    def test_throw_400_if_secret_is_none(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': 'test',
-                                  'secret': None,
-                              }),
-                              content_type='application/json')
-        assert rv.status_code == 400
-        data = json.loads(rv.data)
-        assert data['error_code'] == 'INVALID_INPUT'
-
-    def test_throw_404_if_user_id_do_not_exists(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': None,
-                                  'email': 'test1@test.com',
-                                  'secret': 'super_secret'
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 404)
-        self.assertEqual(data['error_code'], 'USER_NOT_FOUND')
-
-    def test_throw_404_if_user_email_do_not_exists(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': 'not_found_user',
-                                  'email': None,
-                                  'secret': 'super_secret'
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 404)
-        self.assertEqual(data['error_code'], 'USER_NOT_FOUND')
-
-    def test_throw_403_if_user_name_and_secret_key_does_not_match(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': 'test_user',
-                                  'email': None,
-                                  'secret': 'super_secret1'
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 403)
-        self.assertEqual(data['error_code'], 'SECRET_ERROR')
-
-    def test_throw_403_if_email_and_secret_key_does_not_match(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': None,
-                                  'email': 'test@test.com',
-                                  'secret': 'super_secret1'
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 403)
-        self.assertEqual(data['error_code'], 'SECRET_ERROR')
-
-    def test_throw_500_if_exception_occours(self):
-        rv = self.client.post(self.auth_token_url,
-                              data="'username': None,",
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 500)
-        self.assertEqual(data['error_code'], 'GENERIC_ERROR')
-
-    def test_return_200_if_email_and_secret_matches(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': None,
-                                  'email': 'test@test.com',
-                                  'secret': 'super_secret'
-                              }),
-                              content_type='application/json')
-        self.assertEqual(rv.status_code, 200)
-
-    def test_return_200_if_user_id_and_secret_matches(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': 'test_user',
-                                  'email': None,
-                                  'secret': 'super_secret'
-                              }),
-                              content_type='application/json')
-        self.assertEqual(rv.status_code, 200)
 
 
 class GetMetaDataTestCase(unittest.TestCase):
@@ -222,6 +102,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+            db.engine.dispose()
 
 
 class GetAllMetaDataTestCase(unittest.TestCase):
@@ -262,62 +143,7 @@ class GetAllMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
-
-
-class GetS3SignedUrlTestCase(unittest.TestCase):
-    url = '/api/auth/bitstore_upload'
-
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
-
-    def test_throw_400_if_package_is_None(self):
-        rv = self.client.post(self.url,
-                              data=json.dumps({
-                                  'publisher': 'test_publisher',
-                                  'package': None,
-                                  'md5': 'm'
-                              }),
-                              content_type='application/json')
-        self.assertEqual(400, rv.status_code)
-
-    def test_throw_400_if_publisher_is_None(self):
-        rv = self.client.post(self.url,
-                              data=json.dumps({
-                                  'publisher': None,
-                                  'package': 'test_package',
-                                  'md5': 'm'
-                              }),
-                              content_type='application/json')
-        self.assertEqual(400, rv.status_code)
-
-    def test_throw_400_if_md5_is_None(self):
-        rv = self.client.post(self.url,
-                              data=json.dumps({
-                                  'publisher': 'test_publisher',
-                                  'package': 'test_package',
-                                  'md5': None
-                              }),
-                              content_type='application/json')
-        self.assertEqual(400, rv.status_code)
-
-    def test_throw_500_if_internal_server_errror(self):
-        rv = self.client.post(self.url,
-                              content_type='application/json')
-        self.assertEqual(500, rv.status_code)
-
-    @patch('app.mod_api.models.BitStore.generate_pre_signed_put_obj_url')
-    def test_200_if_all_right(self, signed_url):
-        signed_url.return_value = 'https://trial_url'
-        response = self.client.post(self.url,
-                                    data=json.dumps({
-                                        'publisher': 'test_publisher',
-                                        'package': 'test_package',
-                                        'md5': 'm'
-                                    }),
-                                    content_type='application/json')
-        data = json.loads(response.data)
-        self.assertEqual('https://trial_url', data['key'])
+            db.engine.dispose()
 
 
 class FinalizeMetaDataTestCase(unittest.TestCase):
@@ -354,10 +180,10 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.jwt = data['token']
 
-    @patch('app.mod_api.models.MetaDataDB.create_or_update')
-    @patch('app.mod_api.models.BitStore.get_metadata_body')
-    @patch('app.mod_api.models.BitStore.get_readme_object_key')
-    @patch('app.mod_api.models.BitStore.get_s3_object')
+    @patch('app.package.models.MetaDataDB.create_or_update')
+    @patch('app.package.models.BitStore.get_metadata_body')
+    @patch('app.package.models.BitStore.get_readme_object_key')
+    @patch('app.package.models.BitStore.get_s3_object')
     def test_return_200_if_all_right(self, get_metadata_body, create_or_update,
                                      get_readme_object_key, get_s3_object):
         get_metadata_body.return_value = json.dumps(dict(name='package'))
@@ -380,7 +206,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
                                     headers=dict(Authorization=auth))
         self.assertEqual(403, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.get_metadata_body')
+    @patch('app.package.models.BitStore.get_metadata_body')
     def test_throw_500_if_failed_to_get_data_from_s3(self, body_mock):
         body_mock.return_value = None
         auth = "bearer %s" % self.jwt
@@ -401,6 +227,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+            db.engine.dispose()
 
 
 class SaveMetaDataTestCase(unittest.TestCase):
@@ -454,7 +281,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
                                    headers=dict(Authorization='bearer 12 23'))
         self.assertEqual(401, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.package.models.BitStore.save')
     def test_return_200_if_all_right(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
@@ -463,7 +290,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
                                    data=json.dumps({'name': 'package'}))
         self.assertEqual(200, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.package.models.BitStore.save')
     def test_return_403_if_user_not_matches_publisher(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
@@ -472,7 +299,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
                                    data=json.dumps({'name': 'package'}))
         self.assertEqual(403, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.package.models.BitStore.save')
     def test_return_403_if_user_not_found_so_not_permitted_this_action(self, save):
         with self.app.app_context():
             db.drop_all()
@@ -485,7 +312,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
 
         self.assertEqual(403, response.status_code)
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.package.models.BitStore.save')
     def test_return_500_for_internal_error(self, save):
         save.side_effect = Exception('some problem')
         auth = "bearer %s" % self.jwt
@@ -495,7 +322,7 @@ class SaveMetaDataTestCase(unittest.TestCase):
         self.assertEqual(500, response.status_code)
         self.assertEqual('GENERIC_ERROR', data['error_code'])
 
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.package.models.BitStore.save')
     def test_throw_400_if_meta_data_is_invalid(self, save):
         save.return_value = None
         auth = "bearer %s" % self.jwt
@@ -514,56 +341,22 @@ class SaveMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
-
-
-class CallbackHandlingTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
-
-    @patch('app.mod_api.controllers.get_user_info_with_code')
-    def test_throw_500_if_error_getting_user_info_from_auth0(self, get_user):
-        get_user.return_value = None
-
-        response = self.client.get('/api/auth/callback?code=123')
-        self.assertTrue(get_user.called)
-
-        data = json.loads(response.data)
-
-        self.assertEqual(data['error_code'], 'GENERIC_ERROR')
-        self.assertEqual(response.status_code, 500)
-
-    @patch('app.mod_api.controllers.get_user_info_with_code')
-    @patch('app.mod_api.controllers.JWTHelper')
-    @patch('app.mod_api.models.User.create_or_update_user_from_callback')
-    def test_return_200_if_all_right(self,
-                                     create_user, jwt_helper, get_user_with_code ):
-        get_user_with_code('123').return_value = {}
-        create_user.return_value = User(id=1, email="abc@abc.com")
-        response = self.client.get('/api/auth/callback?code=123')
-        self.assertEqual(create_user.call_count, 1)
-        self.assertEqual(jwt_helper.call_count, 1)
-        self.assertEqual(response.status_code, 200)
-
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
+            db.engine.dispose()
 
 
 class DataProxyTestCase(unittest.TestCase):
     publisher = 'test_pub'
     package = 'test_package'
     resource = 'test_resource'
-    url = '/api/dataproxy/{publisher}/{package}/r/{resource}.csv'\
+    url = '/api/package/dataproxy/{publisher}/{package}/r/{resource}.csv'\
         .format(publisher=publisher, package=package, resource=resource)
 
     def setUp(self):
         self.app = create_app()
         self.client = self.app.test_client()
 
-    @patch("app.mod_api.models.BitStore.get_s3_object")
-    @patch("app.mod_api.models.BitStore.build_s3_key")
+    @patch("app.package.models.BitStore.get_s3_object")
+    @patch("app.package.models.BitStore.build_s3_key")
     def test_return_200_if_all_right_for_csv(self, build_key, get_s3_object):
         build_key.return_value = ''
         get_s3_object.return_value = 'test_header_0,test_header_1\n'\
@@ -574,8 +367,8 @@ class DataProxyTestCase(unittest.TestCase):
         self.assertEqual(data, 'test_header_0,test_header_1\n'\
                                      + 'test_value_0,test_value_3\n')
 
-    @patch("app.mod_api.models.BitStore.get_s3_object")
-    @patch("app.mod_api.models.BitStore.build_s3_key")
+    @patch("app.package.models.BitStore.get_s3_object")
+    @patch("app.package.models.BitStore.build_s3_key")
     def test_return_200_if_all_right_for_json(self, build_key, get_s3_object):
         build_key.return_value = ''
         get_s3_object.return_value = 'test_header_0,test_header_1\n'\
@@ -592,8 +385,8 @@ class DataProxyTestCase(unittest.TestCase):
                          + '"test_header_1": "test_value_1"}'
                          + ']')
 
-    @patch("app.mod_api.models.BitStore.get_s3_object")
-    @patch("app.mod_api.models.BitStore.build_s3_key")
+    @patch("app.package.models.BitStore.get_s3_object")
+    @patch("app.package.models.BitStore.build_s3_key")
     def test_throw_500_if_not_able_to_get_data_from_s3(self,
                                                        build_key,
                                                        get_s3_object):
@@ -634,12 +427,12 @@ class EndToEndTestCase(unittest.TestCase):
             db.session.add(self.user)
             db.session.commit()
 
-    @patch('app.mod_api.models.BitStore.get_readme_object_key')
-    @patch('app.mod_api.models.MetaDataDB.create_or_update')
-    @patch('app.mod_api.models.BitStore.get_metadata_body')
-    @patch('app.mod_api.models.BitStore.get_s3_object')
-    @patch('app.mod_api.models.BitStore.generate_pre_signed_put_obj_url')
-    @patch('app.mod_api.models.BitStore.save')
+    @patch('app.package.models.BitStore.get_readme_object_key')
+    @patch('app.package.models.MetaDataDB.create_or_update')
+    @patch('app.package.models.BitStore.get_metadata_body')
+    @patch('app.package.models.BitStore.get_s3_object')
+    @patch('app.package.models.BitStore.generate_pre_signed_put_obj_url')
+    @patch('app.package.models.BitStore.save')
     def test_publish_end_to_end(self, save, signed_url, get_s3_object,
                                 get_metadata_body, create_or_update,
                                 get_readme_object_key):
@@ -708,24 +501,7 @@ class EndToEndTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
-
-
-class Auth0LoginTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
-
-    def test_returns_302(self):
-        response = self.client.get('/api/auth/login')
-        self.assertEqual(response.status_code, 302)
-
-    def test_redirection(self):
-        response = self.client.get('/api/auth/login')
-        self.assertIn('Redirecting...', response.data)
-
-    def test_redirected(self):
-        response = self.client.get('/api/auth/login')
-        self.assertNotEqual(response.location, 'http://localhost:5000/api/auth/login')
+            db.engine.dispose()
 
 
 class SoftDeleteTestCase(unittest.TestCase):
@@ -768,8 +544,8 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.jwt = data['token']
         self.auth = "bearer %s" % self.jwt
 
-    @patch('app.mod_api.models.BitStore.change_acl')
-    @patch('app.mod_api.models.MetaDataDB.change_status')
+    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.package.models.MetaDataDB.change_status')
     def test_return_200_if_all_goes_well(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
@@ -777,8 +553,8 @@ class SoftDeleteTestCase(unittest.TestCase):
         response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         self.assertEqual(response.status_code, 200)
 
-    @patch('app.mod_api.models.BitStore.change_acl')
-    @patch('app.mod_api.models.MetaDataDB.change_status')
+    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.package.models.MetaDataDB.change_status')
     def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
@@ -786,8 +562,8 @@ class SoftDeleteTestCase(unittest.TestCase):
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, 403)
 
-    @patch('app.mod_api.models.BitStore.change_acl')
-    @patch('app.mod_api.models.MetaDataDB.change_status')
+    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.package.models.MetaDataDB.change_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
         change_acl.return_value = False
         change_status.return_value = True
@@ -796,8 +572,8 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to change acl')
 
-    @patch('app.mod_api.models.BitStore.change_acl')
-    @patch('app.mod_api.models.MetaDataDB.change_status')
+    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.package.models.MetaDataDB.change_status')
     def test_throw_500_if_change_status_fails(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = False
@@ -806,8 +582,8 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to change status')
 
-    @patch('app.mod_api.models.BitStore.change_acl')
-    @patch('app.mod_api.models.MetaDataDB.change_status')
+    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.package.models.MetaDataDB.change_status')
     def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
         change_acl.side_effect = Exception('failed')
         change_status.return_value = False
@@ -820,6 +596,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+            db.engine.dispose()
 
 
 class HardDeleteTestCase(unittest.TestCase):
@@ -882,8 +659,8 @@ class HardDeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.jwt_member = data['token']
 
-    @patch('app.mod_api.models.BitStore.delete_data_package')
-    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.package.models.MetaDataDB.delete_data_package')
     def test_return_200_if_all_goes_well(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.return_value = True
@@ -891,8 +668,8 @@ class HardDeleteTestCase(unittest.TestCase):
         response = self.client.delete(self.url, headers=dict(Authorization=auth))
         self.assertEqual(response.status_code, 200)
 
-    @patch('app.mod_api.models.BitStore.delete_data_package')
-    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.package.models.MetaDataDB.delete_data_package')
     def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = False
         db_delete.return_value = True
@@ -902,8 +679,8 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to delete from s3')
 
-    @patch('app.mod_api.models.BitStore.delete_data_package')
-    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.package.models.MetaDataDB.delete_data_package')
     def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.return_value = False
@@ -913,8 +690,8 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to delete from db')
 
-    @patch('app.mod_api.models.BitStore.delete_data_package')
-    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.package.models.MetaDataDB.delete_data_package')
     def test_throw_generic_error_if_internal_error(self, db_delete, bitstore_delete):
         bitstore_delete.side_effect = Exception('failed')
         db_delete.return_value = False
@@ -924,8 +701,8 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'failed')
 
-    @patch('app.mod_api.models.BitStore.delete_data_package')
-    @patch('app.mod_api.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.package.models.MetaDataDB.delete_data_package')
     def test_should_throw_403_if_user_is_not_owner_of_the_package(self,
                                                                   db_delete,
                                                                   bitstore_delete):
@@ -939,6 +716,7 @@ class HardDeleteTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+            db.engine.dispose()
 
 
 class TagDataPackageTestCase(unittest.TestCase):
@@ -1011,8 +789,8 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.jwt = data['token']
         self.auth = "bearer %s" % self.jwt
 
-    @patch('app.mod_api.models.BitStore.copy_to_new_version')
-    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.package.models.MetaDataDB.create_or_update_version')
     def test_return_200_if_all_goes_well(self, create_or_update_version, copy_to_new_version):
         copy_to_new_version.return_value = True
         create_or_update_version.return_value = True
@@ -1024,8 +802,8 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     headers=dict(Authorization=self.auth))
         self.assertEqual(response.status_code, 200)
 
-    @patch('app.mod_api.models.BitStore.copy_to_new_version')
-    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.package.models.MetaDataDB.create_or_update_version')
     def test_throw_400_if_version_missing(self, create_or_update_version, copy_to_new_version):
         copy_to_new_version.return_value = True
         create_or_update_version.return_value = True
@@ -1039,8 +817,8 @@ class TagDataPackageTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual('ATTRIBUTE_MISSING', data['error_code'])
 
-    @patch('app.mod_api.models.BitStore.copy_to_new_version')
-    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.package.models.MetaDataDB.create_or_update_version')
     def test_throw_500_if_failed_to_tag(self, create_or_update_version, copy_to_new_version):
         copy_to_new_version.return_value = False
         create_or_update_version.return_value = True
@@ -1094,8 +872,8 @@ class TagDataPackageTestCase(unittest.TestCase):
                                      .build_s3_versioned_prefix())
         self.assertTrue('Contents' not in objects_nu)
 
-    @patch('app.mod_api.models.BitStore.copy_to_new_version')
-    @patch('app.mod_api.models.MetaDataDB.create_or_update_version')
+    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.package.models.MetaDataDB.create_or_update_version')
     def test_allow_if_member_of_publisher(self, create_or_update_version,
                                           copy_to_new_version):
         copy_to_new_version.return_value = False
@@ -1122,3 +900,4 @@ class TagDataPackageTestCase(unittest.TestCase):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+            db.engine.dispose()

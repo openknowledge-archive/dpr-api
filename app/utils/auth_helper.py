@@ -5,11 +5,11 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from app.utils import handle_error
-from app.utils.jwt_utilities import JWTHelper
+from app.auth.models import JWT
 
 
 def get_user_from_jwt(req, api_key):
-    jwt_helper = JWTHelper(api_key)
+    jwt_helper = JWT(api_key)
 
     auth = req.headers.get('Authorization', None)
 

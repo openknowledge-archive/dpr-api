@@ -4,18 +4,17 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import requests
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask import current_app, json
 from os.path import join, dirname
 from dotenv import load_dotenv
 from app.database import db
-from app.mod_api import models
+from app.package import models
 from app import create_app
-from app.mod_api.models import MetaDataDB, Publisher, \
+from app.package.models import MetaDataDB, Publisher, \
     PublisherUser, User, BitStore, UserRoleEnum
-from app.utils import auth0_helper
+from app.auth.models import Auth0
 
 dot_env_path = join(dirname(__file__), '.env')
 load_dotenv(dot_env_path)
@@ -60,12 +59,13 @@ def populate():
 
 
 def populate_auth0(user_name, full_name, email):
-    responses = auth0_helper.search_user('username', user_name)
+    auth0 = Auth0()
+    responses = auth0.search_user('username', user_name)
     if len(responses) > 0:
         for response in responses:
-            auth0_helper.delete_user(response['user_id'])
-    user_create = auth0_helper.create_user(email, full_name,
-                                           user_name, 'Admin123')
+            auth0.delete_user(response['user_id'])
+    user_create = auth0.create_user(email, full_name,
+                                    user_name, 'Admin123')
     return user_create['user_id']
 
 
