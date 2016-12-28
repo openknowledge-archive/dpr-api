@@ -11,7 +11,7 @@ from mock import patch
 import unittest
 from app.database import db
 from app.site.models import Catalog
-from app.package.models import User, MetaDataDB, Publisher, UserRoleEnum
+from app.package.models import User, Package, Publisher, UserRoleEnum
 
 
 class CatalogTestCase(unittest.TestCase):
@@ -27,7 +27,7 @@ class CatalogTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -50,7 +50,7 @@ class CatalogTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -76,7 +76,7 @@ class CatalogTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             metadata.readme = readme
             publisher.packages.append(metadata)
@@ -97,7 +97,7 @@ class CatalogTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -118,7 +118,7 @@ class CatalogTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -139,7 +139,7 @@ class CatalogTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -179,7 +179,7 @@ class WebsiteTestCase(unittest.TestCase):
         descriptor = json.loads(open('fixtures/datapackage.json').read())
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -205,7 +205,7 @@ class WebsiteTestCase(unittest.TestCase):
         descriptor = {"data": [], "resources": []}
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)

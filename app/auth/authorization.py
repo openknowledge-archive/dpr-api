@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from app.package.models import User, MetaDataDB, Publisher, \
+from app.package.models import User, Package, Publisher, \
     PublisherUser, UserRoleEnum
 
 
@@ -56,7 +56,7 @@ def get_user_actions(user_id, entity):
         else:
             if isinstance(entity, Publisher):
                 local_roles.extend(get_publisher_roles(user_id=user_id, entity=entity))
-            if isinstance(entity, MetaDataDB):
+            if isinstance(entity, Package):
                 local_roles.extend(get_package_roles(user_id=user_id, entity=entity))
             elif entity is None:
                 local_roles.extend(roles_action_mappings['System']['LoggedIn'])

@@ -10,7 +10,7 @@ from flask import current_app as app
 from flask import request, _request_ctx_stack
 
 from app.auth.authorization import is_allowed as ia
-from app.package.models import MetaDataDB, Publisher
+from app.package.models import Package, Publisher
 from app.utils import handle_error
 from app.utils.auth_helper import get_user_from_jwt
 
@@ -39,7 +39,7 @@ def is_allowed(action):
 
             if entity_str == 'Package':
                 publisher_name, package_name = kwargs['publisher'], kwargs['package']
-                instance = MetaDataDB.get_package(publisher_name, package_name)
+                instance = Package.get_package(publisher_name, package_name)
 
             elif entity_str == 'Publisher':
                 publisher_name = kwargs['publisher']

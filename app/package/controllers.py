@@ -12,7 +12,7 @@ from flask import Blueprint, request, jsonify, \
 from flask import current_app as app
 from flask import Response
 
-from app.package.models import BitStore, User, MetaDataDB, Publisher
+from app.package.models import BitStore, User, Package, Publisher
 from app.auth.annotations import requires_auth, is_allowed
 from app.utils import handle_error
 
@@ -40,6 +40,13 @@ def save_metadata(publisher, package):
           type: string
           required: true
           description: package name
+        - in: header
+          name: Authorization
+          type: string
+          required: true
+          description: >
+            Jwt token in format of "bearer {token}.
+            The token can be generated from /api/auth/token"
     responses:
         400:
             description: JWT is invalid or req body is not valid
@@ -112,6 +119,13 @@ def tag_data_package(publisher, package):
           type: string
           required: true
           description: version value
+        - in: header
+          name: Authorization
+          type: string
+          required: true
+          description: >
+            Jwt token in format of "bearer {token}.
+            The token can be generated from /api/auth/token"
     responses:
         400:
             description: JWT is invalid or req body is not valid
@@ -139,7 +153,7 @@ def tag_data_package(publisher, package):
             return handle_error('ATTRIBUTE_MISSING', 'version not found', 400)
 
         bitstore = BitStore(publisher, package)
-        status_db = MetaDataDB.create_or_update_version(publisher, package, data['version'])
+        status_db = Package.create_or_update_version(publisher, package, data['version'])
         status_bitstore = bitstore.copy_to_new_version(data['version'])
 
         if status_db is False or status_bitstore is False:
@@ -154,7 +168,7 @@ def tag_data_package(publisher, package):
 @is_allowed('Package::Delete')
 def delete_data_package(publisher, package):
     """
-    DPR data package soft delete operation operation.
+    DPR data package soft delete operation.
     This API is responsible for mark for delete of data package
     ---
     tags:
@@ -170,6 +184,13 @@ def delete_data_package(publisher, package):
           type: string
           required: true
           description: package name
+        - in: header
+          name: Authorization
+          type: string
+          required: true
+          description: >
+            Jwt token in format of "bearer {token}.
+            The token can be generated from /api/auth/token"
     responses:
         500:
             description: Internal Server Error
@@ -185,7 +206,63 @@ def delete_data_package(publisher, package):
     try:
         bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.change_acl('private')
-        status_db = MetaDataDB.change_status(publisher, package)
+        status_db = Package.change_status(publisher, package)
+        if status_acl and status_db:
+            return jsonify({"status": "OK"}), 200
+        if not status_acl:
+            raise Exception('Failed to change acl')
+        if not status_db:
+            raise Exception('Failed to change status')
+    except Exception as e:
+        app.logger.error(e)
+        return handle_error('GENERIC_ERROR', e.message, 500)
+
+
+@package_blueprint.route("/<publisher>/<package>/undelete", methods=["POST"])
+@requires_auth
+@is_allowed('Package::Undelete')
+def undelete_data_package(publisher, package):
+    """
+    DPR data package un-delete operation.
+    This API is responsible for un-mark the mark for delete of data package
+    ---
+    tags:
+        - package
+    parameters:
+        - in: path
+          name: publisher
+          type: string
+          required: true
+          description: publisher name
+        - in: path
+          name: package
+          type: string
+          required: true
+          description: package name
+        - in: header
+          name: Authorization
+          type: string
+          required: true
+          description: >
+            Jwt token in format of "bearer {token}.
+            The token can be generated from /api/auth/token"
+    responses:
+        500:
+            description: Internal Server Error
+        200:
+            description: Success Message
+            schema:
+                id: put_package_success
+                properties:
+                    status:
+                        type: string
+                        default: OK
+
+    """
+    try:
+        bitstore = BitStore(publisher=publisher, package=package)
+        status_acl = bitstore.change_acl('public-read')
+        status_db = Package.change_status(publisher, package, status='active')
         if status_acl and status_db:
             return jsonify({"status": "OK"}), 200
         if not status_acl:
@@ -218,6 +295,13 @@ def purge_data_package(publisher, package):
           type: string
           required: true
           description: package name
+        - in: header
+          name: Authorization
+          type: string
+          required: true
+          description: >
+            Jwt token in format of "bearer {token}.
+            The token can be generated from /api/auth/token"
     responses:
         500:
             description: Internal Server Error
@@ -233,7 +317,7 @@ def purge_data_package(publisher, package):
     try:
         bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.delete_data_package()
-        status_db = MetaDataDB.delete_data_package(publisher, package)
+        status_db = Package.delete_data_package(publisher, package)
         if status_acl and status_db:
             return jsonify({"status": "OK"}), 200
         if not status_acl:
@@ -267,6 +351,13 @@ def finalize_metadata(publisher, package):
           type: string
           required: true
           description: package name
+        - in: header
+          name: Authorization
+          type: string
+          required: true
+          description: >
+            Jwt token in format of "bearer {token}.
+            The token can be generated from /api/auth/token"
     responses:
         200:
             description: Data transfer complete
@@ -292,8 +383,8 @@ def finalize_metadata(publisher, package):
                 if body is not None:
                     bit_store.change_acl('public-read')
                     readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
-                    MetaDataDB.create_or_update(name=package, publisher_name=publisher,
-                                                descriptor=body, readme=readme)
+                    Package.create_or_update(name=package, publisher_name=publisher,
+                                             descriptor=body, readme=readme)
                     return jsonify({"status": "OK"}), 200
 
                 raise Exception("Failed to get data from s3")
@@ -341,8 +432,8 @@ def get_metadata(publisher, package):
             description: No metadata found for the package
     """
     try:
-        data = MetaDataDB.query.join(Publisher).\
-            filter(Publisher.name == publisher, MetaDataDB.name == package).\
+        data = Package.query.join(Publisher).\
+            filter(Publisher.name == publisher, Package.name == package).\
             first()
         if data is None:
             return handle_error('DATA_NOT_FOUND',
@@ -459,8 +550,8 @@ def get_all_metadata_names_for_publisher(publisher):
             description: No metadata found for the package
     """
     try:
-        metadata = MetaDataDB.query.join(Publisher).\
-            with_entities(MetaDataDB.name).\
+        metadata = Package.query.join(Publisher).\
+            with_entities(Package.name).\
             filter(Publisher.name == publisher).all()
         if len(metadata) is 0:
             return handle_error('DATA_NOT_FOUND',

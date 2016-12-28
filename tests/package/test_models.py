@@ -11,7 +11,7 @@ import unittest
 import json
 from app import create_app
 from app.database import db
-from app.package.models import BitStore, MetaDataDB, User, \
+from app.package.models import BitStore, Package, User, \
     Publisher, PublisherUser, UserRoleEnum
 
 
@@ -255,19 +255,19 @@ class MetaDataDBTestCase(unittest.TestCase):
             association2.publisher = publisher2
             user2.publishers.append(association2)
 
-            metadata1 = MetaDataDB(name=self.package_one)
+            metadata1 = Package(name=self.package_one)
             metadata1.descriptor = json.dumps(dict(name='test_one'))
             publisher1.packages.append(metadata1)
 
-            metadata2 = MetaDataDB(name=self.package_two)
+            metadata2 = Package(name=self.package_two)
             metadata2.descriptor = json.dumps(dict(name='test_two'))
             publisher1.packages.append(metadata2)
 
-            metadata3 = MetaDataDB(name=self.package_one)
+            metadata3 = Package(name=self.package_one)
             metadata3.descriptor = json.dumps(dict(name='test_three'))
             publisher2.packages.append(metadata3)
 
-            metadata4 = MetaDataDB(name=self.package_two)
+            metadata4 = Package(name=self.package_two)
             metadata4.descriptor = json.dumps(dict(name='test_four'))
             publisher2.packages.append(metadata4)
 
@@ -277,21 +277,21 @@ class MetaDataDBTestCase(unittest.TestCase):
             db.session.commit()
 
     def test_composite_key(self):
-        res = MetaDataDB.query.join(Publisher).filter(Publisher.name ==
-                                                      self.publisher_one).all()
+        res = Package.query.join(Publisher).filter(Publisher.name ==
+                                                   self.publisher_one).all()
         self.assertEqual(2, len(res))
 
     def test_update_fields_if_instance_present(self):
-        metadata = MetaDataDB.query.join(Publisher)\
+        metadata = Package.query.join(Publisher)\
             .filter(Publisher.name == self.publisher_one,
-                    MetaDataDB.name == self.package_one).one()
+                    Package.name == self.package_one).one()
         self.assertEqual(json.loads(metadata.descriptor)['name'], "test_one")
-        MetaDataDB.create_or_update(self.package_one, self.publisher_one,
-                                    descriptor=json.dumps(dict(name='sub')),
-                                    private=True)
-        metadata = MetaDataDB.query.join(Publisher) \
+        Package.create_or_update(self.package_one, self.publisher_one,
+                                 descriptor=json.dumps(dict(name='sub')),
+                                 private=True)
+        metadata = Package.query.join(Publisher) \
             .filter(Publisher.name == self.publisher_one,
-                    MetaDataDB.name == self.package_one).one()
+                    Package.name == self.package_one).one()
         self.assertEqual(json.loads(metadata.descriptor)['name'], "sub")
         self.assertEqual(metadata.private, True)
 
@@ -299,104 +299,104 @@ class MetaDataDBTestCase(unittest.TestCase):
         pub = self.publisher_two
         name = "custom_name"
 
-        metadata = MetaDataDB.query.join(Publisher) \
+        metadata = Package.query.join(Publisher) \
             .filter(Publisher.name == pub,
-                    MetaDataDB.name == name).all()
+                    Package.name == name).all()
         self.assertEqual(len(metadata), 0)
-        MetaDataDB.create_or_update(name, pub,
-                                    descriptor=json.dumps(dict(name='sub')),
-                                    private=True)
-        metadata = MetaDataDB.query.join(Publisher) \
+        Package.create_or_update(name, pub,
+                                 descriptor=json.dumps(dict(name='sub')),
+                                 private=True)
+        metadata = Package.query.join(Publisher) \
             .filter(Publisher.name == pub,
-                    MetaDataDB.name == name).all()
+                    Package.name == name).all()
         self.assertEqual(len(metadata), 1)
 
     def test_change_status(self):
-        data = MetaDataDB.query.join(Publisher). \
+        data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_one).one()
+                   Package.name == self.package_one).one()
         self.assertEqual('active', data.status)
 
-        MetaDataDB.change_status(self.publisher_one, self.package_one)
+        Package.change_status(self.publisher_one, self.package_one)
 
-        data = MetaDataDB.query.join(Publisher). \
+        data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_one).one()
+                   Package.name == self.package_one).one()
         self.assertEqual('deleted', data.status)
 
-        MetaDataDB.change_status(self.publisher_one, self.package_one,
-                                 status='active')
+        Package.change_status(self.publisher_one, self.package_one,
+                              status='active')
 
-        data = MetaDataDB.query.join(Publisher). \
+        data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_one).one()
+                   Package.name == self.package_one).one()
         self.assertEqual('active', data.status)
 
     def test_raise_exception_if_wrong_status_given(self):
-        self.assertRaises(Exception, MetaDataDB.change_status,
+        self.assertRaises(Exception, Package.change_status,
                           self.publisher_one, self.package_one,
                           status='active1')
 
     def test_return_false_if_failed_to_change_status(self):
-        status = MetaDataDB.change_status(self.publisher_one, 'fake_package',
-                                          status='active')
+        status = Package.change_status(self.publisher_one, 'fake_package',
+                                       status='active')
         self.assertFalse(status)
 
     def test_return_true_if_delete_data_package_success(self):
-        status = MetaDataDB.delete_data_package(self.publisher_one,
-                                                self.package_one)
+        status = Package.delete_data_package(self.publisher_one,
+                                             self.package_one)
         self.assertTrue(status)
-        data = MetaDataDB.query.join(Publisher). \
+        data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_one).all()
+                   Package.name == self.package_one).all()
         self.assertEqual(0, len(data))
         data = Publisher.query.all()
         self.assertEqual(1, len(data))
 
     def test_return_false_if_error_occur(self):
-        status = MetaDataDB.delete_data_package("fake_package",
-                                                self.package_one)
+        status = Package.delete_data_package("fake_package",
+                                             self.package_one)
         self.assertFalse(status)
 
     def test_should_populate_new_versioned_data_package(self):
-        MetaDataDB.create_or_update_version(self.publisher_one,
-                                            self.package_two, 'tag_one')
-        latest_data = MetaDataDB.query.join(Publisher). \
+        Package.create_or_update_version(self.publisher_one,
+                                         self.package_two, 'tag_one')
+        latest_data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_two,
-                   MetaDataDB.version == 'latest').one()
-        tagged_data = MetaDataDB.query.join(Publisher). \
+                   Package.name == self.package_two,
+                   Package.version == 'latest').one()
+        tagged_data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_two,
-                   MetaDataDB.version == 'tag_one').one()
+                   Package.name == self.package_two,
+                   Package.version == 'tag_one').one()
         self.assertEqual(latest_data.name, tagged_data.name)
         self.assertEqual('tag_one', tagged_data.version)
 
     def test_should_update_data_package_if_preexists(self):
         with self.app.test_request_context():
             pub = Publisher.query.filter_by(name=self.publisher_one).one()
-            pub.packages.append(MetaDataDB(name=self.package_two,
-                                           version='tag_one',
-                                           readme='old_readme'))
+            pub.packages.append(Package(name=self.package_two,
+                                        version='tag_one',
+                                        readme='old_readme'))
             db.session.add(pub)
             db.session.commit()
-        latest_data = MetaDataDB.query.join(Publisher). \
+        latest_data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_two,
-                   MetaDataDB.version == 'latest').one()
-        tagged_data = MetaDataDB.query.join(Publisher). \
+                   Package.name == self.package_two,
+                   Package.version == 'latest').one()
+        tagged_data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_two,
-                   MetaDataDB.version == 'tag_one').one()
+                   Package.name == self.package_two,
+                   Package.version == 'tag_one').one()
         self.assertNotEqual(latest_data.readme, tagged_data.readme)
 
-        MetaDataDB.create_or_update_version(self.publisher_one,
-                                            self.package_two,
+        Package.create_or_update_version(self.publisher_one,
+                                         self.package_two,
                                             'tag_one')
-        tagged_data = MetaDataDB.query.join(Publisher). \
+        tagged_data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
-                   MetaDataDB.name == self.package_two,
-                   MetaDataDB.version == 'tag_one').one()
+                   Package.name == self.package_two,
+                   Package.version == 'tag_one').one()
         self.assertEqual(latest_data.readme, tagged_data.readme)
 
     def tearDown(self):

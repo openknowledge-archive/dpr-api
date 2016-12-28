@@ -11,7 +11,7 @@ from mock import patch
 from moto import mock_s3
 from app import create_app
 from app.database import db
-from app.package.models import User, MetaDataDB, Publisher, \
+from app.package.models import User, Package, Publisher, \
     PublisherUser, UserRoleEnum, BitStore
 
 
@@ -36,7 +36,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         descriptor = {'name': 'test description'}
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -51,7 +51,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         readme = 'README'
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             metadata.readme = readme
             publisher.packages.append(metadata)
@@ -72,7 +72,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         descriptor = {'name': 'test description'}
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = json.dumps(descriptor)
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -87,7 +87,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         descriptor = 'test description'
         with self.app.app_context():
             publisher = Publisher(name='pub')
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -116,8 +116,8 @@ class GetAllMetaDataTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
             publisher = Publisher(name=self.publisher)
-            metadata1 = MetaDataDB(name=self.package1)
-            metadata2 = MetaDataDB(name=self.package2)
+            metadata1 = Package(name=self.package1)
+            metadata2 = Package(name=self.package2)
             publisher.packages.append(metadata1)
             publisher.packages.append(metadata2)
             db.session.add(publisher)
@@ -166,7 +166,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
                 'test@test.com', self.publisher, 'super_secret'
             publisher = Publisher(name=self.publisher)
             association = PublisherUser(role=UserRoleEnum.owner)
-            publisher.packages.append(MetaDataDB(name=self.package))
+            publisher.packages.append(Package(name=self.package))
             association.publisher = publisher
             self.user.publishers.append(association)
             db.session.add(self.user)
@@ -180,7 +180,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.jwt = data['token']
 
-    @patch('app.package.models.MetaDataDB.create_or_update')
+    @patch('app.package.models.Package.create_or_update')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_readme_object_key')
     @patch('app.package.models.BitStore.get_s3_object')
@@ -428,7 +428,7 @@ class EndToEndTestCase(unittest.TestCase):
             db.session.commit()
 
     @patch('app.package.models.BitStore.get_readme_object_key')
-    @patch('app.package.models.MetaDataDB.create_or_update')
+    @patch('app.package.models.Package.create_or_update')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_s3_object')
     @patch('app.package.models.BitStore.generate_pre_signed_put_obj_url')
@@ -462,7 +462,7 @@ class EndToEndTestCase(unittest.TestCase):
         descriptor = {'name': 'test description'}
         with self.app.app_context():
             p = Publisher.query.filter_by(name=self.publisher).one()
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             p.packages.append(metadata)
             metadata.descriptor = json.dumps(descriptor)
             db.session.add(p)
@@ -528,7 +528,7 @@ class SoftDeleteTestCase(unittest.TestCase):
             association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
 
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             self.publisher.packages.append(metadata)
             self.user.publishers.append(association)
 
@@ -545,7 +545,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.auth = "bearer %s" % self.jwt
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.MetaDataDB.change_status')
+    @patch('app.package.models.Package.change_status')
     def test_return_200_if_all_goes_well(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
@@ -554,7 +554,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.MetaDataDB.change_status')
+    @patch('app.package.models.Package.change_status')
     def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
@@ -563,7 +563,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.MetaDataDB.change_status')
+    @patch('app.package.models.Package.change_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
         change_acl.return_value = False
         change_status.return_value = True
@@ -573,7 +573,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Failed to change acl')
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.MetaDataDB.change_status')
+    @patch('app.package.models.Package.change_status')
     def test_throw_500_if_change_status_fails(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = False
@@ -583,7 +583,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Failed to change status')
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.MetaDataDB.change_status')
+    @patch('app.package.models.Package.change_status')
     def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
         change_acl.side_effect = Exception('failed')
         change_status.return_value = False
@@ -633,7 +633,7 @@ class HardDeleteTestCase(unittest.TestCase):
             association1 = PublisherUser(role=UserRoleEnum.member)
             association1.publisher = self.publisher
 
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             self.publisher.packages.append(metadata)
             self.user.publishers.append(association)
             self.user_member.publishers.append(association1)
@@ -660,7 +660,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.jwt_member = data['token']
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.Package.delete_data_package')
     def test_return_200_if_all_goes_well(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.return_value = True
@@ -669,7 +669,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.Package.delete_data_package')
     def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = False
         db_delete.return_value = True
@@ -680,7 +680,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Failed to delete from s3')
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.Package.delete_data_package')
     def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.return_value = False
@@ -691,7 +691,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Failed to delete from db')
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.Package.delete_data_package')
     def test_throw_generic_error_if_internal_error(self, db_delete, bitstore_delete):
         bitstore_delete.side_effect = Exception('failed')
         db_delete.return_value = False
@@ -702,7 +702,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'failed')
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.MetaDataDB.delete_data_package')
+    @patch('app.package.models.Package.delete_data_package')
     def test_should_throw_403_if_user_is_not_owner_of_the_package(self,
                                                                   db_delete,
                                                                   bitstore_delete):
@@ -711,6 +711,127 @@ class HardDeleteTestCase(unittest.TestCase):
         auth = "bearer %s" % self.jwt_member
         response = self.client.delete(self.url, headers=dict(Authorization=auth))
         self.assertEqual(response.status_code, 403)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+
+class UndeleteTestCase(unittest.TestCase):
+    publisher_name = 'test_publisher'
+    package = 'test_package'
+    url = "/api/package/{pub}/{pac}/undelete".format(pub=publisher_name,
+                                                     pac=package)
+    user_id = 1
+    user_id_member = 2
+    user_id_non_member = 3
+    user_member_name = 'test_user'
+    user_non_member_name = 'test_user_non_mmber'
+    jwt_url = '/api/auth/token'
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = self.user_id
+            self.user.email, self.user.name, self.user.secret = \
+                'test@test.com', self.publisher_name, 'super_secret'
+
+            self.user_member = User()
+            self.user_member.id = self.user_id_member
+            self.user_member.email, self.user_member.name, self.user_member.secret = \
+                'test1@test.com', self.user_member_name, 'super_secret'
+
+            self.publisher = Publisher(name=self.publisher_name)
+
+            association = PublisherUser(role=UserRoleEnum.owner)
+            association.publisher = self.publisher
+
+            association1 = PublisherUser(role=UserRoleEnum.member)
+            association1.publisher = self.publisher
+
+            metadata = Package(name=self.package, status='deleted')
+            self.publisher.packages.append(metadata)
+            self.user.publishers.append(association)
+            self.user_member.publishers.append(association1)
+
+            self.user_non_member = User()
+            self.user_non_member.id = self.user_id_non_member
+            self.user_non_member.email, self.user_non_member.name, \
+                self.user_non_member.secret = \
+                'test2@test.com', self.user_non_member_name, 'super_secret'
+
+            db.session.add(self.user)
+            db.session.add(self.user_member)
+            db.session.add(self.user_non_member)
+            db.session.commit()
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt = data['token']
+
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.user_member_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt_member = data['token']
+
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.user_non_member_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt_non_member = data['token']
+
+    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.package.models.Package.change_status')
+    def test_should_return_200_if_all_goes_well(self, change_status,
+                                                change_acl):
+        change_acl.return_value = True
+        change_status.return_value = True
+        auth = "bearer %s" % self.jwt
+        response = self.client.post(self.url, headers=dict(Authorization=auth))
+        self.assertEqual(response.status_code, 200)
+
+    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.package.models.Package.change_status')
+    def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
+        auth = "bearer %s" % self.jwt_non_member
+        response = self.client.post(self.url, headers=dict(Authorization=auth))
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(change_acl.called)
+        self.assertFalse(change_status.called)
+
+    @patch('app.package.models.BitStore.change_acl')
+    def test_should_change_package_status_to_active(self, change_acl):
+        with self.app.app_context():
+            package = Package.query.join(Publisher)\
+                .filter(Package.name == self.package,
+                        Publisher.name == self.publisher_name).first()
+            self.assertEqual(package.status, 'deleted')
+        change_acl.return_value = True
+        auth = "bearer %s" % self.jwt
+        self.client.post(self.url, headers=dict(Authorization=auth))
+
+        with self.app.app_context():
+            package = Package.query.join(Publisher) \
+                .filter(Package.name == self.package,
+                        Publisher.name == self.publisher_name).first()
+            self.assertEqual(package.status, 'active')
 
     def tearDown(self):
         with self.app.app_context():
@@ -748,7 +869,7 @@ class TagDataPackageTestCase(unittest.TestCase):
             association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
 
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             self.publisher.packages.append(metadata)
             self.user.publishers.append(association)
 
@@ -763,7 +884,7 @@ class TagDataPackageTestCase(unittest.TestCase):
             association_not_allowed = PublisherUser(role=UserRoleEnum.owner)
             association_not_allowed.publisher = self.publisher_not_allowed
 
-            metadata = MetaDataDB(name=self.package)
+            metadata = Package(name=self.package)
             self.publisher_not_allowed.packages.append(metadata)
             self.user_not_allowed.publishers.append(association_not_allowed)
 
@@ -790,7 +911,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.auth = "bearer %s" % self.jwt
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.MetaDataDB.create_or_update_version')
+    @patch('app.package.models.Package.create_or_update_version')
     def test_return_200_if_all_goes_well(self, create_or_update_version, copy_to_new_version):
         copy_to_new_version.return_value = True
         create_or_update_version.return_value = True
@@ -803,7 +924,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.MetaDataDB.create_or_update_version')
+    @patch('app.package.models.Package.create_or_update_version')
     def test_throw_400_if_version_missing(self, create_or_update_version, copy_to_new_version):
         copy_to_new_version.return_value = True
         create_or_update_version.return_value = True
@@ -818,7 +939,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertEqual('ATTRIBUTE_MISSING', data['error_code'])
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.MetaDataDB.create_or_update_version')
+    @patch('app.package.models.Package.create_or_update_version')
     def test_throw_500_if_failed_to_tag(self, create_or_update_version, copy_to_new_version):
         copy_to_new_version.return_value = False
         create_or_update_version.return_value = True
@@ -861,9 +982,9 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
 
         with self.app.app_context():
-            data_latest = MetaDataDB.query.join(Publisher). \
+            data_latest = Package.query.join(Publisher). \
                 filter(Publisher.name == self.publisher_name,
-                       MetaDataDB.name == self.package).all()
+                       Package.name == self.package).all()
             self.assertEqual(1, len(data_latest))
         bit_store_tagged = BitStore('test_pub', 'test_package',
                                     'tag_one')
@@ -873,7 +994,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertTrue('Contents' not in objects_nu)
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.MetaDataDB.create_or_update_version')
+    @patch('app.package.models.Package.create_or_update_version')
     def test_allow_if_member_of_publisher(self, create_or_update_version,
                                           copy_to_new_version):
         copy_to_new_version.return_value = False
