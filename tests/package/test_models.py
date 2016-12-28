@@ -47,14 +47,16 @@ class BitStoreTestCase(unittest.TestCase):
             self.assertEqual(key, obs_list[0]['Key'])
             res = s3.get_object_acl(Bucket=bucket_name, Key=key)
 
-            public_grants = {
-                'CanonicalUser': 'FULL_CONTROL',
-                'Group': 'READ'
-            }
+            owner_id = res['Owner']['ID']
+            aws_all_user_group_url = 'http://acs.amazonaws.com/groups/global/AllUsers'
 
-            for grant in res['Grants']:
-                self.assertTrue(grant['Permission'] ==
-                                public_grants[grant['Grantee']['Type']])
+            full_control = filter(lambda grant: grant['Permission'] == 'FULL_CONTROL', res['Grants'])
+            self.assertEqual(len(full_control), 1)
+            self.assertEqual(full_control[0].get('Grantee')['ID'], owner_id)
+
+            read_control = filter(lambda grant: grant['Permission'] == 'READ', res['Grants'])
+            self.assertEqual(len(read_control), 1)
+            self.assertEqual(read_control[0].get('Grantee')['URI'], aws_all_user_group_url)
 
     @mock_s3
     def test_get_metadata_body(self):
@@ -166,23 +168,39 @@ class BitStoreTestCase(unittest.TestCase):
 
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
 
-            for grant in res['Grants']:
-                self.assertTrue(grant['Permission'] ==
-                                public_grants[grant['Grantee']['Type']])
+            owner_id = res['Owner']['ID']
+            aws_all_user_group_url = 'http://acs.amazonaws.com/groups/global/AllUsers'
 
+            full_control = filter(lambda grant: grant['Permission'] == 'FULL_CONTROL', res['Grants'])
+            self.assertEqual(len(full_control), 1)
+            self.assertEqual(full_control[0].get('Grantee')['ID'], owner_id)
+
+            read_control = filter(lambda grant: grant['Permission'] == 'READ', res['Grants'])
+            self.assertEqual(len(read_control), 1)
+            self.assertEqual(read_control[0].get('Grantee')['URI'], aws_all_user_group_url)
+
+            # for grant in res['Grants']:
+            #     self.assertTrue(grant['Permission'] ==
+            #                     public_grants[grant['Grantee']['Type']])
+            #
             bit_store.change_acl("private")
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
-
-            for grant in res['Grants']:
-                self.assertTrue(grant['Permission'] ==
-                                private_grants[grant['Grantee']['Type']])
-
-            bit_store.change_acl("public-read")
-            res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
-
-            for grant in res['Grants']:
-                self.assertTrue(grant['Permission'] ==
-                                public_grants[grant['Grantee']['Type']])
+            full_control = filter(lambda grant: grant['Permission'] == 'FULL_CONTROL', res['Grants'])
+            self.assertEqual(len(full_control), 1)
+            self.assertEqual(full_control[0].get('Grantee')['ID'], owner_id)
+            read_control = filter(lambda grant: grant['Permission'] == 'READ', res['Grants'])
+            self.assertEqual(len(read_control), 0)
+            #
+            # for grant in res['Grants']:
+            #     self.assertTrue(grant['Permission'] ==
+            #                     private_grants[grant['Grantee']['Type']])
+            #
+            # bit_store.change_acl("public-read")
+            # res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
+            #
+            # for grant in res['Grants']:
+            #     self.assertTrue(grant['Permission'] ==
+            #                     public_grants[grant['Grantee']['Type']])
 
     @mock_s3
     def test_delete_data_package(self):
