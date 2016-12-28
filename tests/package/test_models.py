@@ -12,7 +12,7 @@ import json
 from app import create_app
 from app.database import db
 from app.package.models import BitStore, Package, User, \
-    Publisher, PublisherUser, UserRoleEnum
+    Publisher, PublisherUser, UserRoleEnum, PackageStateEnum
 
 
 class BitStoreTestCase(unittest.TestCase):
@@ -315,27 +315,22 @@ class MetaDataDBTestCase(unittest.TestCase):
         data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
                    Package.name == self.package_one).one()
-        self.assertEqual('active', data.status)
+        self.assertEqual(PackageStateEnum.active, data.status)
 
-        Package.change_status(self.publisher_one, self.package_one)
+        Package.change_status(self.publisher_one, self.package_one, PackageStateEnum.deleted)
 
         data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
                    Package.name == self.package_one).one()
-        self.assertEqual('deleted', data.status)
+        self.assertEqual(PackageStateEnum.deleted, data.status)
 
         Package.change_status(self.publisher_one, self.package_one,
-                              status='active')
+                              status=PackageStateEnum.active)
 
         data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,
                    Package.name == self.package_one).one()
-        self.assertEqual('active', data.status)
-
-    def test_raise_exception_if_wrong_status_given(self):
-        self.assertRaises(Exception, Package.change_status,
-                          self.publisher_one, self.package_one,
-                          status='active1')
+        self.assertEqual(PackageStateEnum.active, data.status)
 
     def test_return_false_if_failed_to_change_status(self):
         status = Package.change_status(self.publisher_one, 'fake_package',

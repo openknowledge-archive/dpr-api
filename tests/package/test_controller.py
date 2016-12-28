@@ -12,7 +12,7 @@ from moto import mock_s3
 from app import create_app
 from app.database import db
 from app.package.models import User, Package, Publisher, \
-    PublisherUser, UserRoleEnum, BitStore
+    PublisherUser, UserRoleEnum, BitStore, PackageStateEnum
 
 
 class GetMetaDataTestCase(unittest.TestCase):
@@ -822,7 +822,7 @@ class UndeleteTestCase(unittest.TestCase):
             package = Package.query.join(Publisher)\
                 .filter(Package.name == self.package,
                         Publisher.name == self.publisher_name).first()
-            self.assertEqual(package.status, 'deleted')
+            self.assertEqual(package.status, PackageStateEnum.deleted)
         change_acl.return_value = True
         auth = "bearer %s" % self.jwt
         self.client.post(self.url, headers=dict(Authorization=auth))
@@ -831,7 +831,7 @@ class UndeleteTestCase(unittest.TestCase):
             package = Package.query.join(Publisher) \
                 .filter(Package.name == self.package,
                         Publisher.name == self.publisher_name).first()
-            self.assertEqual(package.status, 'active')
+            self.assertEqual(package.status, PackageStateEnum.active)
 
     def tearDown(self):
         with self.app.app_context():

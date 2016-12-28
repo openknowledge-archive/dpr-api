@@ -324,6 +324,11 @@ class PublisherUser(db.Model):
     user = relationship("User", back_populates="publishers")
 
 
+class PackageStateEnum(enum.Enum):
+    active = "ACTIVE"
+    deleted = "DELETED"
+
+
 class Package(db.Model):
     """
     This class is DB model for storing package data
@@ -335,7 +340,8 @@ class Package(db.Model):
     name = db.Column(db.TEXT, index=True)
     version = db.Column(db.TEXT, index=True, default='latest')
     descriptor = db.Column(db.JSON)
-    status = db.Column(db.TEXT, index=True, default='active')
+    status = db.Column(db.Enum(PackageStateEnum, native_enum=False),
+                       index=True, default=PackageStateEnum.active)
     private = db.Column(db.BOOLEAN, default=False)
     readme = db.Column(db.TEXT)
 
@@ -396,7 +402,7 @@ class Package(db.Model):
         db.session.commit()
 
     @staticmethod
-    def change_status(publisher_name, package_name, status='deleted'):
+    def change_status(publisher_name, package_name, status=PackageStateEnum.active):
         """
         This method changes status of the data package. This method used
         for soft delete the data package
@@ -405,9 +411,6 @@ class Package(db.Model):
         :param status: status of the package
         :return: If success True else False
         """
-        if status not in ['deleted', 'active']:
-            raise Exception('Invalid status name. '
-                            'Only deleted and active are allowed')
         try:
             data = Package.query.join(Publisher). \
                 filter(Publisher.name == publisher_name,
