@@ -74,7 +74,7 @@ class BitStore(object):
         """
         This method search for any readme object is present for the
         generated prefix by:
-        >>> BitStore.build_s3_prefix()
+        >>> BitStore.build_s3_key()
         :return: Value of the readme key if found else None
         :rtype: None or Str
         """

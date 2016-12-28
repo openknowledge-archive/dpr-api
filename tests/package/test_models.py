@@ -47,10 +47,14 @@ class BitStoreTestCase(unittest.TestCase):
             self.assertEqual(key, obs_list[0]['Key'])
             res = s3.get_object_acl(Bucket=bucket_name, Key=key)
 
-            public_grants = ['READ', 'FULL_CONTROL']
+            public_grants = {
+                'CanonicalUser': 'FULL_CONTROL',
+                'Group': 'READ'
+            }
 
             for grant in res['Grants']:
-                self.assertTrue(grant['Permission'] in public_grants)
+                self.assertTrue(grant['Permission'] ==
+                                public_grants[grant['Grantee']['Type']])
 
     @mock_s3
     def test_get_metadata_body(self):
@@ -147,9 +151,11 @@ class BitStoreTestCase(unittest.TestCase):
     @mock_s3
     def test_change_acl(self):
         with self.app.app_context():
-            public_grants = ['READ', 'FULL_CONTROL']
-            private_grants = ['FULL_CONTROL']
-
+            public_grants = {
+                'CanonicalUser': 'FULL_CONTROL',
+                'Group': 'READ'
+            }
+            private_grants = {'CanonicalUser': 'FULL_CONTROL'}
             bit_store = BitStore('test_pub', 'test_package', body='test')
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
@@ -161,19 +167,22 @@ class BitStoreTestCase(unittest.TestCase):
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
 
             for grant in res['Grants']:
-                self.assertTrue(grant['Permission'] in public_grants)
+                self.assertTrue(grant['Permission'] ==
+                                public_grants[grant['Grantee']['Type']])
 
             bit_store.change_acl("private")
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
 
             for grant in res['Grants']:
-                self.assertTrue(grant['Permission'] in private_grants)
+                self.assertTrue(grant['Permission'] ==
+                                private_grants[grant['Grantee']['Type']])
 
             bit_store.change_acl("public-read")
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
 
             for grant in res['Grants']:
-                self.assertTrue(grant['Permission'] in public_grants)
+                self.assertTrue(grant['Permission'] ==
+                                public_grants[grant['Grantee']['Type']])
 
     @mock_s3
     def test_delete_data_package(self):
@@ -249,7 +258,7 @@ class BitStoreTestCase(unittest.TestCase):
                              len(objects_old['Contents']))
 
 
-class MetaDataDBTestCase(unittest.TestCase):
+class PackageTestCase(unittest.TestCase):
     def setUp(self):
         self.publisher_one = 'test_publisher1'
         self.publisher_two = 'test_publisher2'
