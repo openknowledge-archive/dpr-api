@@ -12,7 +12,7 @@ from flask import Blueprint, request, jsonify, \
 from flask import current_app as app
 from flask import Response
 
-from app.package.models import BitStore, User, Package, Publisher
+from app.package.models import BitStore, User, Package, Publisher, PackageStateEnum
 from app.auth.annotations import requires_auth, is_allowed
 from app.utils import handle_error
 
@@ -262,7 +262,7 @@ def undelete_data_package(publisher, package):
     try:
         bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.change_acl('public-read')
-        status_db = Package.change_status(publisher, package, status='active')
+        status_db = Package.change_status(publisher, package, PackageStateEnum.active)
         if status_acl and status_db:
             return jsonify({"status": "OK"}), 200
         if not status_acl:
