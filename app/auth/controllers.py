@@ -52,9 +52,7 @@ def callback_handling():
 
         return render_template("dashboard.html", user=user,
                                title='Dashboard',
-                               encoded_token=jwt_helper.encode(),
-                               zappa_env=get_zappa_prefix(),
-                               s3_cdn=get_s3_cdn_prefix()), 200
+                               encoded_token=jwt_helper.encode()), 200
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
