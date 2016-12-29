@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 from flask import Blueprint, render_template, json, request, redirect, url_for
 from flask import current_app as app
 import jwt
-from app.utils import get_zappa_prefix, get_s3_cdn_prefix
 from app.site.models import Catalog
 from app.package.models import User, BitStore
 
@@ -40,13 +39,9 @@ def index():
                 user = User().get_userinfo_by_id(payload['user'])
                 if user:
                     return render_template("dashboard.html", user=user,
-                                           title='Dashboard',
-                                           zappa_env=get_zappa_prefix(),
-                                           s3_cdn=get_s3_cdn_prefix()), 200
+                                           title='Dashboard'), 200
                 return redirect(request.headers['Host'] + '/logout')
         return render_template("index.html", title='Home',
-                               zappa_env=get_zappa_prefix(),
-                               s3_cdn=get_s3_cdn_prefix(),
                                auth0_client_id=app.config['AUTH0_CLIENT_ID'],
                                auth0_domain=app.config['AUTH0_DOMAIN']), 200
     except Exception:
@@ -65,8 +60,6 @@ def logout():
         description: Load the Home Page
     """
     return render_template("logout.html", title='Home',
-                           zappa_env=get_zappa_prefix(),
-                           s3_cdn=get_s3_cdn_prefix(),
                            auth0_client_id=app.config['AUTH0_CLIENT_ID'],
                            auth0_domain=app.config['AUTH0_DOMAIN']), 200
 
@@ -115,5 +108,4 @@ def datapackage_show(publisher, package):
     return render_template("dataset.html", dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
-                           dataViews=dataViews, zappa_env=get_zappa_prefix(),
-                           s3_cdn=get_s3_cdn_prefix()), 200
+                           dataViews=dataViews), 200
