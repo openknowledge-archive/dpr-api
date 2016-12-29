@@ -228,7 +228,7 @@ class Publisher(db.Model):
     title = db.Column(db.Text)
     private = db.Column(db.BOOLEAN, default=False)
 
-    packages = relationship("MetaDataDB", back_populates="publisher")
+    packages = relationship("Package", back_populates="publisher")
 
     users = relationship("PublisherUser", back_populates="publisher",
                          cascade='save-update, merge, delete, delete-orphan')
@@ -324,7 +324,12 @@ class PublisherUser(db.Model):
     user = relationship("User", back_populates="publishers")
 
 
-class MetaDataDB(db.Model):
+class PackageStateEnum(enum.Enum):
+    active = "ACTIVE"
+    deleted = "DELETED"
+
+
+class Package(db.Model):
     """
     This class is DB model for storing package data
     """
@@ -335,7 +340,8 @@ class MetaDataDB(db.Model):
     name = db.Column(db.TEXT, index=True)
     version = db.Column(db.TEXT, index=True, default='latest')
     descriptor = db.Column(db.JSON)
-    status = db.Column(db.TEXT, index=True, default='active')
+    status = db.Column(db.Enum(PackageStateEnum, native_enum=False),
+                       index=True, default=PackageStateEnum.active)
     private = db.Column(db.BOOLEAN, default=False)
     readme = db.Column(db.TEXT)
 
@@ -351,18 +357,18 @@ class MetaDataDB(db.Model):
     @staticmethod
     def create_or_update_version(publisher_name, package_name, version):
         try:
-            data_latest = MetaDataDB.query.join(Publisher). \
+            data_latest = Package.query.join(Publisher). \
                 filter(Publisher.name == publisher_name,
-                       MetaDataDB.name == package_name,
-                       MetaDataDB.version == 'latest').one()
-            instance = MetaDataDB.query.join(Publisher). \
+                       Package.name == package_name,
+                       Package.version == 'latest').one()
+            instance = Package.query.join(Publisher). \
                 filter(Publisher.name == publisher_name,
-                       MetaDataDB.name == package_name,
-                       MetaDataDB.version == version).first()
+                       Package.name == package_name,
+                       Package.version == version).first()
             update_props = ['name', 'version', 'descriptor', 'status',
                             'private', 'readme', 'publisher_id']
             if instance is None:
-                instance = MetaDataDB()
+                instance = Package()
 
             for update_prop in update_props:
                 setattr(instance, update_prop, getattr(data_latest, update_prop))
@@ -384,11 +390,11 @@ class MetaDataDB(db.Model):
         :param kwargs: package attribute names
         """
         pub_id = Publisher.query.filter_by(name=publisher_name).one().id
-        instance = MetaDataDB.query.join(Publisher)\
-            .filter(MetaDataDB.name == name,
+        instance = Package.query.join(Publisher)\
+            .filter(Package.name == name,
                     Publisher.name == publisher_name).first()
         if not instance:
-            instance = MetaDataDB(name=name)
+            instance = Package(name=name)
             instance.publisher_id = pub_id
         for key, value in kwargs.items():
             setattr(instance, key, value)
@@ -396,7 +402,7 @@ class MetaDataDB(db.Model):
         db.session.commit()
 
     @staticmethod
-    def change_status(publisher_name, package_name, status='deleted'):
+    def change_status(publisher_name, package_name, status=PackageStateEnum.active):
         """
         This method changes status of the data package. This method used
         for soft delete the data package
@@ -405,13 +411,10 @@ class MetaDataDB(db.Model):
         :param status: status of the package
         :return: If success True else False
         """
-        if status not in ['deleted', 'active']:
-            raise Exception('Invalid status name. '
-                            'Only deleted and active are allowed')
         try:
-            data = MetaDataDB.query.join(Publisher). \
+            data = Package.query.join(Publisher). \
                 filter(Publisher.name == publisher_name,
-                       MetaDataDB.name == package_name).one()
+                       Package.name == package_name).one()
             data.status = status
             db.session.add(data)
             db.session.commit()
@@ -430,11 +433,11 @@ class MetaDataDB(db.Model):
         :return: If success True else False
         """
         try:
-            data = MetaDataDB.query.join(Publisher). \
+            data = Package.query.join(Publisher). \
                 filter(Publisher.name == publisher_name,
-                       MetaDataDB.name == package_name).one()
+                       Package.name == package_name).one()
             package_id = data.id
-            meta_data = MetaDataDB.query.get(package_id)
+            meta_data = Package.query.get(package_id)
             db.session.delete(meta_data)
             db.session.commit()
             return True
@@ -451,8 +454,8 @@ class MetaDataDB(db.Model):
         :return: data package object based on the filter.
         """
         try:
-            instance = MetaDataDB.query.join(Publisher) \
-                .filter(MetaDataDB.name == package_name,
+            instance = Package.query.join(Publisher) \
+                .filter(Package.name == package_name,
                         Publisher.name == publisher_name).first()
             return instance
         except Exception as e:

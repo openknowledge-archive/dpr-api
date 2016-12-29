@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from app.database import db
 from app.package import models
 from app import create_app
-from app.package.models import MetaDataDB, Publisher, \
+from app.package.models import Package, Publisher, \
     PublisherUser, User, BitStore, UserRoleEnum
 from app.auth.models import Auth0
 
@@ -96,14 +96,14 @@ def populate_data(publisher_name):
     data = json.loads(open('fixtures/datapackage.json').read())
     data_csv = open('fixtures/data/demo-resource.csv').read()
     readme = open('fixtures/README.md').read()
-    package = MetaDataDB.query.join(Publisher)\
-        .filter(MetaDataDB.name == "demo-package",
-                   Publisher.name == publisher_name).first()
+    package = Package.query.join(Publisher)\
+        .filter(Package.name == "demo-package",
+                Publisher.name == publisher_name).first()
     if package:
-        db.session.delete(MetaDataDB.query.get(package.id))
+        db.session.delete(Package.query.get(package.id))
         db.session.commit()
     publisher = Publisher.query.filter_by(name=publisher_name).first()
-    metadata = MetaDataDB(name="demo-package")
+    metadata = Package(name="demo-package")
     metadata.descriptor, metadata.status, metadata.private, metadata.readme \
         = json.dumps(data), 'active', False, readme
 
