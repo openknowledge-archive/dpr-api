@@ -337,6 +337,10 @@ class ContextProcessorTestCase(TestCase):
         return create_app()
 
     def test_should_have_s3_cdn_value(self):
-        response = self.client.get('/')
-        print(response)
+        self.client.get('/')
         self.assert_context("s3_cdn", get_s3_cdn_prefix())
+
+    def test_should_have_auth0_client_id(self):
+        self.client.get('/')
+        self.assert_context("auth0_client_id",
+                            self.app.config['AUTH0_CLIENT_ID'])

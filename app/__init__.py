@@ -62,7 +62,9 @@ def create_app():
     Gravatar(app)
 
     @app.context_processor
-    def s3_cdn_path():
-        return dict(s3_cdn=get_s3_cdn_prefix())
+    def populate_context_variable():
+        return dict(s3_cdn=get_s3_cdn_prefix(),
+                    auth0_client_id=app.config['AUTH0_CLIENT_ID'],
+                    auth0_domain=app.config['AUTH0_DOMAIN'])
 
     return app
