@@ -431,11 +431,11 @@ class EndToEndTestCase(unittest.TestCase):
     @patch('app.package.models.Package.create_or_update')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_s3_object')
-    @patch('app.package.models.BitStore.generate_pre_signed_put_obj_url')
+    @patch('app.package.models.BitStore.generate_pre_signed_post_object')
     @patch('app.package.models.BitStore.save_metadata')
-    def test_publish_end_to_end(self, save, signed_url, get_s3_object,
-                                get_metadata_body, create_or_update,
-                                get_readme_object_key):
+    def test_publish_end_to_end(self, save, generate_pre_signed_post_object,
+                                get_s3_object, get_metadata_body,
+                                create_or_update, get_readme_object_key):
         # Sending Username & Secret key
         rv = self.client.post(self.auth_token_url,
                               data=json.dumps({
@@ -474,7 +474,7 @@ class EndToEndTestCase(unittest.TestCase):
         self.assertEqual(rv.status_code, 200)
 
         # Get S3 link for uploading Data file
-        signed_url.return_value = 'https://trial_url'
+        generate_pre_signed_post_object.return_value = {'url': 'https://trial_url'}
         rv = self.client.post(self.bitstore_url,
                               data=json.dumps({
                                   'publisher': self.publisher,
@@ -483,7 +483,7 @@ class EndToEndTestCase(unittest.TestCase):
                               }),
                               content_type='application/json')
         # Testing S3 link
-        self.assertEqual({'key': 'https://trial_url'}, json.loads(rv.data))
+        self.assertEqual({'data': {'url': 'https://trial_url'}}, json.loads(rv.data))
         self.assertEqual(200, rv.status_code)
 
         # Finalize

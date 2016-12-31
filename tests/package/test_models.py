@@ -112,9 +112,13 @@ class BitStoreTestCase(unittest.TestCase):
             metadata = BitStore(publisher="pub_test",
                                 package="test_package",
                                 body='hi')
-            url = metadata.generate_pre_signed_put_obj_url('datapackage.json', 'm')
-            parsed = urlparse(url)
-            self.assertEqual(parsed.netloc, 's3-{region}.amazonaws.com'.format(region=self.app.config['AWS_REGION']))
+            post = metadata.generate_pre_signed_post_object('datapackage.json',
+                                                            123)
+            parsed = urlparse(post['url'])
+            self.assertEqual(parsed.netloc,
+                             's3-{region}.amazonaws.com'.
+                             format(region=self.app.config['AWS_REGION']))
+            self.assertEqual('public-read', post['fields']['acl'])
 
     @mock_s3
     def test_get_readme_object_key(self):

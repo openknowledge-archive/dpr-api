@@ -211,9 +211,13 @@ def get_s3_signed_url():
             return handle_error('INVALID_INPUT',
                                 'md5 hash can not be empty',
                                 400)
+        if path == 'datapackage.json':
+            return handle_error('INVALID_INPUT',
+                                'datapackage.json should not publish with this api',
+                                400)
         metadata = BitStore(publisher=publisher, package=package)
-        url = metadata.generate_pre_signed_put_obj_url(path, md5)
-        return jsonify({'key': url}), 200
+        url = metadata.generate_pre_signed_post_object(path, md5)
+        return jsonify({'data': url}), 200
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
