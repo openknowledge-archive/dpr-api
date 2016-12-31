@@ -122,23 +122,34 @@ class BitStore(object):
             format(base_url=domain_name,
                    key=self.build_s3_key(path))
 
-    def generate_pre_signed_put_obj_url(self, path, md5, acl='public-read'):
+    def generate_pre_signed_post_object(self, path, md5,
+                                        acl='public-read',
+                                        file_type='binary/octet-stream'):
         """
-        This method produce a pre-signed url for a specific key to be used
+        This method produce required data to upload file from client side
         for uploading data at client side
         :param path: The relative path of the object
         :param md5: The md5 hash of the file to be uploaded
-        :param acl: The canned acl to be used while put object operation
-        :return: Pre-signed URL
+
+        :param acl: The object ACL default is public_read
+        :param file_type: The type of the file, default is binary/octet-stream
+        :return: dict containing S3 url and post params
         """
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
         key = self.build_s3_key(path)
-        params = {'Bucket': bucket_name, 'Key': key}
-        url = s3_client.generate_presigned_url('put_object',
-                                               Params=params,
-                                               ExpiresIn=3600)
-        return url
+        post = s3_client.generate_presigned_post(Bucket=bucket_name,
+                                                 Key=key,
+                                                 Fields={
+                                                    'acl': acl,
+                                                    'Content-MD5': str(md5),
+                                                    'Content-Type': file_type},
+                                                 Conditions=[
+                                                  {"acl": "public-read"},
+                                                  ["starts-with", "$Content-Type", ""],
+                                                  ["starts-with", "$Content-MD5", ""]
+                                                 ])
+        return post
 
     def delete_data_package(self):
         """

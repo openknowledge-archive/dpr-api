@@ -199,9 +199,9 @@ class GetS3SignedUrlTestCase(unittest.TestCase):
                               content_type='application/json')
         self.assertEqual(500, rv.status_code)
 
-    @patch('app.package.models.BitStore.generate_pre_signed_put_obj_url')
+    @patch('app.package.models.BitStore.generate_pre_signed_post_object')
     def test_200_if_all_right(self, signed_url):
-        signed_url.return_value = 'https://trial_url'
+        signed_url.return_value = {'url': 'https://trial_url'}
         response = self.client.post(self.url,
                                     data=json.dumps({
                                         'publisher': 'test_publisher',
@@ -210,7 +210,7 @@ class GetS3SignedUrlTestCase(unittest.TestCase):
                                     }),
                                     content_type='application/json')
         data = json.loads(response.data)
-        self.assertEqual('https://trial_url', data['key'])
+        self.assertEqual('https://trial_url', data['data']['url'])
 
 
 class CallbackHandlingTestCase(unittest.TestCase):
