@@ -111,7 +111,7 @@ def populate_data(publisher_name):
     db.session.add(publisher)
     db.session.commit()
     bitstore = BitStore(publisher_name, package='demo-package', body=json.dumps(data))
-    bitstore.save()
+    bitstore.save_metadata()
     key = bitstore.build_s3_key('demo-resource.csv')
     bucket_name = app.config['S3_BUCKET_NAME']
     s3_client = app.config['S3']
