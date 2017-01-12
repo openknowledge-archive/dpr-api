@@ -118,7 +118,7 @@ class BitStore(object):
                    version=self.version)
 
     def build_s3_object_url(self, domain_name, path):
-        return 'https://bits.{base_url}.s3.amazonaws.com/{key}'.\
+        return 'https://bits.{base_url}/{key}'.\
             format(base_url=domain_name,
                    key=self.build_s3_key(path))
 
