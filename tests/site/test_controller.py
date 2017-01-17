@@ -47,7 +47,7 @@ class CatalogTestCase(unittest.TestCase):
     def test_adds_local_urls(self):
         descriptor = {
             'name': 'test',
-            'resources': [{'name': 'first'},{'name': 'second'}]
+            'resources': [{'path': 'first.csv'},{'path': 'second.csv'}]
         }
         with self.app.app_context():
             db.drop_all()
