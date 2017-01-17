@@ -31,7 +31,7 @@ window.history.pushState("", "Dashboard", "/");
 		<h1>
 			Welcome {{user.name}}!
 		</h1>
-		<h5>Your Secret Token: {{user.secret}}</h5>
+		<h5>Your Access Token: {{user.secret}}</h5>
 	</div>
 	<div>
 		<h3>Start publishing your data packages in 3 easy steps:</h3>
@@ -47,7 +47,7 @@ Set your configuration:
 	$ dpmpy configure
 	> Username:  # {{user.name}}
 	# Use your secret token here (also visible at the top of the page)
-	> Your password:  # {{user.secret}}
+	> Your access_token:  # {{user.secret}}
 	# Use server url Eg: https://staging.datapackaged.com/
 	> Server URL:
 
