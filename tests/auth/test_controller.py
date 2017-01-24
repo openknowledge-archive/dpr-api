@@ -9,7 +9,7 @@ import json
 from mock import patch
 from app import create_app
 from app.database import db
-from app.package.models import User
+from app.profile.models import User
 
 
 class Auth0LoginTestCase(unittest.TestCase):
@@ -250,7 +250,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
     @patch('app.auth.models.Auth0.get_auth0_token')
     @patch('app.auth.models.Auth0.get_user_info_with_code')
     @patch('app.auth.models.JWT.encode')
-    @patch('app.package.models.User.create_or_update_user_from_callback')
+    @patch('app.profile.models.User.create_or_update_user_from_callback')
     def test_return_200_if_all_right(self,
                                      create_user, jwt_helper, get_user_with_code,
                                      get_auth0_token):

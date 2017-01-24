@@ -12,7 +12,8 @@ from flask import Blueprint, request, jsonify, \
 from flask import current_app as app
 from flask import Response
 
-from app.package.models import BitStore, User, Package, Publisher, PackageStateEnum
+from app.package.models import BitStore, Package, PackageStateEnum
+from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
 from app.utils import handle_error
 

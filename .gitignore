@@ -45,3 +45,5 @@ ENV/
 *_deploy.json
 .DS_Store
 .cred
+.cache/
+.backup/

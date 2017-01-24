@@ -10,7 +10,9 @@ from flask import current_app as app
 from flask import request, _request_ctx_stack
 
 from app.auth.authorization import is_allowed as ia
-from app.package.models import Package, Publisher
+from app.package.models import Package
+from app.profile.models import Publisher
+
 from app.utils import handle_error
 from app.utils.auth_helper import get_user_from_jwt
 
