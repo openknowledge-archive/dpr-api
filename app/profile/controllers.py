@@ -28,7 +28,7 @@ def get_publisher_profile(name):
               description: publisher name
         responses:
             404:
-                description: User not found
+                description: Publisher not found
             500:
                 description: Internal Server Error
             200:
