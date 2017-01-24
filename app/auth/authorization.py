@@ -4,8 +4,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from app.package.models import User, Package, Publisher, \
-    PublisherUser, UserRoleEnum
+from app.package.models import Package
+from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
 
 
 roles_action_mappings = {

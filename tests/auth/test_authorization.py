@@ -9,8 +9,8 @@ import unittest
 from app import create_app
 from app.auth.authorization import is_allowed
 from app.database import db
-from app.package.models import Package, User, Publisher, \
-    PublisherUser, UserRoleEnum
+from app.package.models import Package
+from app.profile.models import User, Publisher, UserRoleEnum, PublisherUser
 
 
 class AuthorizationTestCase(unittest.TestCase):

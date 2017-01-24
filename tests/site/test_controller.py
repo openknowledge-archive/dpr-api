@@ -14,7 +14,8 @@ from app.utils import get_s3_cdn_prefix
 from flask_testing import TestCase
 from app.database import db
 from app.site.models import Catalog
-from app.package.models import User, Package, Publisher, UserRoleEnum
+from app.package.models import Package
+from app.profile.models import User, Publisher, UserRoleEnum
 
 
 class CatalogTestCase(unittest.TestCase):

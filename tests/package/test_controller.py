@@ -11,8 +11,8 @@ from mock import patch
 from moto import mock_s3
 from app import create_app
 from app.database import db
-from app.package.models import User, Package, Publisher, \
-    PublisherUser, UserRoleEnum, BitStore, PackageStateEnum
+from app.package.models import Package,  BitStore, PackageStateEnum
+from app.profile.models import User, Publisher, UserRoleEnum, PublisherUser
 
 
 class GetMetaDataTestCase(unittest.TestCase):

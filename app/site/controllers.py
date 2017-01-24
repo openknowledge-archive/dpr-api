@@ -8,7 +8,8 @@ from flask import Blueprint, render_template, json, request, redirect, url_for
 from flask import current_app as app
 import jwt
 from app.site.models import Catalog
-from app.package.models import User, BitStore
+from app.package.models import BitStore
+from app.profile.models import User
 
 
 site_blueprint = Blueprint('site', __name__)

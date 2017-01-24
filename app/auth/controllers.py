@@ -7,9 +7,10 @@ from __future__ import unicode_literals
 from flask import Blueprint, request, render_template, \
     jsonify, redirect
 from flask import current_app as app
-from app.package.models import BitStore, User
+from app.package.models import BitStore
+from app.profile.models import User
 from app.auth.models import JWT, Auth0
-from app.utils import get_zappa_prefix, get_s3_cdn_prefix, handle_error
+from app.utils import handle_error
 
 
 auth_blueprint = Blueprint('auth', __name__, url_prefix='/api/auth')
