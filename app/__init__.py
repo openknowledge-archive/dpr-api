@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import os
 import flask_s3
 import boto3
+import sqlalchemy
 from botocore.client import Config
 from flasgger import Swagger
 from flask import Flask
@@ -42,6 +43,19 @@ def create_app():
     app.config.from_object(get_config_class_name())
 
     db.init_app(app)
+    
+    try:
+        # Check connection using database url from config.
+        engine = sqlalchemy.create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        engine.connect()
+    except Exception as e:
+        raise Exception(
+            "Failed to connect to the database `%s`.\n"
+            "Please set valid uri in the SQLALCHEMY_DATABASE_URI config variable.\n"
+            "Original error was:\n"
+            "  %s\n" % (app.config['SQLALCHEMY_DATABASE_URI'], str(e)))
+
+
 
     app.register_blueprint(package_blueprint)
     app.register_blueprint(auth_blueprint)
