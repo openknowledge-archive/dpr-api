@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import division
 from __future__ import print_function
@@ -12,8 +13,8 @@ from dotenv import load_dotenv
 from app.database import db
 from app.package import models
 from app import create_app
-from app.package.models import Package, Publisher, \
-    PublisherUser, User, BitStore, UserRoleEnum
+from app.package.models import Package, BitStore
+from app.profile.models import Publisher, PublisherUser, User, UserRoleEnum
 from app.auth.models import Auth0
 
 dot_env_path = join(dirname(__file__), '.env')
