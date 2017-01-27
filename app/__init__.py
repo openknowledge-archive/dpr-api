@@ -19,6 +19,7 @@ from app.auth.controllers import auth_blueprint
 from app.package.controllers import package_blueprint
 from app.site.controllers import site_blueprint
 from app.profile.controllers import profile_blueprint
+from app.search.controllers import search_blueprint
 
 app_config = {
     "base": "app.config.BaseConfig",
@@ -47,6 +48,7 @@ def create_app():
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(site_blueprint)
     app.register_blueprint(profile_blueprint)
+    app.register_blueprint(search_blueprint)
 
     s3 = boto3.client('s3',
                       region_name=app.config['AWS_REGION'],
