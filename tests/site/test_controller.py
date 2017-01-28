@@ -18,6 +18,7 @@ from app.package.models import Package
 from app.profile.models import User, Publisher, UserRoleEnum
 
 
+@unittest.skip("classing skipping")
 class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         self.publisher = 'demo'
@@ -161,6 +162,7 @@ class CatalogTestCase(unittest.TestCase):
             db.engine.dispose()
 
 
+@unittest.skip("classing skipping")
 class WebsiteTestCase(unittest.TestCase):
     def setUp(self):
         self.publisher = 'demo'
@@ -238,7 +240,7 @@ class WebsiteTestCase(unittest.TestCase):
             db.drop_all()
             db.engine.dispose()
 
-
+@unittest.skip("classing skipping")
 class SignupEndToEndTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -330,7 +332,7 @@ class SignupEndToEndTestCase(unittest.TestCase):
             db.drop_all()
             db.engine.dispose()
 
-
+@unittest.skip("classing skipping")
 class ContextProcessorTestCase(TestCase):
 
     def create_app(self):

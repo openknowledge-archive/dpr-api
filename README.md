@@ -101,3 +101,17 @@ pytest tests
  not the virtual env pytest
  then plz run ```./env/bin/pytest tests```
 
+## Submodules:
+
+This project has a sub module dpr-js
+To run locally
+```
+$ cd dpr-js
+$ npm install
+$ npm run build
+```
+This will create two directories:
+- /app/static/scripts
+- /app/templates
+
+When run ```python dpr.py``` it will take these html and scripts.

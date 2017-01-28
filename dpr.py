@@ -9,4 +9,6 @@ from app import create_app
 application = create_app()
 
 if __name__ == "__main__":
-    application.run()
+    from gevent.wsgi import WSGIServer
+    http_server = WSGIServer(('', 5000), application)
+    http_server.serve_forever()
