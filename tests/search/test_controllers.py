@@ -47,7 +47,7 @@ class SearchPackagesTestCase(unittest.TestCase):
         response = self.client.get(url)
         result = json.loads(response.data)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(3, len(result['data']))
+        self.assertEqual(3, len(result['items']))
 
     def tearDown(self):
         with self.app.app_context():

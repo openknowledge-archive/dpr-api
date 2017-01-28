@@ -50,13 +50,12 @@ class DataPackageQuery(object):
             self.filterTerm = matches.group(5)
 
     def get_data(self):
-        data_list = list()
+        data_list = []
         results = self._build_sql_query().all()
         for result in results:
-            data = dict()
-            descriptor = json.loads(result.descriptor)
-            data['name'] = result.name
-            data['title'] = descriptor['title']
-            data['description'] = result.readme[0:100] if result.readme is not None else ''
+            data = result.__dict__
+            data['descriptor'] = json.loads(data['descriptor'])
+            data.pop('_sa_instance_state', None)
+            data['status'] = data['status'].value
             data_list.append(data)
         return data_list

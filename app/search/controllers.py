@@ -15,7 +15,7 @@ search_blueprint = Blueprint('search', __name__, url_prefix='/api/search')
 @search_blueprint.route("/package", methods=["GET"])
 def search_packages():
     """
-        DPR metadata put operation.
+        DPR data package search operation.
         This API is responsible for searching data package
         ---
         tags:
@@ -34,28 +34,19 @@ def search_packages():
                 schema:
                     id: search_package_success
                     properties:
-                        status:
-                            type: string
-                            description: Status of the operation
-                            default: SUCCESS
-                        data:
+                        total_count:
+                            type: integer
+                            description: Total datapackage count
+                        items:
                             type: list
                             properties:
                                 type: object
-                                properties:
-                                    name:
-                                        type: string
-                                    title:
-                                        type: string
-                                    description:
-                                        type: string
-
         """
     try:
         q = request.args.get('q')
         result = DataPackageQuery(query_string=q).get_data()
 
-        return jsonify(dict(data=result, status='SUCCESS'))
+        return jsonify(dict(items=result, total_count=len(result)))
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
