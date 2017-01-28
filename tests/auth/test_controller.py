@@ -256,7 +256,8 @@ class CallbackHandlingTestCase(unittest.TestCase):
                                      get_auth0_token):
         get_auth0_token.return_value = None
         get_user_with_code('123').return_value = {}
-        create_user.return_value = User(id=1, email="abc@abc.com")
+        jwt_helper.return_value = "132432"
+        create_user.return_value = User(id=1, email="abc@abc.com", name='abc', secret='12345')
         response = self.client.get('/api/auth/callback?code=123')
         self.assertEqual(create_user.call_count, 1)
         self.assertEqual(jwt_helper.call_count, 1)
