@@ -4,18 +4,12 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from flask import Blueprint, render_template, json, request, redirect, url_for
-from flask import current_app as app
-import jwt
-from app.site.models import Catalog
-from app.package.models import BitStore
-from app.profile.models import User
-
+from flask import Blueprint, render_template, send_from_directory
 
 site_blueprint = Blueprint('site', __name__)
 
 
-@site_blueprint.route("/", methods=["GET", "POST"])
+@site_blueprint.route("/", methods=["GET"])
 def index():
     """
     Loads home page
@@ -23,86 +17,21 @@ def index():
     tags:
       - site
     responses:
-      404:
-        description: Publiser does not exist
       200:
         description: Succesfuly loaded home page
     """
-    try:
-        if request.method == "POST":
-            encoded_token = request.form.get('encoded_token', '')
-            if encoded_token:
-                try:
-                    payload = jwt.decode(encoded_token, app.config['API_KEY'])
-                except Exception as e:
-                    app.logger.error(e)
-                    return redirect(request.headers['Host'] + '/logout')
-                user = User().get_userinfo_by_id(payload['user'])
-                if user:
-                    return render_template("dashboard.html", user=user,
-                                           title='Dashboard'), 200
-                return redirect(request.headers['Host'] + '/logout')
-        return render_template("index.html", title='Home'), 200
-    except Exception:
-        return redirect(url_for('.logout'))
+    return render_template("index.html"), 200
 
 
-@site_blueprint.route("/logout", methods=["GET"])
-def logout():
+@site_blueprint.route("/static/<file_name>", methods=['GET'])
+def server_static(file_name):
     """
-    Loads Home page if user already login
+     Serves static files
     ---
     tags:
       - site
     responses:
-      302:
-        description: Load the Home Page
-    """
-    return render_template("logout.html", title='Home'), 200
-
-
-@site_blueprint.route("/<publisher>/<package>", methods=["GET"])
-def datapackage_show(publisher, package):
-    """
-    Loads datapackage page for given owner
-    ---
-    tags:
-      - site
-    parameters:
-      - name: publisher
-        in: path
-        type: string
-        required: true
-        description: datapackage owner name
-      - name: package
-        in: path
-        type: string
-        description: datapackage name
-    responses:
-      404:
-        description: Datapackage does not exist
       200:
-        description: Succesfuly loaded
+        description: Succesfuly loaded home page
     """
-    metadata = json.loads(
-        app.test_client().\
-        get('/api/package/{publisher}/{package}'.\
-            format(publisher=publisher, package=package)).data)
-    try:
-        if metadata['error_code'] == 'DATA_NOT_FOUND':
-            return "404 Not Found", 404
-    except:
-        pass
-    catalog = Catalog(metadata)
-    dataset = catalog.construct_dataset(request.url_root)
-    dataViews = catalog.get_views()
-
-    bitstore = BitStore(publisher, package)
-    datapackage_json_url_in_s3 = bitstore.\
-        build_s3_object_url(request.headers['Host'],
-                            'datapackage.json')
-
-    return render_template("dataset.html", dataset=dataset,
-                           datapackageUrl=datapackage_json_url_in_s3,
-                           showDataApi=True, jsonDataPackage=dataset,
-                           dataViews=dataViews), 200
+    return send_from_directory('static', file_name)
