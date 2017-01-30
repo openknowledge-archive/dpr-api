@@ -11,6 +11,7 @@ import sqlalchemy
 from botocore.client import Config
 from flasgger import Swagger
 from flask import Flask
+from flask_cors import CORS
 from flaskext.markdown import Markdown
 from flask_gravatar import Gravatar
 from werkzeug.utils import import_string
@@ -56,8 +57,6 @@ def create_app():
             "Original error was:\n"
             "  %s\n" % (app.config['SQLALCHEMY_DATABASE_URI'], str(e)))
 
-
-
     app.register_blueprint(package_blueprint)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(site_blueprint)
@@ -75,6 +74,7 @@ def create_app():
     if app.config.get('TESTING') is False:
         flask_s3.create_all(app)
 
+    CORS(app)
     Swagger(app)
     Markdown(app)
     Gravatar(app)
