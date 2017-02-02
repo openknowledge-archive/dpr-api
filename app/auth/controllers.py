@@ -51,10 +51,9 @@ def callback_handling():
         user = User().create_or_update_user_from_callback(user_info)
         jwt_helper = JWT(app.config['API_KEY'], user.id)
 
-        return jsonify(dict(token=jwt_helper.encode(),
-                            email=user.email,
-                            username=user.name,
-                            secret=user.secret))
+        return render_template("dashboard.html", user=user,
+                               title='Dashboard',
+                               encoded_token=jwt_helper.encode()), 200
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
