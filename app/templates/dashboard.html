@@ -13,19 +13,15 @@ window.history.pushState("", "Dashboard", "/");
 {% endblock %}
 {% block content %}
 <div class="container">
-	<div class="row">
-		<div align="center">
-            <div class="user-info-block">
-                <div class="user-heading">
-					<br>
-                    <img src="{{user.email | gravatar(size=50)}}" />
-					<br>
-					<br>
-                    <span class="glyphicon glyphicon-envelope"></span>
-                    <span class="help-block">{{user.email}}</span>
-                </div>
-  	    	</div>
-  	    </div>
+	<div class="row  justify-content-center">
+	  <div class="col-4">
+        <br>
+        <img src="{{user.email | gravatar(size=50)}}" class="img-thumbnail"/>
+        <br>
+        <br>
+        <span class="fa fa-envelope"></span>
+        <span class="help-block">{{user.email}}</span>
+  	  </div>
 	</div>
 	<div>
 		<h1>

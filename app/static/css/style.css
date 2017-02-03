@@ -46,18 +46,18 @@ blockquote p {
 
 /* main navbar */
 
-.navbar-nav li a{ color:#3c3c3b; font-size:15px; font-family: 'Lato'; font-weight: bold; }
-.navbar-nav li a:hover{ color:#888; background: none; }
-.mainmenu{}
+/*.navbar-nav li a{ color:#3c3c3b; font-size:15px; font-family: 'Lato'; font-weight: bold; }*/
+/*.navbar-nav li a:hover{ color:#888; background: none; }*/
+/*.mainmenu{}*/
 
 
-.header-middle { background:#f8f8f8; padding: 15px 0; border-bottom: solid 1px #eee;}
-.header-middle .navbar {
-  margin-bottom: 0;
-}
-.header-middle .logo {
-  margin-top: -3px;
-}
+/*.header-middle { background:#f8f8f8; padding: 15px 0; border-bottom: solid 1px #eee;}*/
+/*.header-middle .navbar {*/
+  /*margin-bottom: 0;*/
+/*}*/
+/*.header-middle .logo {*/
+  /*margin-top: -3px;*/
+/*}*/
 
 /**/
 .projects-holder{ padding:15px 0;}

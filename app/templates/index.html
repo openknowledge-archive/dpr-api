@@ -1,12 +1,13 @@
 {% extends "base.html" %}		
 {% block scripts %}		
-<script>		
-     var jwt = localStorage.getItem('encoded_token');		
+<script>
+  debugger;
+  var jwt = localStorage.getItem('encoded_token');
 		
-    if (jwt != null){		
-        post_encoded_token(document.URL, {"encoded_token":jwt})		
-    }		
-var lock = new Auth0Lock("{{ auth0_client_id }}", "{{ auth0_domain }}", {		
+  if (jwt != null){
+    post_encoded_token(document.URL, {"encoded_token":jwt})
+  }
+  var lock = new Auth0Lock("{{ auth0_client_id }}", "{{ auth0_domain }}", {
     auth: {		
       redirectUrl: document.URL + 'api/auth/callback',		
       responseType: 'code',		
@@ -19,11 +20,10 @@ var lock = new Auth0Lock("{{ auth0_client_id }}", "{{ auth0_domain }}", {
         primaryColor: '#31dac6'		
     },		
     languageDictionary: {		
-        emailInputPlaceholder: "something@youremail.com",		
-        title: "DataPackage"		
+      emailInputPlaceholder: "something@youremail.com",
+      title: "DataPackage"
     }		
-  });		
-		
+  });
 </script>		
 {% endblock %}		
 {% block content %}		
@@ -31,7 +31,7 @@ var lock = new Auth0Lock("{{ auth0_client_id }}", "{{ auth0_domain }}", {
   <div id="carousel-banner" class="carousel slide" data-ride="carousel">		
     <div class="carousel-inner">		
       <div class="item active" style="background: black;">		
-        <img src="{{ s3_cdn }}/static/img/hero-team.jpg" width="100%" alt="..." style="opacity: 0.6;"/>		
+        <img src="{{ s3_cdn }}/static/img/hero-team.jpg" width="100%" alt="..." style="opacity: 0.6;"/>
         <div class="carousel-content">		
           <div class="container">		
             <div class="carousel-content-panel text-center">		
@@ -39,7 +39,7 @@ var lock = new Auth0Lock("{{ auth0_client_id }}", "{{ auth0_domain }}", {
               <h2>Publish, find and install data packages quickly and easily</h2>		
               <div class="banner-button">		
                 <ul class="list-inline">		
-                  <li class="btn btn-green btn-block" onclick="lock.show();">Sign Up | Sign In</li>		
+                  <li class="btn btn-primary" onclick="lock.show();">Sign Up | Sign In</li>
 {#                  <li class="btn btn-green btn-block" onclick="lock.show();">Sign In</li>#}		
                 </ul>		
               </div>		

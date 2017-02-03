@@ -10,6 +10,7 @@ import jwt
 from app.site.models import Catalog
 from app.package.models import BitStore
 from app.profile.models import User
+from app.utils import get_s3_cdn_prefix
 
 
 site_blueprint = Blueprint('site', __name__)
@@ -42,7 +43,11 @@ def index():
                     return render_template("dashboard.html", user=user,
                                            title='Dashboard'), 200
                 return redirect(request.headers['Host'] + '/logout')
-        return render_template("index.html", title='Home'), 200
+        return render_template("index.html", title='Home',
+                               s3_cdn=get_s3_cdn_prefix(),
+                               auth0_client_id=app.config['AUTH0_CLIENT_ID'],
+                               auth0_domain=app.config['AUTH0_DOMAIN']
+                               ), 200
     except Exception:
         return redirect(url_for('.logout'))
 
@@ -105,4 +110,10 @@ def datapackage_show(publisher, package):
     return render_template("dataset.html", dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
-                           dataViews=dataViews), 200
+                           dataViews=dataViews,
+                           s3_cdn=get_s3_cdn_prefix()), 200
+
+
+@site_blueprint.route("/<publisher>", methods=["GET"])
+def publisher_dashboard(publisher):
+    return render_template("publisher.html")
