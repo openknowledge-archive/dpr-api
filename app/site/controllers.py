@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from flask import Blueprint, render_template, json, request, redirect, url_for
+from flask import Blueprint, render_template, json, request, redirect, url_for, jsonify
 from flask import current_app as app
 import jwt
 from app.site.models import Catalog
@@ -123,4 +123,12 @@ def publisher_dashboard(publisher):
     publisher = Publisher.get_publisher_info(publisher)
 
     return render_template("publisher.html", publisher=publisher,
+                           datapackage_list=datapackage_list), 200
+
+
+@site_blueprint.route("/search", methods=["GET"])
+def search_package():
+    q = request.args.get('q')
+    datapackage_list = DataPackageQuery(query_string=q).get_data()
+    return render_template("search.html",
                            datapackage_list=datapackage_list), 200
