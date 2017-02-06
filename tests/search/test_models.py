@@ -85,6 +85,10 @@ class DataPackageQueryTestCase(unittest.TestCase):
         self.assertEqual(0, len(dpq.get_data()))
 
     def test_should_return_data_package_containing_query(self):
+        query_string = "none-query publisher:pub1"
+        dpq = DataPackageQuery(query_string)
+        self.assertEqual(0, len(dpq.get_data()))
+
         query_string = "one publisher:pub1"
         dpq = DataPackageQuery(query_string)
         self.assertEqual(1, len(dpq.get_data()))
