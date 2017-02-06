@@ -32,7 +32,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -55,7 +55,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -81,7 +81,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             metadata.readme = readme
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -102,7 +102,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -123,7 +123,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -144,7 +144,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -184,7 +184,7 @@ class WebsiteTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -210,7 +210,7 @@ class WebsiteTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()

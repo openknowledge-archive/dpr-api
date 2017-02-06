@@ -306,19 +306,19 @@ class PackageTestCase(unittest.TestCase):
             user2.publishers.append(association2)
 
             metadata1 = Package(name=self.package_one)
-            metadata1.descriptor = json.dumps(dict(name='test_one'))
+            metadata1.descriptor = dict(name='test_one')
             publisher1.packages.append(metadata1)
 
             metadata2 = Package(name=self.package_two)
-            metadata2.descriptor = json.dumps(dict(name='test_two'))
+            metadata2.descriptor = dict(name='test_two')
             publisher1.packages.append(metadata2)
 
             metadata3 = Package(name=self.package_one)
-            metadata3.descriptor = json.dumps(dict(name='test_three'))
+            metadata3.descriptor = dict(name='test_three')
             publisher2.packages.append(metadata3)
 
             metadata4 = Package(name=self.package_two)
-            metadata4.descriptor = json.dumps(dict(name='test_four'))
+            metadata4.descriptor = dict(name='test_four')
             publisher2.packages.append(metadata4)
 
             db.session.add(user1)
@@ -335,7 +335,7 @@ class PackageTestCase(unittest.TestCase):
         metadata = Package.query.join(Publisher)\
             .filter(Publisher.name == self.publisher_one,
                     Package.name == self.package_one).one()
-        self.assertEqual(json.loads(metadata.descriptor)['name'], "test_one")
+        self.assertEqual(metadata.descriptor['name'], "test_one")
         Package.create_or_update(self.package_one, self.publisher_one,
                                  descriptor=json.dumps(dict(name='sub')),
                                  private=True)

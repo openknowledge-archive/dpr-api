@@ -23,15 +23,15 @@ class DataPackageQueryTestCase(unittest.TestCase):
             self.pub2_name = 'pub2'
             self.pub1 = Publisher(name=self.pub1_name)
             self.pub2 = Publisher(name=self.pub2_name)
-            self.pub1.packages.append(Package(name='pack1', descriptor='{"title": "pack1 details one"}',
+            self.pub1.packages.append(Package(name='pack1', descriptor={"title": "pack1 details one"},
                                               readme="Big readme one"))
-            self.pub1.packages.append(Package(name='pack2', descriptor='{"title": "pack2 details two"}',
+            self.pub1.packages.append(Package(name='pack2', descriptor={"title": "pack2 details two"},
                                               readme="Big readme two"))
-            self.pub1.packages.append(Package(name='pack3', descriptor='{"title": "pack3 details three"}'))
+            self.pub1.packages.append(Package(name='pack3', descriptor={"title": "pack3 details three"}))
 
-            self.pub2.packages.append(Package(name='pack4', descriptor='{"title": "pack4 details four"}'))
-            self.pub2.packages.append(Package(name='pack5', descriptor='{"title": "pack5 details five"}'))
-            self.pub2.packages.append(Package(name='pack6', descriptor='{"title": "pack6 details six"}'))
+            self.pub2.packages.append(Package(name='pack4', descriptor={"title": "pack4 details four"}))
+            self.pub2.packages.append(Package(name='pack5', descriptor={"title": "pack5 details five"}))
+            self.pub2.packages.append(Package(name='pack6', descriptor={"title": "pack6 details six"}))
             db.session.add(self.pub1)
             db.session.add(self.pub2)
             db.session.commit()
@@ -83,6 +83,19 @@ class DataPackageQueryTestCase(unittest.TestCase):
         query_string = "* publisher:pub3"
         dpq = DataPackageQuery(query_string)
         self.assertEqual(0, len(dpq.get_data()))
+
+    def test_should_return_data_package_containing_query(self):
+        query_string = "none-query publisher:pub1"
+        dpq = DataPackageQuery(query_string)
+        self.assertEqual(0, len(dpq.get_data()))
+
+        query_string = "one publisher:pub1"
+        dpq = DataPackageQuery(query_string)
+        self.assertEqual(1, len(dpq.get_data()))
+
+        query_string = "details publisher:pub1"
+        dpq = DataPackageQuery(query_string)
+        self.assertEqual(3, len(dpq.get_data()))
 
     def tearDown(self):
         with self.app.app_context():

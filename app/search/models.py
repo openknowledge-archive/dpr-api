@@ -33,8 +33,9 @@ class DataPackageQuery(object):
 
         # Should thought through not working right now
         if self.query != '*':
-            sql_query = sql_query.filter(Package.descriptor[('title',)]
-                                         .cast(sqlalchemy.TEXT) == "{q}".format(q=self.query))
+            sql_query = sql_query.filter(Package.descriptor.op('->>')
+                                         ('title').cast(sqlalchemy.TEXT)
+                                         .like("%{q}%".format(q=self.query)))
 
         return sql_query
 
@@ -54,7 +55,7 @@ class DataPackageQuery(object):
         results = self._build_sql_query().all()
         for result in results:
             data = result.__dict__
-            data['descriptor'] = json.loads(data['descriptor'])
+            data['descriptor'] = data['descriptor']
             data.pop('_sa_instance_state', None)
             data['status'] = data['status'].value
             data_list.append(data)
