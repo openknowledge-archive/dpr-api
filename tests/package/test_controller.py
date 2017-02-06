@@ -83,21 +83,6 @@ class GetMetaDataTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200) 
         self.assertEqual(data['readme'], '')
 
-    def test_return_generic_error_if_descriptor_is_not_json(self):
-        descriptor = 'test description'
-        with self.app.app_context():
-            publisher = Publisher(name='pub')
-            metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
-            publisher.packages.append(metadata)
-            db.session.add(publisher)
-            db.session.commit()
-        response = self.client\
-            .get('/api/package/%s/%s' % ('pub', self.package))
-        data = json.loads(response.data)
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['error_code'], 'GENERIC_ERROR')
-
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()

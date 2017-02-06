@@ -441,8 +441,6 @@ def get_metadata(publisher, package):
             return handle_error('DATA_NOT_FOUND',
                                 'No metadata found for the package',
                                 404)
-        if not isinstance(data.descriptor, dict):
-            raise Exception("descriptor should be type of dict")
         metadata = {
             'id': data.id,
             'name': data.name,
