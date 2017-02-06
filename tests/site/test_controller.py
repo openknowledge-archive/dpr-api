@@ -193,17 +193,9 @@ class WebsiteTestCase(unittest.TestCase):
                                     package=self.package))
         self.assertNotEqual(404, rv.status_code)
         self.assertIn('Data Files', rv.data.decode("utf8"))
-        # cheks handsontable load
-        self.assertIn('handsontable', rv.data.decode("utf8"))
-        # cheks Vega graph load
-        self.assertIn('vega', rv.data.decode("utf8"))
 
         rv = self.client.get('/non-existing/demo-package')
         self.assertEqual(404, rv.status_code)
-        # cheks handsontable not loaded
-        self.assertNotIn('handsontable', rv.data)
-        # cheks graph not loaded
-        self.assertNotIn('vega', rv.data)
 
     def test_data_package_page_load_without_views(self):
         descriptor = {"data": [], "resources": []}
@@ -219,18 +211,9 @@ class WebsiteTestCase(unittest.TestCase):
                                     package=self.package))
         self.assertNotEqual(404, rv.status_code)
         self.assertIn('Data Files', rv.data.decode("utf8"))
-        # cheks handsontable load
-        self.assertIn('handsontable', rv.data.decode("utf8"))
-        # cheks Vega graph load
-        self.assertIn('vega', rv.data.decode("utf8"))
-
 
         rv = self.client.get('/non-existing/demo-package')
         self.assertEqual(404, rv.status_code)
-        # cheks handsontable not loaded
-        self.assertNotIn('handsontable', rv.data)
-        # cheks graph not loaded
-        self.assertNotIn('vega', rv.data)
 
     def tearDown(self):
         with self.app.app_context():

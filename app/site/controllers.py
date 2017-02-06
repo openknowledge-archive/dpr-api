@@ -111,6 +111,8 @@ def datapackage_show(publisher, package):
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
                            dataViews=dataViews,
+                           publisherName=publisher,
+                           packageName=package,
                            s3_cdn=get_s3_cdn_prefix()), 200
 
 
