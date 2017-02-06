@@ -18,10 +18,10 @@
 </head>
   <body>
     <div class="header clearfix">
-    <nav class="navbar navbar-toggleable-lg bg-faded" style="background-color: #f7f7f7;">
+      <nav class="navbar navbar-toggleable-lg bg-faded" style="background-color: #f7f7f7;">
       <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+        <span class="navbar-toggler-icon"></span>
+      </button>
       <a class="navbar-brand" href="/" style="font-size:35px;color:#31dac6;font-weight:bold;">DPR</a>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
           <ul class="nav nav-pills">
@@ -52,6 +52,7 @@
         </div>
       </nav>
     </div>
+
     {% block content %}{{content}}{% endblock %}
 
     <footer>
@@ -100,14 +101,6 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
     <script src="https://cdn.auth0.com/js/lock/10.9.1/lock.min.js"></script>
     <script type="text/javascript" src="{{ s3_cdn }}/static/js/dashboard.js"></script>
-    <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/handsontable/handsontable.full.js"></script>
-    <link rel="stylesheet" media="screen" href="{{ s3_cdn }}/static/dpr-js/vendor/handsontable/handsontable.full.css">
-    <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/d3/d3.min.js"></script>
-    <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/vega/vega.min.js"></script>
-    <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/vega-embed/vega-embed.js"></script>
-    <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/vega-lite/vega-lite.min.js"></script>
-    <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/vendor/plotly/plotly.min.js"></script>
-    <script type="text/javascript" src="{{ s3_cdn }}/static/dpr-js/bundle.js"></script>
 
     {% block scripts %}{% endblock %}
     <script type="text/javascript">

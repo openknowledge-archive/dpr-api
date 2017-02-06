@@ -9,9 +9,9 @@ from flask import current_app as app
 import jwt
 from app.site.models import Catalog
 from app.package.models import BitStore
-from app.profile.models import User
+from app.profile.models import User, Publisher
+from app.search.models import DataPackageQuery
 from app.utils import get_s3_cdn_prefix
-
 
 site_blueprint = Blueprint('site', __name__)
 
@@ -111,9 +111,16 @@ def datapackage_show(publisher, package):
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
                            dataViews=dataViews,
+                           publisherName=publisher,
+                           packageName=package,
                            s3_cdn=get_s3_cdn_prefix()), 200
 
 
 @site_blueprint.route("/<publisher>", methods=["GET"])
 def publisher_dashboard(publisher):
-    return render_template("publisher.html")
+    datapackage_list = DataPackageQuery(query_string="* publisher:{publisher}"
+                                        .format(publisher=publisher)).get_data()
+    publisher = Publisher.get_publisher_info(publisher)
+
+    return render_template("publisher.html", publisher=publisher,
+                           datapackage_list=datapackage_list), 200

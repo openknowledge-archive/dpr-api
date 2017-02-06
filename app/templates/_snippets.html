@@ -28,7 +28,7 @@
   {% endfor %}
 {%- endmacro %}
 
-{% macro dataset_show(dataset, jsonDataPackage, dataViews, showDataApi, datapackageUrl) -%}
+{% macro dataset_show(dataset, jsonDataPackage, dataViews, showDataApi, datapackageUrl, publisherName, packageName) -%}
 <div class="dataset show">
   <div class="row">
     <div class="col-md-8">
@@ -71,33 +71,9 @@
   <button>Switch View</button>
   <input id="search" placeholder="Search" type="search" style="float:right; display: none">
   <div class="viewer" style="display: none"></div>
-  <div class="vis" id="root"></div>
+  <div id="vis"></div>
   <div class="resources" id="data">
     <h2>Data Files</h2>
-    <div class="resource-listing">
-      <table class="table resource-listing">
-        <thead></thead>
-        <tbody>
-          {% for resource in dataset.resources %}
-          <tr>
-            <td><i class="icon-file-text-alt"></i> <a href="#resource-{{resource.name}}">{{resource.name}}</a></td>
-            <td>{{resource.title}}</td>
-            <td>{{resource.format}}</td>
-            <td class="download truncate"><a href="{{resource.localurl}}"><i class="icon-download-alt"></i> Download</a></td>
-            {% if showDataApi %}
-            <td class="">
-              [Local:
-              <a href="/api/dataproxy/{{dataset.owner}}/{{dataset.name}}/r/{{resource.name}}.csv"><i class="icon-download-alt"></i> CSV</a>
-              &ndash;
-              <a href="/api/dataproxy/{{dataset.owner}}/{{dataset.name}}/r/{{resource.name}}.json"><i class="icon-download-alt"></i> JSON</a>
-              ]
-            </td>
-            {% endif %}
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
 
     {% for resource in dataset.resources %}
     <div class="resource-info">
@@ -146,9 +122,38 @@
   </div>
 
   <script type="text/javascript">
-    var DataPackageData = {{ jsonDataPackage|tojson }};
-    var DataViews = {{ dataViews|tojson }};
-    var DataPackageJsonUrl = "{{ datapackageUrl }}";
+{#    var DataPackageData = {{ jsonDataPackage|tojson }};#}
+{#    var DataViews = {{ dataViews|tojson }};#}
+{#    var DataPackageJsonUrl = "{{ datapackageUrl }}";#}
+    var packageName = "{{ packageName }}";
+    var publisherName = "{{ publisherName }}";
   </script>
 </div><!-- / dataset show -->
+{%- endmacro %}
+
+{% macro package_list_show(publisher, packages) -%}
+  {%- for package in packages  %}
+    <div class="card mb-2">
+      <div class="card-block">
+        <h5 class="card-title"><span class="fa fa-files-o"></span> {{package.descriptor.title}}</h5>
+        <h6>[{{ package.name }}]</h6>
+        <div class="panel-body">
+            <p>
+            {{ package.readme|truncate(50) }}
+            </p>
+        </div>
+        <div class="row show-grid clearfix">
+            <div class="col-sm-2">
+              <img src="https://avatars3.githubusercontent.com/u/22451011?v=3&s=200" class="img-fluid rounded-circle" />
+            </div>
+            <div class="col-sm-6 align-self-center">
+                <small><a href="/{{ publisher }} ">by {{ publisher }}</a></small>
+            </div>
+            <div class="col-sm-4 pull-right align-self-center">
+                <a class="btn btn-secondary" href="/{{ publisher }}/{{ package.name }}">Explore >></a>
+            </div>
+        </div>
+      </div>
+    </div>
+  {%- endfor %}
 {%- endmacro %}

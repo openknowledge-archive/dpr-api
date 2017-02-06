@@ -1,7 +1,6 @@
 {% extends "base.html" %}		
 {% block scripts %}		
 <script>
-  debugger;
   var jwt = localStorage.getItem('encoded_token');
 		
   if (jwt != null){
@@ -45,8 +44,9 @@
               </div>		
             </div>		
           </div>		
-      </div>		
-    </div>		
-  </div>		
-</div>		
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
