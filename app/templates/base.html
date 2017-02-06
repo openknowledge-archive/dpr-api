@@ -19,10 +19,17 @@
   <body>
     <div class="header clearfix">
       <nav class="navbar navbar-toggleable-lg bg-faded" style="background-color: #f7f7f7;">
-      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <a class="navbar-brand" href="/" style="font-size:35px;color:#31dac6;font-weight:bold;">DPR</a>
+        <a class="navbar-brand" href="/" style="font-size:35px;color:#31dac6;font-weight:bold;">DPR</a>
+        <span class="col-sm-1"></span>
+        <form id="navbar-search-form" class="input-group col-sm-7" action="/search" method="GET">
+          <input id="navbar-search" name="q" type="text" class="form-control input-md" placeholder="Search . . . ." />
+          <span class="input-group-btn">
+            <button class="btn btn-outline-secondary btn-md" type="button" onclick="search()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </form>
+        <span class="col-sm-1"></span>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
           <ul class="nav nav-pills">
             <li class="nav-item" >
@@ -112,7 +119,16 @@
       ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
     })();
-  </script>
+    </script>
+    <script type="text/javascript">
+      function search() {
+        var searchTerm = document.getElementById("navbar-search").value;
+        if (searchTerm) {
+          alert("got search term "+ searchTerm);
+          document.getElementById("navbar-search-form").submit()
+        }
+      }
+    </script>
   </body>
 
 </html>
