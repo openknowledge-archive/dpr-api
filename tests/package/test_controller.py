@@ -37,7 +37,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -52,7 +52,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             metadata.readme = readme
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -73,7 +73,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = json.dumps(descriptor)
+            metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -184,12 +184,15 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_readme_object_key')
     @patch('app.package.models.BitStore.get_s3_object')
-    def test_return_200_if_all_right(self, get_metadata_body, create_or_update,
-                                     get_readme_object_key, get_s3_object):
+    @patch('app.package.models.BitStore.change_acl')
+    def test_return_200_if_all_right(self, change_acl, get_s3_object,
+                                     get_readme_object_key,
+                                     get_metadata_body, create_or_update):
         get_metadata_body.return_value = json.dumps(dict(name='package'))
         create_or_update.return_value = None
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
+        change_acl.return_value = None
         auth = "bearer %s" % self.jwt
         response = self.client.post(self.url,
                                     data=json.dumps(dict()),

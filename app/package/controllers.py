@@ -380,7 +380,8 @@ def finalize_metadata(publisher, package):
         if user is not None:
             if user.name == publisher:
                 bit_store = BitStore(publisher, package)
-                body = bit_store.get_metadata_body()
+                b = bit_store.get_metadata_body()
+                body = json.loads(b)
                 if body is not None:
                     bit_store.change_acl('public-read')
                     readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
@@ -440,12 +441,14 @@ def get_metadata(publisher, package):
             return handle_error('DATA_NOT_FOUND',
                                 'No metadata found for the package',
                                 404)
+        if not isinstance(data.descriptor, dict):
+            raise Exception("descriptor should be type of dict")
         metadata = {
             'id': data.id,
             'name': data.name,
             'publisher': data.publisher.name,
             'readme': data.readme or '',
-            'descriptor': json.loads(data.descriptor)
+            'descriptor': data.descriptor
         }
         return jsonify(metadata), 200
     except Exception as e:
