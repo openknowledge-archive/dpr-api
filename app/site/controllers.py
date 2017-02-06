@@ -116,4 +116,10 @@ def datapackage_show(publisher, package):
 
 @site_blueprint.route("/<publisher>", methods=["GET"])
 def publisher_dashboard(publisher):
-    return render_template("publisher.html")
+    datapackage_list_url = "/api/search/package?q=* publisher:{publisher}".format(publisher=publisher)
+    publisher_profile_url = "/api/profile/publisher/{name}".format(name=publisher)
+    datapackage_list = json.loads(app.test_client().get(datapackage_list_url).data)
+    publisher = json.loads(app.test_client().get(publisher_profile_url).data)
+
+    return render_template("publisher.html", publisher=publisher['data'],
+                           datapackage_list=datapackage_list['items']), 200

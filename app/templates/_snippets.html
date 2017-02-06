@@ -152,3 +152,30 @@
   </script>
 </div><!-- / dataset show -->
 {%- endmacro %}
+
+{% macro package_list_show(publisher, packages) -%}
+  {%- for package in packages  %}
+    <div class="card mb-2">
+      <div class="card-block">
+        <h5 class="card-title"><span class="fa fa-files-o"></span> {{package.descriptor.title}}</h5>
+        <h6>[{{ package.name }}]</h6>
+        <div class="panel-body">
+            <p>
+            {{ package.readme|truncate(50) }}
+            </p>
+        </div>
+        <div class="row show-grid clearfix">
+            <div class="col-sm-2">
+              <img src="https://avatars3.githubusercontent.com/u/22451011?v=3&s=200" class="img-fluid rounded-circle" />
+            </div>
+            <div class="col-sm-6 align-self-center">
+                <small><a href="/{{ publisher }} ">by {{ publisher }}</a></small>
+            </div>
+            <div class="col-sm-4 pull-right align-self-center">
+                <a class="btn btn-secondary" href="/{{ publisher }}/{{ package.name }}">Explore >></a>
+            </div>
+        </div>
+      </div>
+    </div>
+  {%- endfor %}
+{%- endmacro %}
