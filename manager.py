@@ -106,7 +106,7 @@ def populate_data(publisher_name):
     publisher = Publisher.query.filter_by(name=publisher_name).first()
     metadata = Package(name="demo-package")
     metadata.descriptor, metadata.status, metadata.private, metadata.readme \
-        = json.dumps(data), 'active', False, readme
+        = data, 'active', False, readme
 
     publisher.packages.append(metadata)
     db.session.add(publisher)
