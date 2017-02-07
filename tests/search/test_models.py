@@ -55,11 +55,6 @@ class DataPackageQueryTestCase(unittest.TestCase):
         dpq = DataPackageQuery(query_string)
         self.assertEqual(1, len(dpq._build_sql_query()._join_entities))
 
-    def test_sql_query_should_not_contain_join_stmt(self):
-        query_string = "abc"
-        dpq = DataPackageQuery(query_string)
-        self.assertEqual(0, len(dpq._build_sql_query()._join_entities))
-
     def test_sql_query_should_contain_one_like_stmt(self):
         query_string = "abc"
         dpq = DataPackageQuery(query_string)
@@ -92,6 +87,7 @@ class DataPackageQueryTestCase(unittest.TestCase):
         query_string = "one publisher:pub1"
         dpq = DataPackageQuery(query_string)
         self.assertEqual(1, len(dpq.get_data()))
+        self.assertEqual('pub1', dpq.get_data()[0]['publisher_name'])
 
         query_string = "details publisher:pub1"
         dpq = DataPackageQuery(query_string)

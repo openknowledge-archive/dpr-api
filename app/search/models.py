@@ -22,20 +22,17 @@ class DataPackageQuery(object):
         self._parse_query_string()
 
     def _build_sql_query(self):
-
+        sql_query = Package.query.join(Package.publisher)
         if self.filterClass is not None:
             if self.filterClass == 'publisher':
-                sql_query = Package.query.join(Publisher).filter(Publisher.name == self.filterTerm)
+                sql_query = sql_query.filter(Publisher.name == self.filterTerm)
             else:
                 raise Exception("not supported any other filter right now")
-        else:
-            sql_query = Package.query
 
-        # Should thought through not working right now
         if self.query != '*':
             sql_query = sql_query.filter(Package.descriptor.op('->>')
                                          ('title').cast(sqlalchemy.TEXT)
-                                         .like("%{q}%".format(q=self.query)))
+                                         .ilike("%{q}%".format(q=self.query)))
 
         return sql_query
 
@@ -56,7 +53,14 @@ class DataPackageQuery(object):
         for result in results:
             data = result.__dict__
             data['descriptor'] = data['descriptor']
-            data.pop('_sa_instance_state', None)
             data['status'] = data['status'].value
+            p = result.publisher
+            data['publisher_name'] = p.name
+            if '_sa_instance_state' in data:
+                data.pop('_sa_instance_state', None)
+
             data_list.append(data)
+        for data in data_list:
+            if 'publisher' in data:
+                data.pop('publisher', None)
         return data_list
