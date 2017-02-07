@@ -47,3 +47,5 @@ ENV/
 .cred
 .cache/
 .backup/
+node_modules/
+react/
