@@ -131,4 +131,6 @@ def search_package():
     q = request.args.get('q')
     datapackage_list = DataPackageQuery(query_string=q).get_data()
     return render_template("search.html",
-                           datapackage_list=datapackage_list), 200
+                           datapackage_list=datapackage_list,
+                           total_count=len(datapackage_list),
+                           query_term=q), 200

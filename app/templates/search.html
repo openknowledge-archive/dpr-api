@@ -1,2 +1,14 @@
 {% extends "base.html" %}
 {% import '_snippets.html' as snippets %}
+
+{% block content %}
+  <div class="container">
+      <div class="show-grid row">
+          <div class="offset-sm-1 col-sm-8">
+              <h6>{{ total_count }} packages Found</h6>
+              <h6>for <b>"{{ query_term }}"</b></h6>
+              {{ snippets.search_package_list(datapackage_list) }}
+          </div>
+      </div>
+  </div>
+{% endblock %}
