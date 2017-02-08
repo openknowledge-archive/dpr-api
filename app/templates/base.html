@@ -19,7 +19,7 @@
   <body>
     <div class="header clearfix">
       <nav class="navbar navbar-toggleable-lg bg-faded" style="background-color: #f7f7f7;">
-        <a class="navbar-brand" href="/" style="font-size:35px;color:#31dac6;font-weight:bold;">DPR</a>
+        <a class="navbar-brand" href="/" style="font-size:25px;color:#31dac6;font-weight:bold;">DPR</a>
         <span class="col-sm-1"></span>
         <form id="navbar-search-form" class="input-group col-sm-7" action="/search" method="GET">
           <input id="navbar-search" name="q" type="text" class="form-control input-md" placeholder="Search . . . ." required />
@@ -29,7 +29,6 @@
             </button>
           </span>
         </form>
-        <span class="col-sm-1"></span>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
           <ul class="nav nav-pills">
             <li class="nav-item" >
@@ -43,16 +42,10 @@
                About
               </a>
             </li>
-            {% if user %}
-            <li class="nav-item" id="logout">
-              <a class="nav-link" href="/logout">
-               Logout
-              </a>
-            </li>
-            {% endif %}
+            <div id="nav-bar-login"></div>
             <li>
               <a href="https://okfn.org/">
-                <img src="//a.okfn.org/img/oki/landscape-rgb-165x43.png" alt="logo" style="height: 33px;" />
+                <img src="//a.okfn.org/img/oki/landscape-rgb-165x43.png" alt="logo" style="height: 33px; margin: auto" />
               </a>
             </li>
           </ul>
@@ -107,25 +100,71 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
     <script src="https://cdn.auth0.com/js/lock/10.9.1/lock.min.js"></script>
+    <script type="text/javascript" src="{{ s3_cdn }}/static/vendor/jwt-decode.min.js"></script>
     <script type="text/javascript" src="{{ s3_cdn }}/static/js/dashboard.js"></script>
 
+
     {% block scripts %}{% endblock %}
-    <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-33874954-11']);
-    _gaq.push(['_trackPageview']);
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-    </script>
     <script type="text/javascript">
       function search() {
         var searchTerm = document.getElementById("navbar-search").value;
         if (searchTerm) {
           document.getElementById("navbar-search-form").submit()
         }
+      }
+    </script>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-33874954-11']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <script type="text/javascript">
+      var local_jwt = localStorage.getItem('encoded_token');
+      var lock = new Auth0Lock("{{ auth0_client_id }}", "{{ auth0_domain }}", {
+        auth: {
+          redirectUrl: window.location.origin + '/api/auth/callback',
+          responseType: 'code',
+          params: {
+            scope: 'openid email' // Learn about scopes: https://auth0.com/docs/scopes
+          }
+        },
+        theme: {
+          logo: "https://o.twimg.com/2/proxy.jpg?t=HBhqaHR0cHM6Ly9jZG4tYnVzaW5lc3MuZGlzY291cnNlLm9yZy91cGxvYWRzL29rZm4vb3JpZ2luYWwvMlgvNS81MmU4MjAwZTUyYmJmM2ExYTY2ZWM1ZTEzNGYxMTdhMTQ5ODkwNDM1LnBuZxSgAhSgAhwU8AEU8AEAABYAEgA&s=1_uZcBWKG_2I6nOZ4YBkAcR7IMTvwZy9BwrAvsuGjyw",
+          primaryColor: '#31dac6'
+        },
+        languageDictionary: {
+          emailInputPlaceholder: "something@youremail.com",
+          title: "DataPackage"
+        }
+      });
+      if (local_jwt != null){
+            var decoded = jwt_decode(local_jwt);
+            var currentTime = Math.floor((new Date).getTime()/1000);
+            if (decoded.exp < currentTime){
+                alert('expired');
+                localStorage.removeItem("encoded_token");
+                auth0();
+            } else{
+              $("#nav-bar-login")
+                .replaceWith('<button class="btn btn-small btn-outline-success" id="logout123"> ' +
+                  '<a class="nav-link" href="/logout">Logout</a> ' +
+                  '</button>');
+              $('#logout123').on('click', function(e) {
+                localStorage.removeItem("encoded_token");
+              });
+            }
+        }
+      else {
+        auth0();
+      }
+      function auth0() {
+       $("#nav-bar-login")
+         .replaceWith('<button class="btn btn-small btn-outline-success" onclick="lock.show();">Sign Up | Sign In</button>')
       }
     </script>
   </body>
