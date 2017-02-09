@@ -39,31 +39,62 @@ class DataPackageQueryTestCase(unittest.TestCase):
     def test_should_return_query_and_filter(self):
         query_string = "abc publisher:core"
         dpq = DataPackageQuery(query_string)
-        self.assertEqual('abc', dpq.query)
-        self.assertEqual('publisher', dpq.filterClass)
-        self.assertEqual('core', dpq.filterTerm)
+        query, filters = dpq._parse_query_string()
+        self.assertEqual('abc', query)
+        self.assertEqual('publisher:core', filters[0])
 
     def test_should_return_query(self):
         query_string = "abc"
         dpq = DataPackageQuery(query_string)
-        self.assertEqual('abc', dpq.query)
-        self.assertEqual(None, dpq.filterClass)
-        self.assertEqual(None, dpq.filterTerm)
+        query, filters = dpq._parse_query_string()
+        self.assertEqual('abc', query)
+        self.assertEqual(0, len(filters))
+
+    def test_should_contain_multiple_filters(self):
+        query_string = "publisher:pub1 publisher:pub2 abc "
+        dpq = DataPackageQuery(query_string)
+        query, filters = dpq._parse_query_string()
+        self.assertEqual('abc', query)
+        self.assertEqual(2, len(filters))
+
+    def test_should_take_first_query_occurrence(self):
+        query_string = "bca publisher:pub1 publisher:pub2 abc "
+        dpq = DataPackageQuery(query_string)
+        query, filters = dpq._parse_query_string()
+        self.assertEqual('bca', query)
+        self.assertEqual(2, len(filters))
+
+        query_string = "publisher:pub1 publisher:pub2 abc "
+        dpq = DataPackageQuery(query_string)
+        query, filters = dpq._parse_query_string()
+        self.assertEqual('abc', query)
+        self.assertEqual(2, len(filters))
+
+    def test_should_throw_error_if_empty_query_string(self):
+        query_string = "   "
+        dpq = DataPackageQuery(query_string)
+        self.assertRaises(Exception, dpq._parse_query_string)
 
     def test_sql_query_should_contain_join_stmt(self):
         query_string = "abc publisher:core"
         dpq = DataPackageQuery(query_string)
-        self.assertEqual(1, len(dpq._build_sql_query()._join_entities))
+        query, filters = dpq._parse_query_string()
+        self.assertEqual(1, len(dpq._build_sql_query(query, filters)
+                                ._join_entities))
 
     def test_sql_query_should_contain_one_like_stmt(self):
         query_string = "abc"
         dpq = DataPackageQuery(query_string)
-        self.assertEqual(1, len(dpq._build_sql_query().whereclause._from_objects))
+        query, filters = dpq._parse_query_string()
+        self.assertEqual(1, len(dpq._build_sql_query(query, filters)
+                                .whereclause._from_objects))
 
     def test_sql_query_should_not_contain_like_stmt(self):
         query_string = "*"
         dpq = DataPackageQuery(query_string)
-        self.assertIsNone(dpq._build_sql_query().whereclause)
+        query, filters = dpq._parse_query_string()
+        self.assertIsNone(dpq._build_sql_query(query, filters)
+                          .whereclause)
 
     def test_get_data_should_return_all_data_contains_query_string(self):
         query_string = "*"
@@ -92,6 +123,10 @@ class DataPackageQueryTestCase(unittest.TestCase):
         query_string = "details publisher:pub1"
         dpq = DataPackageQuery(query_string)
         self.assertEqual(3, len(dpq.get_data()))
+
+        query_string = "details publisher:pub1 publisher:pub2"
+        dpq = DataPackageQuery(query_string)
+        self.assertEqual(6, len(dpq.get_data()))
 
     def tearDown(self):
         with self.app.app_context():
