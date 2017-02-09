@@ -146,7 +146,6 @@
             var decoded = jwt_decode(local_jwt);
             var currentTime = Math.floor((new Date).getTime()/1000);
             if (decoded.exp < currentTime){
-                alert('expired');
                 localStorage.removeItem("encoded_token");
                 auth0();
             } else{

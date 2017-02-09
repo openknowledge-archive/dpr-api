@@ -43,11 +43,7 @@ def index():
                     return render_template("dashboard.html", user=user,
                                            title='Dashboard'), 200
                 return redirect(request.headers['Host'] + '/logout')
-        return render_template("index.html", title='Home',
-                               s3_cdn=get_s3_cdn_prefix(),
-                               auth0_client_id=app.config['AUTH0_CLIENT_ID'],
-                               auth0_domain=app.config['AUTH0_DOMAIN']
-                               ), 200
+        return render_template("index.html", title='Home'), 200
     except Exception:
         return redirect(url_for('.logout'))
 
@@ -63,11 +59,7 @@ def logout():
       302:
         description: Load the Home Page
     """
-    return render_template("logout.html", title='Logout',
-                           s3_cdn=get_s3_cdn_prefix(),
-                           auth0_client_id=app.config['AUTH0_CLIENT_ID'],
-                           auth0_domain=app.config['AUTH0_DOMAIN']
-                           ), 200
+    return render_template("logout.html", title='Logout'), 200
 
 
 @site_blueprint.route("/<publisher>/<package>", methods=["GET"])
@@ -116,8 +108,7 @@ def datapackage_show(publisher, package):
                            showDataApi=True, jsonDataPackage=dataset,
                            dataViews=dataViews,
                            publisherName=publisher,
-                           packageName=package,
-                           s3_cdn=get_s3_cdn_prefix()), 200
+                           packageName=package), 200
 
 
 @site_blueprint.route("/<publisher>", methods=["GET"])
