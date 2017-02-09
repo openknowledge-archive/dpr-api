@@ -37,8 +37,6 @@ class DataPackageQuery(object):
         return sql_query
 
     def _parse_query_string(self):
-        if not self.query_string.strip():
-            raise Exception("Invalid Query string")
 
         regex = "(\\b\\w+\\b:[\\-\\w\\_\\@]+)"
         copy = self.query_string
@@ -50,14 +48,15 @@ class DataPackageQuery(object):
             if qs.strip():
                 qu = qs.strip()
                 break
-        if not qu.strip() and len(qu_filters) == 0:
-            raise Exception("Invalid Query string")
         return qu, qu_filters
 
-    def get_data(self):
+    def get_data(self, limit=None):
         data_list = []
         q, qf = self._parse_query_string()
-        results = self._build_sql_query(q, qf).all()
+        if limit is None:
+            results = self._build_sql_query(q, qf).all()
+        else:
+            results = self._build_sql_query(q, qf).limit(limit)
         for result in results:
             data = result.__dict__
             data['descriptor'] = data['descriptor']

@@ -43,8 +43,11 @@ def search_packages():
                                 type: object
         """
     try:
-        q = request.args.get('q')
-        result = DataPackageQuery(query_string=q).get_data()
+        q = request.args.get('q').strip()
+        if q:
+            result = DataPackageQuery(query_string=q).get_data()
+        else:
+            result = DataPackageQuery(query_string=q).get_data(50)
 
         return jsonify(dict(items=result, total_count=len(result)))
     except Exception as e:

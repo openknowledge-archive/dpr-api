@@ -128,6 +128,16 @@ class DataPackageQueryTestCase(unittest.TestCase):
         dpq = DataPackageQuery(query_string)
         self.assertEqual(6, len(dpq.get_data()))
 
+    def test_should_return_data_package_with_limit(self):
+
+        query_string = "details publisher:pub1"
+        dpq = DataPackageQuery(query_string)
+        self.assertEqual(3, len(dpq.get_data(limit=5)))
+
+        query_string = "details publisher:pub1 publisher:pub2"
+        dpq = DataPackageQuery(query_string)
+        self.assertEqual(3, len(dpq.get_data(limit=3)))
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
