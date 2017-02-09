@@ -37,11 +37,6 @@ class SearchPackagesTestCase(unittest.TestCase):
             db.session.add(self.pub2)
             db.session.commit()
 
-    def test_should_return_500_if_query_string_is_malformed(self):
-        url = "/api/search/package?q=".format(name=self.pub1_name)
-        response = self.client.get(url)
-        self.assertEqual(500, response.status_code)
-
     def test_should_return_data_package_filter_by_publisher(self):
         url = "/api/search/package?q=* publisher:pub1".format(name=self.pub1_name)
         response = self.client.get(url)

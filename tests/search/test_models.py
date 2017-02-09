@@ -70,11 +70,6 @@ class DataPackageQueryTestCase(unittest.TestCase):
         self.assertEqual('abc', query)
         self.assertEqual(2, len(filters))
 
-    def test_should_throw_error_if_empty_query_string(self):
-        query_string = "   "
-        dpq = DataPackageQuery(query_string)
-        self.assertRaises(Exception, dpq._parse_query_string)
-
     def test_sql_query_should_contain_join_stmt(self):
         query_string = "abc publisher:core"
         dpq = DataPackageQuery(query_string)
