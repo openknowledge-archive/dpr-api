@@ -3,12 +3,25 @@
 
 {% block content %}
   <div class="container">
-      <div class="show-grid row">
-          <div class="offset-sm-1 col-sm-8">
-              <h6>{{ total_count }} packages Found</h6>
-              <h6>for <b>"{{ query_term }}"</b></h6>
-              {{ snippets.search_package_list(datapackage_list) }}
-          </div>
+    <div class="col-md-8 pb-4">
+      <h1>Search</h1>
+      <div id="custom-search-input">
+        <form id="search-page-search-form" class="input-group col-md-12" action="/search" method="GET">
+          <input id="search-page-search" type="text" class="form-control input-lg" placeholder="Search ..." name="q" value="{{ query_term }}" required/>
+          <span class="input-group-btn">
+            <button class="btn btn-lg" type="submit">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </form>
       </div>
+    </div>
+    {% if total_count %}
+    <div class="col-md-8">
+      <h6>{{ total_count }} packages Found</h6>
+      <h6>for <b>"{{ query_term }}"</b></h6>
+      {{ snippets.search_package_list(datapackage_list) }}
+    </div>
+    {% endif %}
   </div>
 {% endblock %}

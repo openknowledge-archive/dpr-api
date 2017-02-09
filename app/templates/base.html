@@ -10,7 +10,7 @@
   <meta name="description" content="{{title}}. Frictionless open data. Open data with tools to make it easy to use. Managed by Open Knowledge International">
   <meta name="keywords" content="open data,data package,reference data,indicators">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+  <link rel="shortcut icon" href="{{ s3_cdn }}/static/img/icons/top-small-logo.png">
   <link rel="stylesheet" media="screen" href="{{ s3_cdn }}/static/css/style.css">
   <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
@@ -19,16 +19,13 @@
   <body>
     <div class="header clearfix">
       <nav class="navbar navbar-toggleable-lg bg-faded" style="background-color: #f7f7f7;">
-        <a class="navbar-brand" href="/" style="font-size:25px;color:#31dac6;font-weight:bold;">DPR</a>
-        <span class="col-sm-1"></span>
-        <form id="navbar-search-form" class="input-group col-sm-7" action="/search" method="GET">
-          <input id="navbar-search" name="q" type="text" class="form-control input-md" placeholder="Search . . . ." required />
-          <span class="input-group-btn">
-            <button class="btn btn-outline-secondary btn-md" type="button" onclick="search()">
-              <i class="fa fa-search"></i>
-            </button>
-          </span>
-        </form>
+        <a class="navbar-brand" href="/" style="font-size:35px;color:#31dac6;font-weight:bold;">DPR</a>
+        <div class="collapse navbar-collapse" id="nav-bar-search-div">
+          <form class="form-inline" id="navbar-search-form" action="/search" method="GET">
+            <input id="navbar-search" class="form-control mr-sm-0" type="text" placeholder="Search" name="q" required>
+            <button class="btn btn-outline-success my-2 my-sm-0 " type="submit" onclick="search()"><i class="fa fa-search"></i></button>
+          </form>
+        </div>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
           <ul class="nav nav-pills">
             <li class="nav-item" >
