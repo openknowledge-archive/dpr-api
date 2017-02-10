@@ -138,9 +138,11 @@
         <h5 class="card-title"><span class="fa fa-files-o"></span> {{package.descriptor.title}}</h5>
         <h6>[{{ package.name }}]</h6>
         <div class="panel-body">
+            {% if package.readme %}
             <p>
             {{ package.readme|truncate(50) }}
             </p>
+            {% endif %}
         </div>
         <div class="row show-grid clearfix">
             <div class="col-sm-2">
@@ -168,9 +170,11 @@
         </h5>
         <h6>[{{ package.name }}]</h6>
         <div class="panel-body">
+            {% if package.readme %}
           <p>
           {{ package.readme|truncate(50) }}
           </p>
+            {% endif %}
         </div>
         <div class="row show-grid clearfix">
           <div class="col-sm-1">
