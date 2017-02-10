@@ -51,6 +51,13 @@ class SearchPackagesTestCase(unittest.TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(6, len(result['items']))
 
+    def test_should_return_data_packages_for_blank_query(self):
+        url = "/api/search/package"
+        response = self.client.get(url)
+        result = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(6, len(result['items']))
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
