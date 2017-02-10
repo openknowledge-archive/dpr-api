@@ -37,17 +37,19 @@ class SearchPackagesTestCase(unittest.TestCase):
             db.session.add(self.pub2)
             db.session.commit()
 
-    def test_should_return_500_if_query_string_is_malformed(self):
-        url = "/api/search/package?q=".format(name=self.pub1_name)
-        response = self.client.get(url)
-        self.assertEqual(500, response.status_code)
-
     def test_should_return_data_package_filter_by_publisher(self):
         url = "/api/search/package?q=* publisher:pub1".format(name=self.pub1_name)
         response = self.client.get(url)
         result = json.loads(response.data)
         self.assertEqual(200, response.status_code)
         self.assertEqual(3, len(result['items']))
+
+    def test_should_return_data_packages_max_to_limit(self):
+        url = "/api/search/package?q="
+        response = self.client.get(url)
+        result = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(6, len(result['items']))
 
     def tearDown(self):
         with self.app.app_context():

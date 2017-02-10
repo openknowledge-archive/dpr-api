@@ -6,50 +6,57 @@ from __future__ import unicode_literals
 
 import re
 import sqlalchemy
-import json
+from sqlalchemy import or_
 from app.package.models import Package
 from app.profile.models import Publisher
 
 
 class DataPackageQuery(object):
 
-    query = ''
-    filterClass = None
-    filterTerm = None
-
     def __init__(self, query_string):
         self.query_string = query_string
-        self._parse_query_string()
 
-    def _build_sql_query(self):
+    def _build_sql_query(self, query, query_filters):
+
         sql_query = Package.query.join(Package.publisher)
-        if self.filterClass is not None:
-            if self.filterClass == 'publisher':
-                sql_query = sql_query.filter(Publisher.name == self.filterTerm)
+        sa_filters = []
+        for f in query_filters:
+            filter_class, filter_term = f.split(":")
+            if filter_class == 'publisher':
+                sa_filters.append(Publisher.name == filter_term)
             else:
                 raise Exception("not supported any other filter right now")
+        if len(sa_filters) > 0:
+            sql_query = sql_query.filter(or_(*sa_filters))
 
-        if self.query != '*':
+        if query != '*' or not query.strip():
             sql_query = sql_query.filter(Package.descriptor.op('->>')
                                          ('title').cast(sqlalchemy.TEXT)
-                                         .ilike("%{q}%".format(q=self.query)))
+                                         .ilike("%{q}%".format(q=query)))
 
         return sql_query
 
     def _parse_query_string(self):
-        regex = "^((.*)\\s((\\b\\w+\\b):(\\b\\w+\\b))?|([\\w+\\*]+))"
-        matches = re.match(regex, self.query_string, re.M | re.I)
-        if matches.group(6):
-            self.query = matches.group(6)
-        elif matches.group(2):
-            self.query = matches.group(2)
-        if matches.group(3):
-            self.filterClass = matches.group(4)
-            self.filterTerm = matches.group(5)
 
-    def get_data(self):
+        regex = "(\\b\\w+\\b:[\\-\\w\\_\\@]+)"
+        copy = self.query_string
+        qu_filters, qu = [], ''
+        for match in re.findall(regex, copy):
+            qu_filters.append(match)
+            copy = copy.replace(match, ":")
+        for qs in copy.split(":"):
+            if qs.strip():
+                qu = qs.strip()
+                break
+        return qu, qu_filters
+
+    def get_data(self, limit=None):
         data_list = []
-        results = self._build_sql_query().all()
+        q, qf = self._parse_query_string()
+        if limit is None:
+            results = self._build_sql_query(q, qf).all()
+        else:
+            results = self._build_sql_query(q, qf).limit(limit)
         for result in results:
             data = result.__dict__
             data['descriptor'] = data['descriptor']

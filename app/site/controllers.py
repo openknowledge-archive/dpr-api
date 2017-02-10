@@ -123,8 +123,8 @@ def publisher_dashboard(publisher):
 
 @site_blueprint.route("/search", methods=["GET"])
 def search_package():
-    q = request.args.get('q')
-    datapackage_list = DataPackageQuery(query_string=q).get_data()
+    q = request.args.get('q').strip()
+    datapackage_list = DataPackageQuery(query_string=q).get_data(20)
     return render_template("search.html",
                            datapackage_list=datapackage_list,
                            total_count=len(datapackage_list),
