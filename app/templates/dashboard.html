@@ -2,12 +2,7 @@
 
 {% block scripts%}
 <script>
-{% if encoded_token %}
 localStorage.setItem("encoded_token","{{encoded_token}}");
-{% endif %}
-$('#logout').on('click', function(e) {
-    localStorage.removeItem("encoded_token");
-});
 window.history.pushState("", "Dashboard", "/");
 </script>
 {% endblock %}
