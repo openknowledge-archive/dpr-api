@@ -325,7 +325,7 @@ class AuthorizeUploadTestCase(unittest.TestCase):
 
     @mock_s3
     def test_should_return_200_if_all_right(self):
-        auth = "bearer %s" % self.jwt
+        auth = "%s" % self.jwt
         data = {
             'metadata': {
                 "owner": self.publisher,
@@ -339,14 +339,14 @@ class AuthorizeUploadTestCase(unittest.TestCase):
             }
         }
         response = self.client.post(self.url,
-                                    headers=dict(Authorization=auth),
+                                    headers={'Auth-Token': auth},
                                     data=json.dumps(data),
                                     content_type='application/json')
         self.assertEqual(200, response.status_code)
 
     @mock_s3
     def test_should_return_500_if_data_not_present(self):
-        auth = "bearer %s" % self.jwt
+        auth = "%s" % self.jwt
         data = {
             'metadata': {
                 "owner": self.publisher,
@@ -359,14 +359,14 @@ class AuthorizeUploadTestCase(unittest.TestCase):
             }
         }
         response = self.client.post(self.url,
-                                    headers=dict(Authorization=auth),
+                                    headers={'Auth-Token': auth},
                                     data=json.dumps(data),
                                     content_type='application/json')
         self.assertEqual(500, response.status_code)
 
     @mock_s3
     def test_should_return_400_if_unauthorized(self):
-        auth = "bearer %s" % self.jwt1
+        auth = "%s" % self.jwt1
         data = {
             'metadata': {
                 "owner": self.publisher,
@@ -379,7 +379,7 @@ class AuthorizeUploadTestCase(unittest.TestCase):
             }
         }
         response = self.client.post(self.url,
-                                    headers=dict(Authorization=auth),
+                                    headers={'Auth-Token': auth},
                                     data=json.dumps(data),
                                     content_type='application/json')
         self.assertEqual(400, response.status_code)

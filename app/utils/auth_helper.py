@@ -14,24 +14,15 @@ from app.auth.authorization import is_allowed as ia
 def get_user_from_jwt(req, api_key):
     jwt_helper = JWT(api_key)
 
-    auth = req.headers.get('Authorization', None)
+    token = req.headers.get('Authorization', None)
+    if token is None:
+        token = req.headers.get('Auth-Token', None)
+    if token is None:
+        token = req.values.get('jwt')
 
-    if not auth:
+    if not token:
         return False, handle_error('authorization_header_missing',
                                    'Authorization header is expected', 401)
-    parts = auth.split()
-    if parts[0].lower() != 'bearer':
-        return False, handle_error('invalid_header',
-                                   'Authorization header must start with Bearer',
-                                   401)
-    elif len(parts) == 1:
-        return False, handle_error('invalid_header', 'Token not found', 401)
-    elif len(parts) > 2:
-        return False, handle_error(
-            'invalid_header',
-            'Authorization header must\ be Bearer + \s + token',
-            401)
-    token = parts[1]
     try:
         return True, jwt_helper.decode(token)
     except Exception as e:
@@ -52,4 +43,3 @@ def get_status(action, publisher, package=None, user_id=None):
         return handle_error("INVALID_ENTITY", "{e} is not a valid one".format(e=entity_str), 401)
 
     return ia(user_id, instance, action)
-
