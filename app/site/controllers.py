@@ -105,6 +105,7 @@ def datapackage_show(publisher, package):
 
     return render_template("dataset.html", dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,
+                           datapackage=metadata['descriptor'],
                            showDataApi=True, jsonDataPackage=dataset,
                            dataViews=dataViews,
                            publisherName=publisher,
