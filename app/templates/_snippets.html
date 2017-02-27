@@ -122,11 +122,8 @@
   </div>
 
   <script type="text/javascript">
-{#    var DataPackageData = {{ jsonDataPackage|tojson }};#}
-{#    var DataViews = {{ dataViews|tojson }};#}
-{#    var DataPackageJsonUrl = "{{ datapackageUrl }}";#}
-    var packageName = "{{ packageName }}";
-    var publisherName = "{{ publisherName }}";
+    var DATA_PACKAGE_URL = "{{ datapackageUrl }}";
+    var DATA_PACKAGE = "{{ datapackage }}"
   </script>
 </div><!-- / dataset show -->
 {%- endmacro %}
