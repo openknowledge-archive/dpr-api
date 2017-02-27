@@ -9,7 +9,9 @@ import json
 from mock import patch
 from app import create_app
 from app.database import db
-from app.profile.models import User
+from moto import mock_s3
+from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
+from app.package.models import Package
 
 
 class Auth0LoginTestCase(unittest.TestCase):
@@ -262,6 +264,125 @@ class CallbackHandlingTestCase(unittest.TestCase):
         self.assertEqual(create_user.call_count, 1)
         self.assertEqual(jwt_helper.call_count, 1)
         self.assertEqual(response.status_code, 200)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+
+class AuthorizeUploadTestCase(unittest.TestCase):
+    publisher = 'test_publisher'
+    package = 'test_package'
+    user_id = 1
+    url = '/api/datastore/authorize'
+    jwt_url = '/api/auth/token'
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = self.user_id
+            self.user.email, self.user.name, self.user.secret = \
+                'test@test.com', self.publisher, 'super_secret'
+            self.pub = Publisher(name=self.publisher)
+            self.pub.packages.append(Package(name='test_package'))
+            association = PublisherUser(role=UserRoleEnum.owner)
+            association.publisher = self.pub
+            self.user.publishers.append(association)
+
+            user1 = User(id=2, name='test1',
+                         secret='super_secret1', email="test1@test.com")
+            pub1 = Publisher(name='test1')
+            association1 = PublisherUser(role=UserRoleEnum.owner)
+            association1.publisher = pub1
+            user1.publishers.append(association1)
+
+            db.session.add(self.user)
+            db.session.add(user1)
+            db.session.commit()
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt = data['token']
+
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': 'test1',
+                                        'secret': 'super_secret1'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt1 = data['token']
+
+    @mock_s3
+    def test_should_return_200_if_all_right(self):
+        auth = "bearer %s" % self.jwt
+        data = {
+            'metadata': {
+                "owner": self.publisher,
+                "name": self.package
+            },
+            "filedata": {
+                "package.json": {
+                    "name": "package.json",
+                    "md5": "12345y65uyhgfed23243y6"
+                }
+            }
+        }
+        response = self.client.post(self.url,
+                                    headers=dict(Authorization=auth),
+                                    data=json.dumps(data),
+                                    content_type='application/json')
+        self.assertEqual(200, response.status_code)
+
+    @mock_s3
+    def test_should_return_500_if_data_not_present(self):
+        auth = "bearer %s" % self.jwt
+        data = {
+            'metadata': {
+                "owner": self.publisher,
+                "name": self.package
+            },
+            "filedata": {
+                "package.json": {
+                    "name": "package.json"
+                }
+            }
+        }
+        response = self.client.post(self.url,
+                                    headers=dict(Authorization=auth),
+                                    data=json.dumps(data),
+                                    content_type='application/json')
+        self.assertEqual(500, response.status_code)
+
+    @mock_s3
+    def test_should_return_400_if_unauthorized(self):
+        auth = "bearer %s" % self.jwt1
+        data = {
+            'metadata': {
+                "owner": self.publisher,
+                "name": self.package
+            },
+            "filedata": {
+                "package.json": {
+                    "name": "package.json"
+                }
+            }
+        }
+        response = self.client.post(self.url,
+                                    headers=dict(Authorization=auth),
+                                    data=json.dumps(data),
+                                    content_type='application/json')
+        self.assertEqual(400, response.status_code)
 
     def tearDown(self):
         with self.app.app_context():

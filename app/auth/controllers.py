@@ -9,11 +9,13 @@ from flask import Blueprint, request, render_template, \
 from flask import current_app as app
 from app.package.models import BitStore
 from app.profile.models import User
-from app.auth.models import JWT, Auth0
+from app.auth.models import JWT, Auth0, FileData
+from app.package.models import Package
 from app.utils import handle_error
-
+from app.utils.auth_helper import get_status, get_user_from_jwt
 
 auth_blueprint = Blueprint('auth', __name__, url_prefix='/api/auth')
+datastore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore')
 
 
 @auth_blueprint.route("/callback")
@@ -219,6 +221,66 @@ def get_s3_signed_url():
         metadata = BitStore(publisher=publisher, package=package)
         url = metadata.generate_pre_signed_post_object(path, md5)
         return jsonify({'data': url}), 200
+    except Exception as e:
+        app.logger.error(e)
+        return handle_error('GENERIC_ERROR', e.message, 500)
+
+
+@datastore_blueprint.route('/authorize', methods=['POST'])
+def authorize_upload():
+    """
+    This API is responsible for generate signed urls for multiple files
+    to post data to S3
+    ---
+    tags:
+        - auth
+    parameters:
+        - in: body
+          name: data
+          type: map
+          required: true
+          description: publisher name and package name, and file details
+    responses:
+        200:
+            description: Success
+            schema:
+                id: get_signed_url
+                properties:
+                    filedata:
+                        type: map
+                        description: Signed url and upload_query
+        400:
+            description: Unauthorized
+        500:
+            description: Internal Server Error
+    """
+    try:
+        user_id = None
+        jwt_status, user_info = get_user_from_jwt(request, app.config['API_KEY'])
+        if jwt_status:
+            user_id = user_info['user']
+
+        data = request.get_json()
+        metadata, filedata = data['metadata'], data['filedata']
+        publisher, package_name = metadata['owner'], metadata['name']
+        res_payload = {'filedata': {}}
+
+        if Package.is_package_exists(package_name):
+            status = get_status('Package::Update', publisher, package_name, user_id)
+        else:
+            status = get_status('Package::Create', publisher, package_name, user_id)
+
+        if not status:
+            return handle_error('UN-AUTHORIZE', 'not authorized to upload data', 400)
+
+        for relative_path in filedata.keys():
+            response = FileData(package_name=package_name,
+                                publisher=publisher,
+                                relative_path=relative_path,
+                                props=filedata[relative_path])
+            res_payload['filedata'][relative_path] = response.get_response()
+
+        return jsonify(res_payload), 200
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)

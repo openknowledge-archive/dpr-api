@@ -10,6 +10,7 @@ import json
 import time
 import requests
 from flask import current_app as app
+from app.package.models import BitStore
 
 
 class JWT(object):
@@ -152,3 +153,42 @@ class Auth0(object):
             return response.json()
         else:
             return None
+
+
+class FileData(object):
+
+    def __init__(self, package_name, publisher,
+                 relative_path, props):
+        self.package_name = package_name
+        self.publisher = publisher
+        self.relative_path = relative_path
+        self.props = props
+        self.bitstore = BitStore(publisher=publisher,
+                                 package=package_name)
+
+    def _generate_bitstore_url(self):
+        kwargs = {}
+        if 'type' in self.props:
+            kwargs['file_type'] = self.props['type']
+        if 'acl' in self.props:
+            kwargs['acl'] = self.props['acl']
+        post = self.bitstore.\
+            generate_pre_signed_post_object(self.relative_path,
+                                            md5=self.props['md5'],
+                                            **kwargs)
+        return post
+
+    def get_response(self):
+        response = {
+            'name': self.props['name'],
+            'md5': self.props['md5'],
+        }
+        if 'type' in self.props:
+            response['type'] = self.props['type']
+        if 'acl' in self.props:
+            response['acl'] = self.props['acl']
+
+        post = self._generate_bitstore_url()
+        response['upload_url'] = post['url']
+        response['upload_query'] = post['fields']
+        return response

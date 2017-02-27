@@ -365,3 +365,15 @@ class Package(db.Model):
         except Exception as e:
             app.logger.error(e)
             return None
+
+    @staticmethod
+    def is_package_exists(package_name):
+        """
+        This method will check package with the name already exists or not
+        :param package_name: package name
+        :return: True is data already exists else false
+        """
+        instance = Package.query \
+            .filter(Package.name == package_name).all()
+        return len(instance) > 0
+
