@@ -106,9 +106,8 @@ def datapackage_show(publisher, package):
     return render_template("dataset.html", dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
-                           dataViews=dataViews,
-                           publisherName=publisher,
-                           packageName=package), 200
+                           dataViews=dataViews
+                           ), 200
 
 
 @site_blueprint.route("/<publisher>", methods=["GET"])
