@@ -227,6 +227,12 @@ class BitStore(object):
             app.logger.error(e)
             return False
 
+    @staticmethod
+    def extract_information_from_s3_url(url):
+        information = url.split('metadata/')[1].split('/')
+        publisher, package, version = information[0], information[1], information[3]
+        return publisher, package, version
+
 
 class PackageStateEnum(enum.Enum):
     active = "ACTIVE"

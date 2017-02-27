@@ -135,8 +135,11 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
     publisher = 'test_publisher'
     package = 'test_package'
     user_id = 1
-    url = '/api/package/%s/%s/finalize' % (publisher, package)
+    url = '/api/package/upload'
     jwt_url = '/api/auth/token'
+    datapackage_url = 'https://bits.datapackaged.com/metadata/' \
+                      '{pub}/{pack}/_v/latest/datapackage.com'.\
+        format(pub=publisher, pack=package)
 
     def setUp(self):
         self.app = create_app()
@@ -180,36 +183,34 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         change_acl.return_value = None
         auth = "%s" % self.jwt
         response = self.client.post(self.url,
-                                    data=json.dumps(dict()),
-                                    headers={'Auth-Token': auth})
+                                    data=json.dumps(dict(datapackage=self.datapackage_url)),
+                                    headers={'Auth-Token': auth},
+                                    content_type='application/json')
         self.assertEqual(200, response.status_code)
-
-    def test_throw_403_if_user_not_exists_so_operation_not_permitted(self):
-        with self.app.app_context():
-            db.drop_all()
-            db.create_all()
-        auth = "%s" % self.jwt
-        response = self.client.post(self.url,
-                                    data=json.dumps(dict()),
-                                    headers={'Auth-Token': auth})
-        self.assertEqual(403, response.status_code)
+        data = json.loads(response.data)
+        self.assertEqual({'status': 'queued'}, data)
 
     @patch('app.package.models.BitStore.get_metadata_body')
     def test_throw_500_if_failed_to_get_data_from_s3(self, body_mock):
         body_mock.return_value = None
         auth = "%s" % self.jwt
         response = self.client.post(self.url,
-                                    data=json.dumps(dict()),
-                                    headers={'Auth-Token': auth})
+                                    data=json.dumps(dict(datapackage=self.datapackage_url)),
+                                    headers={'Auth-Token': auth},
+                                    content_type='application/json')
         self.assertEqual(500, response.status_code)
 
-    def test_throw_403_if_user_not_permitted_for_this_operation(self):
+    def test_throw_400_if_user_not_permitted_for_this_operation(self):
         auth = "%s" % self.jwt
-        url = '/api/package/%s/%s/finalize' % ("test_publisher1", self.package)
+        url = '/api/package/upload'
+        datapackage_url = 'https://bits.datapackaged.com/metadata/' \
+                          '{pub}/{pack}/_v/latest/datapackage.com'. \
+            format(pub='test_publisher1', pack=self.package)
         response = self.client.post(url,
-                                    data=json.dumps(dict()),
-                                    headers={'Auth-Token': auth})
-        self.assertEqual(403, response.status_code)
+                                    data=json.dumps(dict(datapackage=datapackage_url)),
+                                    headers={'Auth-Token': auth},
+                                    content_type='application/json')
+        self.assertEqual(400, response.status_code)
 
     def tearDown(self):
         with self.app.app_context():
@@ -378,8 +379,11 @@ class EndToEndTestCase(unittest.TestCase):
     package = 'test_package'
     meta_data_url = '/api/package/%s/%s' % (publisher, package)
     bitstore_url = '/api/auth/bitstore_upload'
-    finalize_url = '/api/package/%s/%s/finalize' % (publisher, package)
+    finalize_url = '/api/package/upload'
     test_data_package = {'name': 'test_package'}
+    datapackage_url = 'https://bits.datapackaged.com/metadata/' \
+                      '{pub}/{pack}/_v/latest/datapackage.com'. \
+        format(pub=publisher, pack=package)
 
     def setUp(self):
         self.app = create_app()
@@ -466,10 +470,13 @@ class EndToEndTestCase(unittest.TestCase):
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
         rv = self.client.post(self.finalize_url,
-                              data=json.dumps(dict()),
-                              headers=dict(Authorization=self.auth))
+                              data=json.dumps(dict(datapackage=self.datapackage_url)),
+                              headers=dict(Authorization=self.auth),
+                              content_type='application/json')
         # Test Data
         self.assertEqual(200, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertEqual({'status': 'queued'}, data)
 
     def tearDown(self):
         with self.app.app_context():
