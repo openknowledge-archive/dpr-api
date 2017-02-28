@@ -1,20 +1,112 @@
 {% extends "base.html" %}
-{% block content %}		
-<div class="header-bottom">		
-  <div id="carousel-banner" class="carousel slide" data-ride="carousel">		
-    <div class="carousel-inner">		
-      <div class="item active" style="background: black;">		
-        <img src="{{ s3_cdn }}/static/img/hero-team.jpg" width="100%" alt="..." style="opacity: 0.6;"/>
-        <div class="carousel-content">		
-          <div class="container">		
-            <div class="carousel-content-panel text-center">		
-              <h1><br/>Data Package Registry</h1>		
-              <h2>Publish, find and install data packages quickly and easily</h2>
-              </div>		
-            </div>		
-          </div>		
-        </div>
+{% block content %}
+<!-- Jumbotron main -->
+<div class="jumbotron jumbotron-primary">
+  <div class="container text-center">
+    <h1>DATA PACKAGE REGISTRY</h1>
+    <p class="main-text">Publish, find and install data packages quickly and easily</p>
+    <button class="btn btn-lg btn-warning" onclick="lock.show();">Start publishing your data</button>
+  </div>
+</div>
+<!-- Grid for command line usage -->
+<div class="container">
+  <div class="row">
+    <div class="col-sm-1">
+      <span class="glyphicon glyphicon-console"></span>
+    </div>
+    <div class="col-sm-4 pull-left">
+      <h2>
+        <strong>Publish</strong> or <strong>Download</strong> from the command line
+      </h2>
+    </div>
+  </div>
+  <div class="row vertical-center">
+    <div class="col-sm-4">
+      <h4>Install the data package manager command line tool:</h4>
+      <p><kbd>$ [sudo] pip install dpmpy</kbd></p>
+      <h4>Configure (use your secret token here):</h4>
+      <p><kbd>$ dpmpy configure</kbd></p>
+      <h4>Publish your data:</h4>
+      <p><kbd>$ cd your-data-package-directory/</kbd></p>
+      <p><kbd>$ dpmpy publish</kbd></p>
+      <h4>Download:</h4>
+      <p><kbd>$ dpmpy download</kbd></p>
+      <br />
+      <button class="btn btn-lg btn-warning" onclick="lock.show();">Get started</button>
+    </div>
+    <div class="col-sm-8 video-mask">
+      <video src="{{ s3_cdn }}/static/img/terminal.mp4" autoplay muted loop class="img-responsive" poster="{{ s3_cdn }}/static/img/terminal.png" style="padding:50px" />
+    </div>
+  </div>
+</div>
+<!-- Jumbotron message 1 -->
+<div class="jumbotron jumbotron-message">
+  <div class="container text-center">
+    <h4 class="message"><span class="glyphicon glyphicon-paperclip"></span> We’re open source, community-focused project with sustainable business model.</h4>
+  </div>
+</div>
+<!-- Grid Power Users vs Data Analysts -->
+<div class="container features">
+  <div class="row">
+    <div class="col-sm-6 text-center panel panel-default">
+      <div class="panel-heading">
+        <h3>Power Users</h3>
       </div>
+      <div class="panel-body">
+        <ul class="list-unstyled list-group">
+          <li class="list-group-item"><span class="glyphicon glyphicon-ok"></span> Use command line to publish (and get data)</li>
+          <li class="list-group-item"><span class="glyphicon glyphicon-ok"></span> Also want a showcase for their data on site</li>
+          <li class="list-group-item"><span class="glyphicon glyphicon-ok"></span> Want to find high quality data quickly and easily</li>
+        </ul>
+      </div>
+      <div class="panel-footer">
+        <a class="btn btn-lg btn-warning" href="#" onclick="lock.show();">Sign Up</a>
+      </div>
+    </div>
+    <div class="col-sm-6 text-center panel panel-default">
+      <div class="panel-heading">
+        <h3>Data Analysts</h3>
+      </div>
+      <div class="panel-body">
+        <ul class="list-unstyled list-group">
+          <li class="list-group-item"><span class="glyphicon glyphicon-ok"></span> A clear sense of the data</li>
+          <li class="list-group-item"><span class="glyphicon glyphicon-ok"></span> Can download into e.g. Excel</li>
+          <li class="list-group-item"><span class="glyphicon glyphicon-ok"></span> Findable on Google</li>
+        </ul>
+      </div>
+      <div class="panel-footer">
+        <a class="btn btn-lg btn-warning" href="#" onclick="lock.show();">Sign Up</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Jumbotron message 2 -->
+<div class="jumbotron jumbotron-message">
+  <div class="container text-center">
+    <h4 class="message"><span class="glyphicon glyphicon-paperclip"></span> By focusing on data packages with valid data we can guarantee much higher quality data. We will also dedicate our own effort to publishing data.</h4>
+  </div>
+</div>
+<!-- Grid for visulalize and downloading from web page -->
+<div class="container">
+  <div class="row">
+    <div class="col-sm-1">
+      <span class="glyphicon glyphicon-blackboard"></span>
+    </div>
+    <div class="col-sm-4 pull-left">
+      <h2>
+        <strong>Visualize</strong> <p>on the web page
+      </h2>
+    </div>
+  </div>
+  <div class="row vertical-center">
+    <div class="col-sm-4">
+      <h4>Showcase</h4>
+      <h4>Download</h4>
+      <p></p>
+
+    </div>
+    <div class="col-sm-8">
+      <img src="{{ s3_cdn }}/static/img/webpage.png" class="img-responsive" />
     </div>
   </div>
 </div>
