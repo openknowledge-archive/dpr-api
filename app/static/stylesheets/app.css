@@ -5846,23 +5846,20 @@ button.close {
   height: 60vh;
   color: white !important; }
 
-.jumbotron {
-  background-color: #dcedfd;
-  color: #757575; }
-  .jumbotron .btn-warning {
-    margin-top: 30px;
-    margin-bottom: 50px; }
-  .jumbotron .glyphicon-triangle-bottom {
-    font-size: 50px;
-    color: #ff5500; }
-  .jumbotron .main-text {
-    font-family: Lora, Georgia, Times, serif; }
-  .jumbotron .secondary-text {
-    margin-top: auto;
-    font-size: 14px; }
-  .jumbotron h1 {
-    font-weight: 200;
-    margin-bottom: 30px; }
+.jumbotron .btn-warning {
+  margin-top: 30px;
+  margin-bottom: 50px; }
+.jumbotron .glyphicon-triangle-bottom {
+  font-size: 50px;
+  color: #ff5500; }
+.jumbotron .main-text {
+  font-family: Lora, Georgia, Times, serif; }
+.jumbotron .secondary-text {
+  margin-top: auto;
+  font-size: 14px; }
+.jumbotron h1 {
+  font-weight: 200;
+  margin-bottom: 30px; }
 
 /* Power users vs Data analysts
 ====================================*/
@@ -5894,11 +5891,14 @@ button.close {
 
 /* Jumbotron message
 ====================================*/
-.jumbotron-message .message {
-  font-weight: lighter; }
-.jumbotron-message .glyphicon-paperclip {
-  font-size: 20px;
-  color: #ff5500; }
+.jumbotron-message {
+  background-color: #f0f0f0;
+  color: #757575; }
+  .jumbotron-message .message {
+    font-weight: lighter; }
+  .jumbotron-message .glyphicon-paperclip {
+    font-size: 20px;
+    color: #ff5500; }
 
 footer {
   background: #666666;

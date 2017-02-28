@@ -1,6 +1,8 @@
 /* Jumbotron message
 ====================================*/
 .jumbotron-message {
+  background-color: lighten($gray-light, 20%);
+  color: $gray;
   .message {
     font-weight: lighter;
   }
