@@ -1,0 +1,11 @@
+/* Jumbotron message
+====================================*/
+.jumbotron-message {
+  .message {
+    font-weight: lighter;
+  }
+  .glyphicon-paperclip {
+    font-size: 20px;
+    color: $brand-warning;
+  }
+}

@@ -1,0 +1,13 @@
+/* Containers for terminal usage, downloading, showcase
+====================================*/
+.glyphicon-console, .glyphicon-download, .glyphicon-blackboard {
+  font-size: 60px;
+  margin-top: 20px;
+  color: $brand-primary;
+}
+
+.vertical-center {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+}
