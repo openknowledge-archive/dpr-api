@@ -1,13 +1,23 @@
 /* Jumbotron message
 ====================================*/
 .jumbotron-message {
-  background-color: lighten($gray-light, 20%);
+  margin-top: 5px;
+  background-color: white;
+  border-bottom: 1px solid $gray-light;
+  border-top: 1px solid $gray-light;
   color: $gray;
   .message {
+    p {
+      font-size: $font-size-large;
+    }
     font-weight: lighter;
+    h3 {
+      color: $brand-warning;
+    }
   }
-  .glyphicon-paperclip {
-    font-size: 20px;
-    color: $brand-warning;
+  .glyphicon {
+    font-size: 80px;
+    color: $brand-primary;
+    padding-top: 30%;
   }
 }

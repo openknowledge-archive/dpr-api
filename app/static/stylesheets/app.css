@@ -5892,13 +5892,21 @@ button.close {
 /* Jumbotron message
 ====================================*/
 .jumbotron-message {
-  background-color: #f0f0f0;
+  margin-top: 5px;
+  background-color: white;
+  border-bottom: 1px solid #BDBDBD;
+  border-top: 1px solid #BDBDBD;
   color: #757575; }
   .jumbotron-message .message {
     font-weight: lighter; }
-  .jumbotron-message .glyphicon-paperclip {
-    font-size: 20px;
-    color: #ff5500; }
+    .jumbotron-message .message p {
+      font-size: 18px; }
+    .jumbotron-message .message h3 {
+      color: #ff5500; }
+  .jumbotron-message .glyphicon {
+    font-size: 80px;
+    color: #28ceac;
+    padding-top: 30%; }
 
 footer {
   background: #666666;
