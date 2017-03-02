@@ -378,7 +378,7 @@ class EndToEndTestCase(unittest.TestCase):
     publisher = 'test_publisher'
     package = 'test_package'
     meta_data_url = '/api/package/%s/%s' % (publisher, package)
-    bitstore_url = '/api/auth/bitstore_upload'
+    bitstore_url = '/api/datastore/authorize'
     finalize_url = '/api/package/upload'
     test_data_package = {'name': 'test_package'}
     datapackage_url = 'https://bits.datapackaged.com/metadata/' \
@@ -452,16 +452,23 @@ class EndToEndTestCase(unittest.TestCase):
         self.assertEqual(rv.status_code, 200)
 
         # Get S3 link for uploading Data file
-        generate_pre_signed_post_object.return_value = {'url': 'https://trial_url'}
+        generate_pre_signed_post_object.return_value = {'url': 'https://trial_url',
+                                                        'fields': {}}
         rv = self.client.post(self.bitstore_url,
                               data=json.dumps({
-                                  'publisher': self.publisher,
-                                  'package': self.package,
-                                  'md5': ''
+                                  'metadata': {'owner': 'pub1', 'name': 'package1'},
+                                  'filedata': {
+                                      'README.md': {
+                                          'md5': '',
+                                          'name': 'README.md'
+                                      }
+                                  }
                               }),
-                              content_type='application/json')
+                              content_type='application/json',
+                              headers=dict(Authorization=self.auth))
         # Testing S3 link
-        self.assertEqual({'data': {'url': 'https://trial_url'}}, json.loads(rv.data))
+        self.assertEqual('https://trial_url',
+                         json.loads(rv.data)['filedata']['README.md']['upload_url'])
         self.assertEqual(200, rv.status_code)
 
         # Finalize
