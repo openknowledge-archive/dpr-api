@@ -12,10 +12,10 @@ from app.profile.models import User
 from app.auth.models import JWT, Auth0, FileData
 from app.package.models import Package
 from app.utils import handle_error
-from app.utils.auth_helper import get_status, get_user_from_jwt
+from app.utils.auth_helper import check_is_authorized, get_user_from_jwt
 
 auth_blueprint = Blueprint('auth', __name__, url_prefix='/api/auth')
-datastore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore')
+bitstore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore')
 
 
 @auth_blueprint.route("/callback")
@@ -163,70 +163,7 @@ def auth0_login():
     return redirect(redirect_url)
 
 
-@auth_blueprint.route('/bitstore_upload', methods=['POST'])
-def get_s3_signed_url():
-    """
-    This API is responsible for generate signed url to post data to S3
-    ---
-    tags:
-        - auth
-    parameters:
-        - in: body
-          name: publisher
-          type: string
-          required: true
-          description: publisher name
-        - in: body
-          name: package
-          type: string
-          required: true
-          description: package name
-        - in: body
-          name: path
-          type: string
-          required: true
-          description: relative path of the resources
-    responses:
-        200:
-            description: Success
-            schema:
-                id: get_signed_url
-                properties:
-                    key:
-                        type: string
-                        description: signed url for post data to S3
-        400:
-            description: Publisher or package can not be empty
-        500:
-            description: Internal Server Error
-    """
-    try:
-        data = request.get_json()
-        publisher = data.get('publisher', None)
-        package = data.get('package', None)
-        path = data.get('path', None)
-        md5 = data.get('md5', None)
-        if publisher is None or package is None:
-            return handle_error('INVALID_INPUT',
-                                'publisher or package can not be empty',
-                                400)
-        if md5 is None:
-            return handle_error('INVALID_INPUT',
-                                'md5 hash can not be empty',
-                                400)
-        if path == 'datapackage.json':
-            return handle_error('INVALID_INPUT',
-                                'datapackage.json should not publish with this api',
-                                400)
-        metadata = BitStore(publisher=publisher, package=package)
-        url = metadata.generate_pre_signed_post_object(path, md5)
-        return jsonify({'data': url}), 200
-    except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
-
-
-@datastore_blueprint.route('/authorize', methods=['POST'])
+@bitstore_blueprint.route('/authorize', methods=['POST'])
 def authorize_upload():
     """
     This API is responsible for generate signed urls for multiple files
@@ -266,9 +203,9 @@ def authorize_upload():
         res_payload = {'filedata': {}}
 
         if Package.is_package_exists(package_name):
-            status = get_status('Package::Update', publisher, package_name, user_id)
+            status = check_is_authorized('Package::Update', publisher, package_name, user_id)
         else:
-            status = get_status('Package::Create', publisher, package_name, user_id)
+            status = check_is_authorized('Package::Create', publisher, package_name, user_id)
 
         if not status:
             return handle_error('UN-AUTHORIZE', 'not authorized to upload data', 400)
@@ -278,7 +215,7 @@ def authorize_upload():
                                 publisher=publisher,
                                 relative_path=relative_path,
                                 props=filedata[relative_path])
-            res_payload['filedata'][relative_path] = response.get_response()
+            res_payload['filedata'][relative_path] = response.build_file_information()
 
         return jsonify(res_payload), 200
     except Exception as e:

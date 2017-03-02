@@ -16,7 +16,7 @@ from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
 from app.utils import handle_error
-from app.utils.auth_helper import get_user_from_jwt, get_status
+from app.utils.auth_helper import get_user_from_jwt, check_is_authorized
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
 
@@ -333,10 +333,11 @@ def purge_data_package(publisher, package):
 
 @package_blueprint.route("/upload", methods=["POST"])
 @requires_auth
-def finalize_metadata():
+def finalize_publish():
     """
-    DPR metadata finalize operation.
-    This API is responsible for getting data from S3 and push it to RDS.
+    Data package finalize operation.
+    This API is responsible for getting the Data Package (datapackage.json, README)
+    and importing it into our MetaStore.
     ---
     tags:
         - package
@@ -372,9 +373,9 @@ def finalize_metadata():
             user_id = user_info['user']
 
         if Package.is_package_exists(package):
-            status = get_status('Package::Update', publisher, package, user_id)
+            status = check_is_authorized('Package::Update', publisher, package, user_id)
         else:
-            status = get_status('Package::Create', publisher, package, user_id)
+            status = check_is_authorized('Package::Create', publisher, package, user_id)
 
         if not status:
             return handle_error('UN-AUTHORIZE', 'not authorized to upload data', 400)

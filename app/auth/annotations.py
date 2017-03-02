@@ -10,7 +10,7 @@ from flask import current_app as app
 from flask import request, _request_ctx_stack
 
 from app.utils import handle_error
-from app.utils.auth_helper import get_user_from_jwt, get_status
+from app.utils.auth_helper import get_user_from_jwt, check_is_authorized
 
 
 def requires_auth(f):
@@ -33,7 +33,7 @@ def is_allowed(action):
             jwt_status, user_info = get_user_from_jwt(request, app.config['API_KEY'])
             if jwt_status:
                 user_id = user_info['user']
-            status = get_status(action, kwargs['publisher'], kwargs['package'], user_id)
+            status = check_is_authorized(action, kwargs['publisher'], kwargs['package'], user_id)
             if not status:
                 return handle_error("NOT_ALLOWED", "The operation is not allowed", 403)
             return f(*args, **kwargs)

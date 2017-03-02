@@ -178,7 +178,7 @@ class FileData(object):
                                             **kwargs)
         return post
 
-    def get_response(self):
+    def build_file_information(self):
         response = {
             'name': self.props['name'],
             'md5': self.props['md5'],

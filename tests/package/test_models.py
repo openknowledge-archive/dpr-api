@@ -452,7 +452,7 @@ class PackageTestCase(unittest.TestCase):
                    Package.version == 'tag_one').one()
         self.assertEqual(latest_data.readme, tagged_data.readme)
 
-    def test_should_return_true_if_package_already_exists(self):
+    def test_is_package_exists(self):
         status = Package.is_package_exists(self.package_one)
         self.assertTrue(status)
         status = Package.is_package_exists('non-exists-package')

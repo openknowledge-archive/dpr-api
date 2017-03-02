@@ -29,7 +29,7 @@ def get_user_from_jwt(req, api_key):
         return False, handle_error('jwt_error', e.message, 400)
 
 
-def get_status(action, publisher, package=None, user_id=None):
+def check_is_authorized(action, publisher, package=None, user_id=None):
     entity_str, action_str = action.split("::")
 
     if entity_str == 'Package':

@@ -32,5 +32,5 @@ class FileDataTestCase(unittest.TestCase):
                                  props={'md5': 'as131twfc56t7',
                                         'type': 'json',
                                         'name': 'readme.md'})
-            response = file_data.get_response()
+            response = file_data.build_file_information()
             self.assertIsNotNone(response['upload_url'])
