@@ -135,8 +135,11 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
     publisher = 'test_publisher'
     package = 'test_package'
     user_id = 1
-    url = '/api/package/%s/%s/finalize' % (publisher, package)
+    url = '/api/package/upload'
     jwt_url = '/api/auth/token'
+    datapackage_url = 'https://bits.datapackaged.com/metadata/' \
+                      '{pub}/{pack}/_v/latest/datapackage.com'.\
+        format(pub=publisher, pack=package)
 
     def setUp(self):
         self.app = create_app()
@@ -178,38 +181,36 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
         change_acl.return_value = None
-        auth = "bearer %s" % self.jwt
+        auth = "%s" % self.jwt
         response = self.client.post(self.url,
-                                    data=json.dumps(dict()),
-                                    headers=dict(Authorization=auth))
+                                    data=json.dumps(dict(datapackage=self.datapackage_url)),
+                                    headers={'Auth-Token': auth},
+                                    content_type='application/json')
         self.assertEqual(200, response.status_code)
-
-    def test_throw_403_if_user_not_exists_so_operation_not_permitted(self):
-        with self.app.app_context():
-            db.drop_all()
-            db.create_all()
-        auth = "bearer %s" % self.jwt
-        response = self.client.post(self.url,
-                                    data=json.dumps(dict()),
-                                    headers=dict(Authorization=auth))
-        self.assertEqual(403, response.status_code)
+        data = json.loads(response.data)
+        self.assertEqual({'status': 'queued'}, data)
 
     @patch('app.package.models.BitStore.get_metadata_body')
     def test_throw_500_if_failed_to_get_data_from_s3(self, body_mock):
         body_mock.return_value = None
-        auth = "bearer %s" % self.jwt
+        auth = "%s" % self.jwt
         response = self.client.post(self.url,
-                                    data=json.dumps(dict()),
-                                    headers=dict(Authorization=auth))
+                                    data=json.dumps(dict(datapackage=self.datapackage_url)),
+                                    headers={'Auth-Token': auth},
+                                    content_type='application/json')
         self.assertEqual(500, response.status_code)
 
-    def test_throw_403_if_user_not_permitted_for_this_operation(self):
-        auth = "bearer %s" % self.jwt
-        url = '/api/package/%s/%s/finalize' % ("test_publisher1", self.package)
+    def test_throw_400_if_user_not_permitted_for_this_operation(self):
+        auth = "%s" % self.jwt
+        url = '/api/package/upload'
+        datapackage_url = 'https://bits.datapackaged.com/metadata/' \
+                          '{pub}/{pack}/_v/latest/datapackage.com'. \
+            format(pub='test_publisher1', pack=self.package)
         response = self.client.post(url,
-                                    data=json.dumps(dict()),
-                                    headers=dict(Authorization=auth))
-        self.assertEqual(403, response.status_code)
+                                    data=json.dumps(dict(datapackage=datapackage_url)),
+                                    headers={'Auth-Token': auth},
+                                    content_type='application/json')
+        self.assertEqual(400, response.status_code)
 
     def tearDown(self):
         with self.app.app_context():
@@ -255,35 +256,21 @@ class SaveMetaDataTestCase(unittest.TestCase):
         response = self.client.put(self.url)
         self.assertEqual(401, response.status_code)
 
-    def test_should_throw_error_if_auth_header_not_starts_with_bearer(self):
-        response = self.client.put(self.url,
-                                   headers=dict(Authorization='auth 123'))
-        self.assertEqual(401, response.status_code)
-
-    def test_should_throw_error_if_auth_header_malformed(self):
-        response = self.client.put(self.url,
-                                   headers=dict(Authorization='bearer123'))
-        self.assertEqual(401, response.status_code)
-
-        response = self.client.put(self.url,
-                                   headers=dict(Authorization='bearer 12 23'))
-        self.assertEqual(401, response.status_code)
-
     @patch('app.package.models.BitStore.save_metadata')
     def test_return_200_if_all_right(self, save):
         save.return_value = None
-        auth = "bearer %s" % self.jwt
+        auth = "%s" % self.jwt
         response = self.client.put(self.url,
-                                   headers=dict(Authorization=auth),
+                                   headers={'Auth-Token': auth},
                                    data=json.dumps({'name': 'package'}))
         self.assertEqual(200, response.status_code)
 
     @patch('app.package.models.BitStore.save_metadata')
     def test_return_403_if_user_not_matches_publisher(self, save):
         save.return_value = None
-        auth = "bearer %s" % self.jwt
+        auth = "%s" % self.jwt
         response = self.client.put('/api/package/not-a-publisher/%s'%self.package,
-                                   headers=dict(Authorization=auth),
+                                   headers={'Auth-Token': auth},
                                    data=json.dumps({'name': 'package'}))
         self.assertEqual(403, response.status_code)
 
@@ -293,9 +280,9 @@ class SaveMetaDataTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
         save.return_value = None
-        auth = "bearer %s" % self.jwt
+        auth = "%s" % self.jwt
         response = self.client.put(self.url,
-                                   headers=dict(Authorization=auth),
+                                   headers={'Auth-Token': auth},
                                    data=json.dumps({'name': 'package'}))
 
         self.assertEqual(403, response.status_code)
@@ -303,8 +290,8 @@ class SaveMetaDataTestCase(unittest.TestCase):
     @patch('app.package.models.BitStore.save_metadata')
     def test_return_500_for_internal_error(self, save):
         save.side_effect = Exception('some problem')
-        auth = "bearer %s" % self.jwt
-        response = self.client.put(self.url, headers=dict(Authorization=auth),
+        auth = "%s" % self.jwt
+        response = self.client.put(self.url, headers={'Auth-Token': auth},
                                    data=json.dumps({'name': 'package'}))
         data = json.loads(response.data)
         self.assertEqual(500, response.status_code)
@@ -313,14 +300,14 @@ class SaveMetaDataTestCase(unittest.TestCase):
     @patch('app.package.models.BitStore.save_metadata')
     def test_throw_400_if_meta_data_is_invalid(self, save):
         save.return_value = None
-        auth = "bearer %s" % self.jwt
-        response = self.client.put(self.url, headers=dict(Authorization=auth),
+        auth = "%s" % self.jwt
+        response = self.client.put(self.url, headers={'Auth-Token': auth},
                                    data=json.dumps({'name1': 'package'}))
         data = json.loads(response.data)
         self.assertEqual(400, response.status_code)
         self.assertEqual(data['error_code'], 'INVALID_DATA')
         # test metadata has no name
-        response = self.client.put(self.url, headers=dict(Authorization=auth),
+        response = self.client.put(self.url, headers={'Auth-Token': auth},
                                    data=json.dumps({'name': ''}))
         self.assertEqual(400, response.status_code)
         self.assertEqual(data['error_code'], 'INVALID_DATA')
@@ -391,9 +378,12 @@ class EndToEndTestCase(unittest.TestCase):
     publisher = 'test_publisher'
     package = 'test_package'
     meta_data_url = '/api/package/%s/%s' % (publisher, package)
-    bitstore_url = '/api/auth/bitstore_upload'
-    finalize_url = '/api/package/%s/%s/finalize' % (publisher, package)
+    bitstore_url = '/api/datastore/authorize'
+    finalize_url = '/api/package/upload'
     test_data_package = {'name': 'test_package'}
+    datapackage_url = 'https://bits.datapackaged.com/metadata/' \
+                      '{pub}/{pack}/_v/latest/datapackage.com'. \
+        format(pub=publisher, pack=package)
 
     def setUp(self):
         self.app = create_app()
@@ -438,7 +428,7 @@ class EndToEndTestCase(unittest.TestCase):
 
         # Sending recived token to server with Authentication Header
         token = json.loads(rv.data)['token']
-        self.auth = "bearer %s" % token  # Saving token for future use
+        self.auth = "%s" % token  # Saving token for future use
         save.return_value = None
         rv = self.client.put(self.meta_data_url, headers=dict(Authorization=self.auth),
                              data=json.dumps(self.test_data_package))
@@ -462,16 +452,23 @@ class EndToEndTestCase(unittest.TestCase):
         self.assertEqual(rv.status_code, 200)
 
         # Get S3 link for uploading Data file
-        generate_pre_signed_post_object.return_value = {'url': 'https://trial_url'}
+        generate_pre_signed_post_object.return_value = {'url': 'https://trial_url',
+                                                        'fields': {}}
         rv = self.client.post(self.bitstore_url,
                               data=json.dumps({
-                                  'publisher': self.publisher,
-                                  'package': self.package,
-                                  'md5': ''
+                                  'metadata': {'owner': 'pub1', 'name': 'package1'},
+                                  'filedata': {
+                                      'README.md': {
+                                          'md5': '',
+                                          'name': 'README.md'
+                                      }
+                                  }
                               }),
-                              content_type='application/json')
+                              content_type='application/json',
+                              headers=dict(Authorization=self.auth))
         # Testing S3 link
-        self.assertEqual({'data': {'url': 'https://trial_url'}}, json.loads(rv.data))
+        self.assertEqual('https://trial_url',
+                         json.loads(rv.data)['filedata']['README.md']['upload_url'])
         self.assertEqual(200, rv.status_code)
 
         # Finalize
@@ -480,10 +477,13 @@ class EndToEndTestCase(unittest.TestCase):
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
         rv = self.client.post(self.finalize_url,
-                              data=json.dumps(dict()),
-                              headers=dict(Authorization=self.auth))
+                              data=json.dumps(dict(datapackage=self.datapackage_url)),
+                              headers=dict(Authorization=self.auth),
+                              content_type='application/json')
         # Test Data
         self.assertEqual(200, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertEqual({'status': 'queued'}, data)
 
     def tearDown(self):
         with self.app.app_context():
@@ -530,7 +530,7 @@ class SoftDeleteTestCase(unittest.TestCase):
                                     content_type='application/json')
         data = json.loads(response.data)
         self.jwt = data['token']
-        self.auth = "bearer %s" % self.jwt
+        self.auth = "%s" % self.jwt
 
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
@@ -652,8 +652,8 @@ class HardDeleteTestCase(unittest.TestCase):
     def test_return_200_if_all_goes_well(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.return_value = True
-        auth = "bearer %s" % self.jwt
-        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        auth = "%s" % self.jwt
+        response = self.client.delete(self.url, headers={'Auth-Token': auth})
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.delete_data_package')
@@ -661,8 +661,8 @@ class HardDeleteTestCase(unittest.TestCase):
     def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = False
         db_delete.return_value = True
-        auth = "bearer %s" % self.jwt
-        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        auth = "%s" % self.jwt
+        response = self.client.delete(self.url, headers={'Auth-Token': auth})
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to delete from s3')
@@ -672,8 +672,8 @@ class HardDeleteTestCase(unittest.TestCase):
     def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.return_value = False
-        auth = "bearer %s" % self.jwt
-        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        auth = "%s" % self.jwt
+        response = self.client.delete(self.url, headers={'Auth-Token': auth})
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'Failed to delete from db')
@@ -683,8 +683,8 @@ class HardDeleteTestCase(unittest.TestCase):
     def test_throw_generic_error_if_internal_error(self, db_delete, bitstore_delete):
         bitstore_delete.side_effect = Exception('failed')
         db_delete.return_value = False
-        auth = "bearer %s" % self.jwt
-        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        auth = "%s" % self.jwt
+        response = self.client.delete(self.url, headers={'Auth-Token': auth})
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
         self.assertEqual(data['message'], 'failed')
@@ -696,8 +696,8 @@ class HardDeleteTestCase(unittest.TestCase):
                                                                   bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.return_value = True
-        auth = "bearer %s" % self.jwt_member
-        response = self.client.delete(self.url, headers=dict(Authorization=auth))
+        auth = "%s" % self.jwt_member
+        response = self.client.delete(self.url, headers={'Auth-Token': auth})
         self.assertEqual(response.status_code, 403)
 
     def tearDown(self):
@@ -791,15 +791,15 @@ class UndeleteTestCase(unittest.TestCase):
                                                 change_acl):
         change_acl.return_value = True
         change_status.return_value = True
-        auth = "bearer %s" % self.jwt
-        response = self.client.post(self.url, headers=dict(Authorization=auth))
+        auth = "%s" % self.jwt
+        response = self.client.post(self.url, headers={'Auth-Token': auth})
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
     def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
-        auth = "bearer %s" % self.jwt_non_member
-        response = self.client.post(self.url, headers=dict(Authorization=auth))
+        auth = "%s" % self.jwt_non_member
+        response = self.client.post(self.url, headers={'Auth-Token': auth})
         self.assertEqual(response.status_code, 403)
         self.assertFalse(change_acl.called)
         self.assertFalse(change_status.called)
@@ -812,8 +812,8 @@ class UndeleteTestCase(unittest.TestCase):
                         Publisher.name == self.publisher_name).first()
             self.assertEqual(package.status, PackageStateEnum.deleted)
         change_acl.return_value = True
-        auth = "bearer %s" % self.jwt
-        self.client.post(self.url, headers=dict(Authorization=auth))
+        auth = "%s" % self.jwt
+        self.client.post(self.url, headers={'Auth-Token': auth})
 
         with self.app.app_context():
             package = Package.query.join(Publisher) \
@@ -896,7 +896,7 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     content_type='application/json')
         data = json.loads(response.data)
         self.jwt = data['token']
-        self.auth = "bearer %s" % self.jwt
+        self.auth = "%s" % self.jwt
 
     @patch('app.package.models.BitStore.copy_to_new_version')
     @patch('app.package.models.Package.create_or_update_version')
@@ -959,7 +959,7 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     content_type='application/json')
         data = json.loads(response.data)
         jwt_not_allowed = data['token']
-        auth_not_allowed = "bearer %s" % jwt_not_allowed
+        auth_not_allowed = "%s" % jwt_not_allowed
 
         response = self.client.post(self.url,
                                     data=json.dumps({
@@ -995,7 +995,7 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     content_type='application/json')
         data = json.loads(response.data)
         jwt_allowed = data['token']
-        auth_allowed = "bearer %s" % jwt_allowed
+        auth_allowed = "%s" % jwt_allowed
 
         response = self.client.post(self.url,
                                     data=json.dumps({

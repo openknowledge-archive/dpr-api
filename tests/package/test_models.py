@@ -30,6 +30,14 @@ class BitStoreTestCase(unittest.TestCase):
         expected = "{t}/pub_test/test_package".format(t=metadata.prefix)
         self.assertEqual(expected, metadata.build_s3_base_prefix())
 
+    def test_extract_information_from_s3_url(self):
+        metadata = BitStore(publisher="pub_test", package="test_package")
+        s3_key = metadata.build_s3_key("datapackage.json")
+        pub, package, version = BitStore.extract_information_from_s3_url(s3_key)
+        self.assertEqual(pub, 'pub_test')
+        self.assertEqual(package, 'test_package')
+        self.assertEqual(version, 'latest')
+
     @mock_s3
     def test_save(self):
         with self.app.app_context():
@@ -443,6 +451,12 @@ class PackageTestCase(unittest.TestCase):
                    Package.name == self.package_two,
                    Package.version == 'tag_one').one()
         self.assertEqual(latest_data.readme, tagged_data.readme)
+
+    def test_is_package_exists(self):
+        status = Package.is_package_exists(self.package_one)
+        self.assertTrue(status)
+        status = Package.is_package_exists('non-exists-package')
+        self.assertFalse(status)
 
     def tearDown(self):
         with self.app.app_context():

@@ -17,7 +17,7 @@ from flask_gravatar import Gravatar
 from werkzeug.utils import import_string
 from .database import db
 from app.utils import get_s3_cdn_prefix
-from app.auth.controllers import auth_blueprint
+from app.auth.controllers import auth_blueprint, bitstore_blueprint
 from app.package.controllers import package_blueprint
 from app.site.controllers import site_blueprint
 from app.profile.controllers import profile_blueprint
@@ -62,6 +62,7 @@ def create_app():
     app.register_blueprint(site_blueprint)
     app.register_blueprint(profile_blueprint)
     app.register_blueprint(search_blueprint)
+    app.register_blueprint(bitstore_blueprint)
 
     s3 = boto3.client('s3',
                       region_name=app.config['AWS_REGION'],

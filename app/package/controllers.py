@@ -16,6 +16,7 @@ from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
 from app.utils import handle_error
+from app.utils.auth_helper import get_user_from_jwt, check_is_authorized
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
 
@@ -330,70 +331,67 @@ def purge_data_package(publisher, package):
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
-@package_blueprint.route("/<publisher>/<package>/finalize",
-                         methods=["POST"])
+@package_blueprint.route("/upload", methods=["POST"])
 @requires_auth
-@is_allowed('Package::Create')
-def finalize_metadata(publisher, package):
+def finalize_publish():
     """
-    DPR metadata finalize operation.
-    This API is responsible for getting data from S3 and push it to RDS.
+    Data package finalize operation.
+    This API is responsible for getting the Data Package (datapackage.json, README)
+    and importing it into our MetaStore.
     ---
     tags:
         - package
     parameters:
-        - in: path
-          name: publisher
-          type: string
+        - in: body
+          type: map
           required: true
-          description: publisher name
-        - in: path
-          name: package
-          type: string
-          required: true
-          description: package name
+          description: data package url
         - in: header
           name: Authorization
           type: string
           required: true
           description: >
-            Jwt token in format of "bearer {token}.
+            Jwt token in format of "{token}.
             The token can be generated from /api/auth/token"
     responses:
         200:
             description: Data transfer complete
         400:
-            description: JWT is invalid
+            description: UN-AUTHORIZE
         401:
             description: Invalid Header for JWT
-        403:
-            description: User name and publisher not matched
-        404:
-            description: User not found
         500:
             description: Internal Server Error
     """
     try:
-        user = _request_ctx_stack.top.current_user
-        user_id = user['user']
-        user = User.query.filter_by(id=user_id).first()
-        if user is not None:
-            if user.name == publisher:
-                bit_store = BitStore(publisher, package)
-                b = bit_store.get_metadata_body()
-                body = json.loads(b)
-                if body is not None:
-                    bit_store.change_acl('public-read')
-                    readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
-                    Package.create_or_update(name=package, publisher_name=publisher,
-                                             descriptor=body, readme=readme)
-                    return jsonify({"status": "OK"}), 200
+        data = request.get_json()
+        datapackage_url = data['datapackage']
+        publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
+        user_id = None
+        jwt_status, user_info = get_user_from_jwt(request, app.config['API_KEY'])
+        if jwt_status:
+            user_id = user_info['user']
 
-                raise Exception("Failed to get data from s3")
-            return handle_error('NOT_PERMITTED',
-                                'user name and publisher not matched',
-                                403)
-        return handle_error('USER_NOT_FOUND', 'user not found', 404)
+        if Package.is_package_exists(package):
+            status = check_is_authorized('Package::Update', publisher, package, user_id)
+        else:
+            status = check_is_authorized('Package::Create', publisher, package, user_id)
+
+        if not status:
+            return handle_error('UN-AUTHORIZE', 'not authorized to upload data', 400)
+
+        bit_store = BitStore(publisher, package)
+        b = bit_store.get_metadata_body()
+        body = json.loads(b)
+        if body is not None:
+            bit_store.change_acl('public-read')
+            readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
+            Package.create_or_update(name=package, publisher_name=publisher,
+                                     descriptor=body, readme=readme)
+            return jsonify({"status": "queued"}), 200
+
+        raise Exception("Failed to get data from s3")
+
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
