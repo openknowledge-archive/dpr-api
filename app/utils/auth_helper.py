@@ -8,7 +8,7 @@ from app.utils import handle_error
 from app.auth.models import JWT
 from app.package.models import Package
 from app.profile.models import Publisher
-from app.auth.authorization import is_allowed as ia
+from app.auth.authorization import is_authorize
 
 
 def get_user_from_jwt(req, api_key):
@@ -42,4 +42,4 @@ def check_is_authorized(action, publisher, package=None, user_id=None):
     else:
         return handle_error("INVALID_ENTITY", "{e} is not a valid one".format(e=entity_str), 401)
 
-    return ia(user_id, instance, action)
+    return is_authorize(user_id, instance, action)

@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import unittest
 
 from app import create_app
-from app.auth.authorization import is_allowed
+from app.auth.authorization import is_authorize
 from app.database import db
 from app.package.models import Package
 from app.profile.models import User, Publisher, UserRoleEnum, PublisherUser
@@ -66,161 +66,161 @@ class AuthorizationTestCase(unittest.TestCase):
 
             db.session.commit()
 
-    def test_publisher_read_is_allowed_if_user_is_owner(self):
-        allowed = is_allowed(11, self.publisher, 'Publisher::Read')
+    def test_publisher_read_is_authorize_if_user_is_owner(self):
+        allowed = is_authorize(11, self.publisher, 'Publisher::Read')
         self.assertTrue(allowed)
 
-    def test_publisher_read_is_allowed_if_user_is_member(self):
-        allowed = is_allowed(11, self.publisher1, 'Publisher::Read')
+    def test_publisher_read_is_authorize_if_user_is_member(self):
+        allowed = is_authorize(11, self.publisher1, 'Publisher::Read')
         self.assertTrue(allowed)
 
-    def test_publisher_read_is_allowed_if_user_is_sysadmin(self):
-        allowed = is_allowed(12, self.publisher, 'Publisher::Read')
+    def test_publisher_read_is_authorize_if_user_is_sysadmin(self):
+        allowed = is_authorize(12, self.publisher, 'Publisher::Read')
         self.assertTrue(allowed)
 
-    def test_publisher_read_is_allowed_if_user_is_anonymous(self):
-        allowed = is_allowed(None, self.publisher, 'Publisher::Read')
+    def test_publisher_read_is_authorize_if_user_is_anonymous(self):
+        allowed = is_authorize(None, self.publisher, 'Publisher::Read')
         self.assertTrue(allowed)
 
     def test_publisher_read_is_not_allowed_if_user_is_anonymous_and_package_private(self):
-        allowed = is_allowed(None, self.publisher2, 'Publisher::Read')
+        allowed = is_authorize(None, self.publisher2, 'Publisher::Read')
         self.assertFalse(allowed)
 
-    def test_publisher_delete_is_allowed_if_user_is_owner(self):
-        allowed = is_allowed(11, self.publisher, 'Publisher::Delete')
+    def test_publisher_delete_is_authorize_if_user_is_owner(self):
+        allowed = is_authorize(11, self.publisher, 'Publisher::Delete')
         self.assertTrue(allowed)
 
-    def test_publisher_delete_is_allowed_if_user_is_sysadmin(self):
-        allowed = is_allowed(12, self.publisher, 'Publisher::Delete')
+    def test_publisher_delete_is_authorize_if_user_is_sysadmin(self):
+        allowed = is_authorize(12, self.publisher, 'Publisher::Delete')
         self.assertTrue(allowed)
 
     def test_publisher_delete_is_not_allowed_if_user_is_member(self):
-        allowed = is_allowed(11, self.publisher1, 'Publisher::Delete')
+        allowed = is_authorize(11, self.publisher1, 'Publisher::Delete')
         self.assertFalse(allowed)
 
     def test_publisher_delete_is_not_allowed_if_user_is_anonymous(self):
-        allowed = is_allowed(None, self.publisher1, 'Publisher::Delete')
+        allowed = is_authorize(None, self.publisher1, 'Publisher::Delete')
         self.assertFalse(allowed)
 
-    def test_publisher_add_member_is_allowed_if_user_is_owner(self):
-        allowed = is_allowed(11, self.publisher, 'Publisher::AddMember')
+    def test_publisher_add_member_is_authorize_if_user_is_owner(self):
+        allowed = is_authorize(11, self.publisher, 'Publisher::AddMember')
         self.assertTrue(allowed)
 
-    def test_publisher_add_member_is_allowed_if_user_is_sysadmin(self):
-        allowed = is_allowed(12, self.publisher, 'Publisher::AddMember')
+    def test_publisher_add_member_is_authorize_if_user_is_sysadmin(self):
+        allowed = is_authorize(12, self.publisher, 'Publisher::AddMember')
         self.assertTrue(allowed)
 
-    def test_publisher_add_member_is_allowed_if_user_is_member(self):
-        allowed = is_allowed(11, self.publisher1, 'Publisher::AddMember')
+    def test_publisher_add_member_is_authorize_if_user_is_member(self):
+        allowed = is_authorize(11, self.publisher1, 'Publisher::AddMember')
         self.assertTrue(allowed)
 
     def test_publisher_add_member_is_not_allowed_if_user_is_anonymous(self):
-        allowed = is_allowed(None, self.publisher1, 'Publisher::AddMember')
+        allowed = is_authorize(None, self.publisher1, 'Publisher::AddMember')
         self.assertFalse(allowed)
 
-    def test_package_read_is_allowed_if_user_is_owner(self):
+    def test_package_read_is_authorize_if_user_is_owner(self):
         package = Package.query.join(Publisher)\
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher.name).one()
-        allowed = is_allowed(11, package, 'Package::Read')
+        allowed = is_authorize(11, package, 'Package::Read')
         self.assertTrue(allowed)
 
-    def test_package_read_is_allowed_if_user_is_member(self):
+    def test_package_read_is_authorize_if_user_is_member(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher1.name).one()
-        allowed = is_allowed(11, package, 'Package::Read')
+        allowed = is_authorize(11, package, 'Package::Read')
         self.assertTrue(allowed)
 
-    def test_package_read_is_allowed_if_user_is_sysadmin(self):
+    def test_package_read_is_authorize_if_user_is_sysadmin(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher.name).one()
-        allowed = is_allowed(12, package, 'Package::Read')
+        allowed = is_authorize(12, package, 'Package::Read')
         self.assertTrue(allowed)
 
-    def test_package_read_is_allowed_if_user_is_anonymous(self):
+    def test_package_read_is_authorize_if_user_is_anonymous(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher.name).one()
-        allowed = is_allowed(None, package, 'Package::Read')
+        allowed = is_authorize(None, package, 'Package::Read')
         self.assertTrue(allowed)
 
     def test_package_read_is_not_allowed_if_user_is_anonymous_and_package_private(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher2.name).one()
-        allowed = is_allowed(None, package, 'Package::Read')
+        allowed = is_authorize(None, package, 'Package::Read')
         self.assertFalse(allowed)
 
-    def test_package_delete_is_allowed_if_user_is_owner(self):
+    def test_package_delete_is_authorize_if_user_is_owner(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher.name).one()
-        allowed = is_allowed(11, package, 'Package::Purge')
+        allowed = is_authorize(11, package, 'Package::Purge')
         self.assertTrue(allowed)
 
-    def test_package_delete_is_allowed_if_user_is_sysadmin(self):
+    def test_package_delete_is_authorize_if_user_is_sysadmin(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher.name).one()
-        allowed = is_allowed(12, package, 'Package::Purge')
+        allowed = is_authorize(12, package, 'Package::Purge')
         self.assertTrue(allowed)
 
     def test_package_delete_is_not_allowed_if_user_is_member(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher1.name).one()
-        allowed = is_allowed(11, package, 'Package::Purge')
+        allowed = is_authorize(11, package, 'Package::Purge')
         self.assertFalse(allowed)
 
     def test_package_delete_is_not_allowed_if_user_is_anonymous(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher.name).one()
-        allowed = is_allowed(None, package, 'Package::Purge')
+        allowed = is_authorize(None, package, 'Package::Purge')
         self.assertFalse(allowed)
 
-    def test_package_add_member_is_allowed_if_user_is_owner(self):
+    def test_package_add_member_is_authorize_if_user_is_owner(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher.name).one()
-        allowed = is_allowed(11, package, 'Package::Delete')
+        allowed = is_authorize(11, package, 'Package::Delete')
         self.assertTrue(allowed)
 
-    def test_package_add_member_is_allowed_if_user_is_sysadmin(self):
+    def test_package_add_member_is_authorize_if_user_is_sysadmin(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher.name).one()
-        allowed = is_allowed(12, package, 'Package::Delete')
+        allowed = is_authorize(12, package, 'Package::Delete')
         self.assertTrue(allowed)
 
-    def test_package_add_member_is_allowed_if_user_is_member(self):
+    def test_package_add_member_is_authorize_if_user_is_member(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher1.name).one()
-        allowed = is_allowed(11, package, 'Package::Delete')
+        allowed = is_authorize(11, package, 'Package::Delete')
         self.assertTrue(allowed)
 
     def test_package_add_member_is_not_allowed_if_user_is_anonymous(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher1.name).one()
-        allowed = is_allowed(None, package, 'Package::Delete')
+        allowed = is_authorize(None, package, 'Package::Delete')
         self.assertFalse(allowed)
 
     def test_package_create_is_not_allowed_if_user_is_logged_in(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher1.name).one()
-        allowed = is_allowed(13, package, 'Package::Create')
+        allowed = is_authorize(13, package, 'Package::Create')
         self.assertTrue(allowed)
 
     def test_publisher_create_is_not_allowed_if_user_is_logged_in(self):
         package = Package.query.join(Publisher) \
             .filter(Package.name == 'test_package',
                     Publisher.name == self.publisher1.name).one()
-        allowed = is_allowed(13, package, 'Publisher::Create')
+        allowed = is_authorize(13, package, 'Publisher::Create')
         self.assertTrue(allowed)
 
     def tearDown(self):

@@ -37,7 +37,7 @@ roles_action_mappings = {
 }
 
 
-def is_allowed(user_id, entity, action):
+def is_authorize(user_id, entity, action):
     actions = get_user_actions(user_id, entity)
     return action in actions
 
