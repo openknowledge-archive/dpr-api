@@ -16,7 +16,7 @@ from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
 from app.utils import handle_error
-from app.utils.auth_helper import get_user_from_jwt, check_is_authorized
+from app.auth.annotations import check_is_authorized, get_user_from_jwt
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
 
