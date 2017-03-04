@@ -12,7 +12,7 @@ from app.profile.models import User
 from app.auth.models import JWT, Auth0, FileData
 from app.package.models import Package
 from app.utils import handle_error
-from app.utils.auth_helper import check_is_authorized, get_user_from_jwt
+from app.auth.annotations import check_is_authorized, get_user_from_jwt
 
 auth_blueprint = Blueprint('auth', __name__, url_prefix='/api/auth')
 bitstore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore')
