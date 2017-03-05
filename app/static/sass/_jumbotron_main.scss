@@ -1,0 +1,33 @@
+/* Jumbotron main
+====================================*/
+.jumbotron-primary {
+  background-image: url("../img/hero-team.jpg");
+  background-repeat: no-repeat;
+  //background-position: -690% 10%;
+  //margin-bottom: 50px;
+  padding: 100px 0 50px 0;
+  width: 100vw;
+  height: 60vh;
+  color: white !important;
+}
+.jumbotron {
+  .btn-warning {
+    margin-top: 30px;
+    margin-bottom: 50px;
+  }
+  .glyphicon-triangle-bottom {
+    font-size: 50px;
+    color: $brand-warning
+  }
+  .main-text {
+    font-family: $font-family-serif;
+  }
+  .secondary-text {
+    margin-top: auto;
+    font-size: $font-size-base;
+  }
+  h1 {
+    font-weight: 200;
+    margin-bottom: 30px;
+  }
+}
