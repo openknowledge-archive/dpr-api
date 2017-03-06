@@ -44,7 +44,7 @@
     </div>
     <div class="col-md-4 sidebar">
       <div class="btn-group">
-        <a href="/api/package/{{dataset.owner}}/{{dataset.name}}" class="btn btn-small btn-default"><i class="icon-download-alt"></i> Metadata</a></a>
+        <a href="{{ datapackageUrl }}" class="btn btn-small btn-default"><i class="icon-download-alt"></i> Metadata</a></a>
         {% if dataset.bugs and dataset.bugs.url %}
         <a href="{{dataset.bugs.url}}" class="btn btn-small" target="_blank"><i class="icon-exclamation-sign icon-white"></i> Report an Issue</a>
         {% endif %}
@@ -67,27 +67,32 @@
   <hr/>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-
-  <button>Switch View</button>
-  <input id="search" placeholder="Search" type="search" style="float:right; display: none">
-  <div class="viewer" style="display: none"></div>
   <div id="vis"></div>
   <div class="resources" id="data">
     <h2>Data Files</h2>
-
+    <div class="resource-listing">
+      <table class="table resource-listing" style="border-radius:3px; padding:3px;margin-bottom:0">
+        <thead></thead>
+        <tbody>
+        {% for resource in dataset.resources %}
+          <tr>
+            <td><i class="icon-file-text-alt"></i><a href="#resource-{{resource.name}}">co2-mm-mlo</a></td>
+            <td></td>
+            <td>csv</td>
+            <td class="download truncate">
+                <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}">
+                    <i class="icon-download-alt"></i> Download
+                </a>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
     {% for resource in dataset.resources %}
     <div class="resource-info">
       <h3 id="resource-{{resource.name}}"><i class="icon-file-text-alt"></i> {{resource.name}}</h3>
-
-    {% if resource.format == 'geojson' %}
-      <div class="js-show-geojson show-geojson" data-resource-index="{{loop.index0}}"></div>
-      {% else %}
-      <input id="search_field" placeholder="Search" type="search" style="float:right" data-resource-index="{{loop.index0}}">
-      <br>
-      <br>
-      <div class="js-show-handsontable-grid" data-resource-index="{{loop.index0}}"></div>
-    {% endif %}
-
+      <div id="resource-{{loop.index - 1}}"></div>
       <h4>Field Information</h4>
       <table class="table table-bordered table-striped resource-summary">
         <thead>
