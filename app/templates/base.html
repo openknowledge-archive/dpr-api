@@ -20,7 +20,7 @@
       <div class="container">
         <div class="row">
           <div class="col-sm-2">
-            <a class="main-logo pull-left" href="#"></a>
+            <a class="main-logo pull-left" href="/"></a>
             <div class="navbutton">
               <a href="/apidocs/index.html">API</a>
               <a href="https://frictionlessdata.io/">About</a>
@@ -28,11 +28,10 @@
           </div>
 
           <div class="col-sm-7 search-div">
-            <form class="form-inline">
+            <form class="form-inline" action="/search" method="GET">
               <div class="form-group">
-                <input type="text" class="form-control" id="searchbox" placeholder="Data Package">
+                <input type="text" class="form-control" id="searchbox" placeholder="Data Package" name="q">
               </div>
-              <button type="submit" class="btn btn-warning" onclick="search()"><span class="glyphicon glyphicon-search"></span></button>
             </form>
           </div>
           <div class="col-sm-2">
@@ -94,14 +93,6 @@
 
 
     {% block scripts %}{% endblock %}
-    <script type="text/javascript">
-      function search() {
-        var searchTerm = document.getElementById("navbar-search").value;
-        if (searchTerm) {
-          document.getElementById("navbar-search-form").submit()
-        }
-      }
-    </script>
     <script type="text/javascript">
       var _gaq = _gaq || [];
       _gaq.push(['_setAccount', 'UA-33874954-11']);
