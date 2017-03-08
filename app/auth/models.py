@@ -6,10 +6,6 @@ from __future__ import unicode_literals
 
 import datetime
 import jwt
-import json
-import time
-import requests
-from flask import current_app as app
 from app.package.models import BitStore
 
 
@@ -51,108 +47,6 @@ class JWT(object):
 
     def get_decoded_user_id(self, token):
         return self.decode(token)['user']
-
-
-class Auth0(object):
-    def __init__(self):
-        self.client_id = app.config['AUTH0_CLIENT_ID']
-        self.client_secret = app.config['AUTH0_CLIENT_SECRET']
-        self.auth0_domain = app.config["AUTH0_DOMAIN"]
-        self.auth0_audience = "https://{domain}/api/v2/".format(domain=self.auth0_domain)
-        self.auth0_api = "https://{domain}/api/v2".format(domain=self.auth0_domain)
-        self.jwt_token = self.get_auth0_token()
-        self.headers = {'Authorization': "Bearer {token}".format(token=self.jwt_token),
-                        'content-type': "application/json"}
-
-    def get_auth0_token(self):
-        jwt_token = app.config.get('AUTH0_JWT', None)
-        if jwt_token is not None:
-            token_payload = jwt.decode(jwt_token, verify=False)
-            if int(time.time()) > int(token_payload['exp']):
-                return jwt_token
-
-        json_header = {'content-type': 'application/json'}
-
-        token_url = "https://{domain}/oauth/token". \
-            format(domain=self.auth0_domain)
-
-        token_payload = {
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
-            'grant_type': 'client_credentials',
-            'audience': self.auth0_audience
-        }
-        token_info = requests.post(token_url,
-                                   data=json.dumps(token_payload),
-                                   headers=json_header).json()
-        return token_info['access_token']
-
-    def get_user_info_with_code(self, code, redirect_uri):
-        json_header = {'content-type': 'application/json'}
-
-        token_url = "https://{domain}/oauth/token". \
-            format(domain=app.config["AUTH0_DOMAIN"])
-        token_payload = {
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
-            'redirect_uri': redirect_uri,
-            'code': code,
-            'grant_type': 'authorization_code'
-        }
-
-        token_info = requests.post(token_url,
-                                   data=json.dumps(token_payload),
-                                   headers=json_header).json()
-        user_url = "https://{domain}/userinfo?access_token={access_token}" \
-            .format(domain=self.auth0_domain,
-                    access_token=token_info['access_token'])
-
-        response = requests.get(user_url)
-        if response.ok:
-            return response.json()
-        else:
-            return None
-
-    def get_user(self, user_id):
-        url = "{AUDIENCE}/users/{user_id}". \
-            format(AUDIENCE=self.auth0_api,
-                   user_id=user_id)
-        response = requests.request("GET", url, headers=self.headers)
-        return response.json()
-
-    def search_user(self, field, value):
-
-        url = "{AUDIENCE}/users?include_fields=true&q={FIELD}:{VALUE}". \
-            format(AUDIENCE=self.auth0_api,
-                   FIELD=field, VALUE=value)
-        response = requests.get(url=url, headers=self.headers)
-        if response.ok:
-            return response.json()
-        else:
-            return None
-
-    def delete_user(self, user_id):
-
-        url = "{AUDIENCE}/users/{USER_ID}". \
-            format(AUDIENCE=self.auth0_api,
-                   USER_ID=user_id)
-        requests.delete(url=url, headers=self.headers)
-
-    def create_user(self, email, full_name, user_name, password):
-
-        payload = dict(user_metadata=dict(full_name=full_name),
-                       connection=app.config['AUTH0_DB_NAME'],
-                       email=email,
-                       username=user_name,
-                       password=password)
-
-        url = "{AUDIENCE}/users".format(AUDIENCE=self.auth0_api)
-        response = requests.post(url=url, data=json.dumps(payload),
-                                 headers=self.headers)
-        if response.ok:
-            return response.json()
-        else:
-            return None
 
 
 class FileData(object):

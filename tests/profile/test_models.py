@@ -89,8 +89,7 @@ class UserTestCase(unittest.TestCase):
 
             user = User(id=11,
                         name='test_user_id',
-                        secret='supersecret',
-                        auth0_id="123|auth0")
+                        secret='supersecret')
             publisher = Publisher(name='test_pub_id')
             association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = publisher
@@ -109,17 +108,17 @@ class UserTestCase(unittest.TestCase):
         self.assertEqual(len(user.publishers), 1)
         self.assertEqual(user.publishers[0].role, UserRoleEnum.owner)
 
-    def test_user_creation_from_outh0_response(self):
+    def test_user_creation_from_Oauth_response(self):
         user_info = dict(email="test@test.com",
-                         username="test",
-                         user_id="124|auth0")
+                         login="test",
+                         name="The Test")
         user = User.create_or_update_user_from_callback(user_info)
         self.assertEqual(user.name, 'test')
 
     def test_update_secret_if_it_is_supersecret(self):
         user_info = dict(email="test@test.com",
-                         username="test",
-                         user_id="123|auth0")
+                         login="test",
+                         name="The Test")
         user = User.create_or_update_user_from_callback(user_info)
         self.assertNotEqual('supersecret', user.secret)
 

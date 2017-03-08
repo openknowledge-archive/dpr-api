@@ -15,7 +15,6 @@ from app.package import models
 from app import create_app
 from app.package.models import Package, BitStore
 from app.profile.models import Publisher, PublisherUser, User, UserRoleEnum
-from app.auth.models import Auth0
 
 dot_env_path = join(dirname(__file__), '.env')
 load_dotenv(dot_env_path)
@@ -48,36 +47,23 @@ def dropdb():
 @manager.command
 def populate():
     user_name, full_name, email = 'core', 'Test Admin', 'core@test.com'
-    auth0_id = populate_auth0(user_name, full_name, email)
-    populate_db(auth0_id, email, user_name, full_name,
+    populate_db(email, user_name, full_name,
                 'c053521f4f3331908d89df39bba922190a69f0ea99f7ca12')
 
     user_name, full_name, email = 'admin', 'Test Admin', 'test@test.com'
-    auth0_id = populate_auth0(user_name, full_name, email)
-    populate_db(auth0_id, email, user_name, full_name,
+    populate_db(email, user_name, full_name,
                 'c053521f4f3331908d89df39bba922190a69f0ea99f7ca00')
     populate_data(user_name)
 
 
-def populate_auth0(user_name, full_name, email):
-    auth0 = Auth0()
-    responses = auth0.search_user('username', user_name)
-    if len(responses) > 0:
-        for response in responses:
-            auth0.delete_user(response['user_id'])
-    user_create = auth0.create_user(email, full_name,
-                                    user_name, 'Admin123')
-    return user_create['user_id']
-
-
-def populate_db(auth0_id, email, user_name, full_name, secret):
+def populate_db(email, user_name, full_name, secret):
     user = User.query.filter_by(name=user_name).first()
 
     publisher = Publisher.query.filter_by(name=user_name).first()
     if user is None:
         user = User()
-        user.auth0_id, user.email, user.name, user.full_name, user.secret \
-            = auth0_id, email, user_name, full_name, secret
+        user.email, user.name, user.full_name, user.secret \
+            = email, user_name, full_name, secret
         db.session.add(user)
         db.session.commit()
 

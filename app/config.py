@@ -12,7 +12,7 @@ class BaseConfig(object):
     required_config = ['AWS_REGION', 'SQLALCHEMY_DATABASE_URI',
                        'S3_BUCKET_NAME', 'FLASKS3_BUCKET_NAME',
                        'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
-                       "AUTH0_DOMAIN", 'AUTH0_CLIENT_ID']
+                       "GITHUB_CLIENT_ID", 'GITHUB_CLIENT_SECRET']
 
     API_KEY = "dpr-api-key"
     DEBUG = True
@@ -35,9 +35,8 @@ class BaseConfig(object):
     AWS_ACCESS_KEY_ID = ""
     AWS_SECRET_ACCESS_KEY = ""
 
-    AUTH0_DOMAIN = ""
-    AUTH0_CLIENT_ID = ''
-    AUTH0_CLIENT_SECRET = ""
+    GITHUB_CLIENT_ID = 'id'
+    GITHUB_CLIENT_SECRET = 'secret'
 
     SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/dpr_db_test'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -57,13 +56,10 @@ class BaseConfig(object):
 
 
 class DevelopmentConfig(BaseConfig):
-    required_config = ['AWS_REGION', 'S3_BUCKET_NAME',
-                       'FLASKS3_BUCKET_NAME', 'AWS_ACCESS_KEY_ID',
-                       'AWS_SECRET_ACCESS_KEY', 'AUTH0_CLIENT_ID',
-                       'AUTH0_CLIENT_SECRET', 'AUTH0_DOMAIN',
-                       'AUTH0_DB_NAME',
-                       'SQLALCHEMY_DATABASE_URI', 'S3_BUCKET_NAME',
-                       'FLASKS3_BUCKET_NAME']
+    required_config = ['S3_BUCKET_NAME', 'FLASKS3_BUCKET_NAME',
+                       'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
+                       'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET',
+                       'SQLALCHEMY_DATABASE_URI']
     try:
         dot_env_path = join(dirname(__file__), '../.env')
         load_dotenv(dot_env_path)
@@ -81,11 +77,8 @@ class DevelopmentConfig(BaseConfig):
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_REGION = os.environ.get('AWS_REGION')
 
-    AUTH0_CLIENT_ID = os.environ.get('AUTH0_CLIENT_ID')
-    AUTH0_CLIENT_SECRET = os.environ.get('AUTH0_CLIENT_SECRET')
-    AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
-    AUTH0_DB_NAME = os.environ.get('AUTH0_DB_NAME')
-    AUTH0_API_AUDIENCE = os.environ.get('AUTH0_API_AUDIENCE')
+    GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
+    GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET')
 
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
 

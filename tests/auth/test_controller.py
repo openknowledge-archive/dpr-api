@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 import json
+
+from flask.ext.oauthlib.client import OAuthResponse
 from mock import patch
 from app import create_app
 from app.database import db
@@ -14,28 +16,28 @@ from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
 from app.package.models import Package
 
 
-class Auth0LoginTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
-
-    def test_returns_302(self):
-        response = self.client.get('/api/auth/login')
-        self.assertEqual(response.status_code, 302)
-
-    def test_redirection(self):
-        response = self.client.get('/api/auth/login')
-        self.assertIn('Redirecting...', response.data)
-
-    def test_redirected(self):
-        response = self.client.get('/api/auth/login')
-        self.assertNotEqual(response.location, 'http://localhost:5000/api/auth/login')
-
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
+# class Auth0LoginTestCase(unittest.TestCase):
+#     def setUp(self):
+#         self.app = create_app()
+#         self.client = self.app.test_client()
+#
+#     def test_returns_302(self):
+#         response = self.client.get('/api/auth/login')
+#         self.assertEqual(response.status_code, 302)
+#
+#     def test_redirection(self):
+#         response = self.client.get('/api/auth/login')
+#         self.assertIn('Redirecting...', response.data)
+#
+#     def test_redirected(self):
+#         response = self.client.get('/api/auth/login')
+#         self.assertNotEqual(response.location, 'http://localhost:5000/api/auth/login')
+#
+#     def tearDown(self):
+#         with self.app.app_context():
+#             db.session.remove()
+#             db.drop_all()
+#             db.engine.dispose()
 
 
 class AuthTokenTestCase(unittest.TestCase):
@@ -164,29 +166,28 @@ class CallbackHandlingTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client()
 
-    @patch('app.auth.models.Auth0.get_user_info_with_code')
-    @patch('app.auth.models.Auth0.get_auth0_token')
-    def test_throw_500_if_error_getting_user_info_from_auth0(self, get_auth0_token, get_user):
-        get_user.return_value = None
-        get_auth0_token.return_value = None
+    @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
+    def test_throw_500_if_error_getting_user_info_from_oauth(self, authorized_response):
+        authorized_response.return_value = {'name': 'bond'}
 
         response = self.client.get('/api/auth/callback?code=123')
-        self.assertTrue(get_user.called)
 
         data = json.loads(response.data)
 
         self.assertEqual(data['error_code'], 'GENERIC_ERROR')
         self.assertEqual(response.status_code, 500)
 
-    @patch('app.auth.models.Auth0.get_auth0_token')
-    @patch('app.auth.models.Auth0.get_user_info_with_code')
+    @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
+    @patch('flask_oauthlib.client.OAuthRemoteApp.get')
     @patch('app.auth.models.JWT.encode')
     @patch('app.profile.models.User.create_or_update_user_from_callback')
     def test_return_200_if_all_right(self,
-                                     create_user, jwt_helper, get_user_with_code,
-                                     get_auth0_token):
-        get_auth0_token.return_value = None
-        get_user_with_code('123').return_value = {}
+                                     create_user, jwt_helper, get_user,
+                                     authorized_response):
+        authorized_response.return_value = {'access_token': 'token'}
+        get_user.return_value = OAuthResponse(resp=None,
+                                              content=json.dumps(dict()),
+                                              content_type='application/json')
         jwt_helper.return_value = "132432"
         create_user.return_value = User(id=1, email="abc@abc.com", name='abc', secret='12345')
         response = self.client.get('/api/auth/callback?code=123')

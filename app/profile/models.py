@@ -61,12 +61,12 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    email = db.Column(db.TEXT, index=True)
+    email = db.Column(db.TEXT, unique=True, index=True)
     secret = db.Column(db.TEXT)
     name = db.Column(db.TEXT, unique=True, index=True, nullable=False)
     full_name = db.Column(db.TEXT)
-    auth0_id = db.Column(db.TEXT, index=True)
     sysadmin = db.Column(db.BOOLEAN, default=False)
+    oauth_source = db.Column(db.TEXT, default=None)
 
     publishers = relationship("PublisherUser", back_populates="user",
                               cascade='save-update, merge, delete, delete-orphan')
@@ -82,20 +82,21 @@ class User(db.Model):
         }
 
     @staticmethod
-    def create_or_update_user_from_callback(user_info):
+    def create_or_update_user_from_callback(user_info, oauth_source='github'):
         """
         This method populates db when user sign up or login through external auth system
         :param user_info: User data from external auth system
+        :param oauth_source: From which oauth source the user coming from e.g. github
         :return: User data from Database
         """
-        auth0_id = user_info['user_id']
-        user = User.query.filter_by(auth0_id=auth0_id).first()
+        user = User.query.filter_by(email=user_info['email']).first()
         if user is None:
             user = User()
             user.email = user_info['email']
             user.secret = os.urandom(24).encode('hex')
-            user.name = user_info['username']
-            user.auth0_id = auth0_id
+            user.name = user_info['login']
+            user.full_name = user_info['name']
+            user.oauth_source = oauth_source
 
             publisher = Publisher(name=user.name)
             association = PublisherUser(role=UserRoleEnum.owner)

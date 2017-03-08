@@ -25,8 +25,7 @@ class AuthorizationTestCase(unittest.TestCase):
 
             self.user = User(id=11,
                              name=self.user_name,
-                             secret='supersecret',
-                             auth0_id="123|auth0")
+                             secret='supersecret')
 
             self.publisher = Publisher(name=self.user_name)
             self.publisher.packages.append(Package(name='test_package'))

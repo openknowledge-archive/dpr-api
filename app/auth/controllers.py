@@ -5,11 +5,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from flask import Blueprint, request, render_template, \
-    jsonify, redirect
+    jsonify, session, url_for
 from flask import current_app as app
-from app.package.models import BitStore
 from app.profile.models import User
-from app.auth.models import JWT, Auth0, FileData
+from app.auth.models import JWT, FileData
 from app.package.models import Package
 from app.utils import handle_error
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
@@ -46,13 +45,17 @@ def callback_handling():
                                      picture, name
     """
     try:
-        code = request.args.get('code')
-        auth0 = Auth0()
-        user_info = auth0.get_user_info_with_code(code, request.base_url)
-
-        user = User().create_or_update_user_from_callback(user_info)
+        github = app.config['github']
+        resp = github.authorized_response()
+        if resp is None or resp.get('access_token') is None:
+            return handle_error('Access Denied',
+                                request.args['error_description'],
+                                400)
+        session['github_token'] = (resp['access_token'], '')
+        user_info = github.get('user')
+        user = User().create_or_update_user_from_callback(user_info.data)
         jwt_helper = JWT(app.config['API_KEY'], user.id)
-
+        session.pop('github_token', None)
         return render_template("dashboard.html", user=user,
                                title='Dashboard',
                                encoded_token=jwt_helper.encode()), 200
@@ -157,10 +160,7 @@ def auth0_login():
     tags:
         - auth
     """
-    redirect_url = "https://{domain}/login?client={client_id}"\
-        .format(domain=app.config['AUTH0_DOMAIN'],
-                client_id=app.config['AUTH0_CLIENT_ID'])
-    return redirect(redirect_url)
+    return app.config['github'].authorize(callback=url_for('.callback_handling', _external=True))
 
 
 @bitstore_blueprint.route('/authorize', methods=['POST'])
