@@ -10,10 +10,11 @@ import boto3
 import sqlalchemy
 from botocore.client import Config
 from flasgger import Swagger
-from flask import Flask
+from flask import Flask, session
 from flask_cors import CORS
 from flaskext.markdown import Markdown
 from flask_gravatar import Gravatar
+from flask_oauthlib.client import OAuth
 from werkzeug.utils import import_string
 from .database import db
 from app.utils import get_s3_cdn_prefix
@@ -39,9 +40,24 @@ def get_config_class_name():
     return class_name
 
 
+def get_github_oauth(oauth, client_id, client_secret):
+    github = oauth.remote_app(
+        'github',
+        consumer_key=client_id,
+        consumer_secret=client_secret,
+        request_token_params={'scope': 'user:email'},
+        base_url='https://api.github.com/',
+        request_token_url=None,
+        access_token_method='POST',
+        access_token_url='https://github.com/login/oauth/access_token',
+        authorize_url='https://github.com/login/oauth/authorize')
+    return github
+
+
 def create_app():
 
     app = Flask(__name__)
+    app.secret_key = 'dpr-api-secret-key'
     app.config.from_object(get_config_class_name())
 
     db.init_app(app)
@@ -75,15 +91,23 @@ def create_app():
     if app.config.get('TESTING') is False:
         flask_s3.create_all(app)
 
+    oauth = OAuth(app=app)
     CORS(app)
     Swagger(app)
     Markdown(app)
     Gravatar(app)
 
+    github = get_github_oauth(oauth, app.config['GITHUB_CLIENT_ID'],
+                              app.config['GITHUB_CLIENT_SECRET'])
+
+    @github.tokengetter
+    def get_github_oauth_token():
+        return session.get('github_token')
+
+    app.config['github'] = github
+
     @app.context_processor
     def populate_context_variable():
-        return dict(s3_cdn=get_s3_cdn_prefix(),
-                    auth0_client_id=app.config['AUTH0_CLIENT_ID'],
-                    auth0_domain=app.config['AUTH0_DOMAIN'])
+        return dict(s3_cdn=get_s3_cdn_prefix())
 
     return app

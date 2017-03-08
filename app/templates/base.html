@@ -87,7 +87,6 @@
     <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-    <script src="https://cdn.auth0.com/js/lock/10.9.1/lock.min.js"></script>
     <script type="text/javascript" src="{{ s3_cdn }}/static/vendor/jwt-decode.min.js"></script>
     <script type="text/javascript" src="{{ s3_cdn }}/static/js/dashboard.js"></script>
 
@@ -105,29 +104,12 @@
     </script>
     <script type="text/javascript">
       var local_jwt = localStorage.getItem('encoded_token');
-      var lock = new Auth0Lock("{{ auth0_client_id }}", "{{ auth0_domain }}", {
-        auth: {
-          redirectUrl: window.location.origin + '/api/auth/callback',
-          responseType: 'code',
-          params: {
-            scope: 'openid email' // Learn about scopes: https://auth0.com/docs/scopes
-          }
-        },
-        theme: {
-          logo: "https://o.twimg.com/2/proxy.jpg?t=HBhqaHR0cHM6Ly9jZG4tYnVzaW5lc3MuZGlzY291cnNlLm9yZy91cGxvYWRzL29rZm4vb3JpZ2luYWwvMlgvNS81MmU4MjAwZTUyYmJmM2ExYTY2ZWM1ZTEzNGYxMTdhMTQ5ODkwNDM1LnBuZxSgAhSgAhwU8AEU8AEAABYAEgA&s=1_uZcBWKG_2I6nOZ4YBkAcR7IMTvwZy9BwrAvsuGjyw",
-          primaryColor: '#31dac6'
-        },
-        languageDictionary: {
-          emailInputPlaceholder: "something@youremail.com",
-          title: "DataPackage"
-        }
-      });
       if (local_jwt != null){
             var decoded = jwt_decode(local_jwt);
             var currentTime = Math.floor((new Date).getTime()/1000);
             if (decoded.exp < currentTime){
                 localStorage.removeItem("encoded_token");
-                auth0();
+                login();
             } else{
               $("#nav-bar-login")
                 .replaceWith('<button class="btn btn-small btn-outline-success p-0" id="logout123"> ' +
@@ -139,11 +121,11 @@
             }
         }
       else {
-        auth0();
+        login();
       }
-      function auth0() {
+      function login() {
        $("#nav-bar-login")
-         .replaceWith('<button class="btn btn-small btn-warning pull-right search-div" onclick="lock.show();">Sign Up | Sign In</button>')
+         .replaceWith('<a class="btn btn-small btn-warning pull-right search-div" href="/api/auth/login">Sign Up | Sign In</a>')
       }
     </script>
   </body>

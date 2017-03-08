@@ -4,6 +4,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from flask.ext.oauthlib.client import OAuthResponse
+
 from app import create_app
 from flask import json, template_rendered
 from contextlib import nested, contextmanager
@@ -228,7 +230,7 @@ class SignupEndToEndTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client()
         self.signup_url_for_auth0 = "api/auth/login"
-        self.auth0_callback = 'api/auth/callback?code=xyz'
+        self.oAuth_callback = 'api/auth/callback?code=xyz'
         self.env_variables = {
             'AUTH0_DOMAIN': 'test_auth0_domain_xyz',
             'AUTH0_CLIENT_ID': 'test_client_id_xyz',
@@ -236,10 +238,10 @@ class SignupEndToEndTestCase(unittest.TestCase):
         }
         self.auth0_url = "https://test_auth0_domain_xyz/login?client=test_client_id_xyz"
 
-        # Auth0 Callback info
-        self.auth0_user_info = {
-            'user_id': 'new_test_id',
-            'username': 'test_username_xyz',
+        # OAuth User info
+        self.oAuth_user_info = {
+            'name': 'The Big User',
+            'login': 'test_username_xyz',
             'email': 'test@mail.com'
         }
 
@@ -267,20 +269,21 @@ class SignupEndToEndTestCase(unittest.TestCase):
         # Sign Up button
         self.assertIn('Sign Up', rv.data.decode("utf8"))
 
-        with nested(patch("app.auth.models.Auth0.get_auth0_token"),
-                    patch('app.auth.models.Auth0.get_user_info_with_code'),
+        with nested(patch("flask_oauthlib.client.OAuthRemoteApp.authorized_response"),
+                    patch('flask_oauthlib.client.OAuthRemoteApp.get'),
                     patch('app.auth.models.JWT')) \
-                as (get_auth0_token, get_user_with_code, JWTHelper):
+                as (get_auth0_token, get_user, JWTHelper):
             # Mocking Auth0 user info & Return value for Dashboard
             with self.app.app_context():
-                get_user_with_code(
-                    'xyz').__getitem__.side_effect = self.auth0_user_info.__getitem__
+                get_user.return_value = OAuthResponse(resp=None,
+                                                      content=json.dumps(self.oAuth_user_info),
+                                                      content_type='application/json')
 
                 # Testing with Captured Templates
                 with self.captured_templates(self.app) as templates:
-                    rv = self.client.get(self.auth0_callback)
+                    rv = self.client.get(self.oAuth_callback)
                     template, context = templates[0]
-                    user_created = User.query.filter_by(name=self.auth0_user_info['username'])
+                    user_created = User.query.filter_by(email=self.oAuth_user_info['email'])
 
                     # Check new user created
                     self.assertEqual(user_created.count(), 1)
@@ -298,8 +301,8 @@ class SignupEndToEndTestCase(unittest.TestCase):
                     self.assertEqual('dashboard.html', template.name)
 
                     # Checking User Object passed with context
-                    self.assertEqual(self.auth0_user_info[
-                                     'username'], context['user'].name)
+                    self.assertEqual(self.oAuth_user_info[
+                                     'login'], context['user'].name)
 
                     # Token sent along with context (For login)
                     self.assertIn('encoded_token', context)
@@ -313,6 +316,7 @@ class SignupEndToEndTestCase(unittest.TestCase):
             db.drop_all()
             db.engine.dispose()
 
+
 class ContextProcessorTestCase(TestCase):
 
     def create_app(self):
@@ -322,8 +326,3 @@ class ContextProcessorTestCase(TestCase):
     def test_should_have_s3_cdn_value(self):
         self.client.get('/')
         self.assert_context("s3_cdn", get_s3_cdn_prefix())
-
-    def test_should_have_auth0_client_id(self):
-        self.client.get('/')
-        self.assert_context("auth0_client_id",
-                            self.app.config['AUTH0_CLIENT_ID'])
