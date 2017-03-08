@@ -16,30 +16,6 @@ from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
 from app.package.models import Package
 
 
-# class Auth0LoginTestCase(unittest.TestCase):
-#     def setUp(self):
-#         self.app = create_app()
-#         self.client = self.app.test_client()
-#
-#     def test_returns_302(self):
-#         response = self.client.get('/api/auth/login')
-#         self.assertEqual(response.status_code, 302)
-#
-#     def test_redirection(self):
-#         response = self.client.get('/api/auth/login')
-#         self.assertIn('Redirecting...', response.data)
-#
-#     def test_redirected(self):
-#         response = self.client.get('/api/auth/login')
-#         self.assertNotEqual(response.location, 'http://localhost:5000/api/auth/login')
-#
-#     def tearDown(self):
-#         with self.app.app_context():
-#             db.session.remove()
-#             db.drop_all()
-#             db.engine.dispose()
-
-
 class AuthTokenTestCase(unittest.TestCase):
     auth_token_url = '/api/auth/token'
 
