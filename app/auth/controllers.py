@@ -160,7 +160,8 @@ def auth0_login():
     tags:
         - auth
     """
-    return app.config['github'].authorize(callback=url_for('.callback_handling', _external=True))
+    callback_url = request.scheme + '://' + request.headers['Host'] + '/api/auth/callback'
+    return app.config['github'].authorize(callback=callback_url)
 
 
 @bitstore_blueprint.route('/authorize', methods=['POST'])

@@ -94,27 +94,29 @@
       <h3 id="resource-{{resource.name}}"><i class="icon-file-text-alt"></i> {{resource.name}}</h3>
       <div id="resource-{{loop.index - 1}}" class="react-me"
            data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
-      <h4>Field Information</h4>
-      <table class="table table-bordered table-striped resource-summary">
-        <thead>
-          <tr>
-            <th>Field Name</th>
-            <th>Order</th>
-            <th>Type (Format)</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for field in resource.schema.fields %}
-          <tr>
-            <th>{{field.name}}</th>
-            <td>{{loop.index}}</td>
-            <td class="type type-{{field.type}}">{{field.type}} {% if field.format %}({{field.format}}) {% endif %}</td>
-            <td>{{field.description}}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      {% if resource.format == "csv" %}
+       <h4>Field Information</h4>
+       <table class="table table-bordered table-striped resource-summary">
+         <thead>
+           <tr>
+             <th>Field Name</th>
+             <th>Order</th>
+             <th>Type (Format)</th>
+             <th>Description</th>
+           </tr>
+         </thead>
+         <tbody>
+           {% for field in resource.schema.fields %}
+           <tr>
+             <th>{{field.name}}</th>
+             <td>{{loop.index}}</td>
+             <td class="type type-{{field.type}}">{{field.type}} {% if field.format %}({{field.format}}) {% endif %}</td>
+             <td>{{field.description}}</td>
+           </tr>
+           {% endfor %}
+         </tbody>
+       </table>
+     {% endif %}
     </div>
     {% endfor %}
   </div> <!-- / resoures -->
