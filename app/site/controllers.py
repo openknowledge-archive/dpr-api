@@ -107,7 +107,6 @@ def datapackage_show(publisher, package):
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
                            dataViews=dataViews,
-                           DATA_PACKAGE=metadata['descriptor']
                            ), 200
 
 
