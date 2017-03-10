@@ -122,9 +122,17 @@ class UserTestCase(unittest.TestCase):
         user = User.create_or_update_user_from_callback(user_info)
         self.assertNotEqual('supersecret', user.secret)
 
-    def test_get_userinfo_by_id(self):
+    def test_get_user_info_by_id(self):
         self.assertEqual(User.get_userinfo_by_id(11).name, 'test_user_id')
         self.assertIsNone(User.get_userinfo_by_id(2))
+
+    def test_create_user_should_handle_null_email(self):
+        user_info = dict(login="test_null_email")
+        User.create_or_update_user_from_callback(user_info)
+        user = User.query.filter_by(name='test_null_email').first()
+        self.assertIsNotNone(user)
+        self.assertIsNone(user.email)
+        self.assertIsNone(user.full_name)
 
     def tearDown(self):
         with self.app.app_context():
