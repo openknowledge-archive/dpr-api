@@ -8,6 +8,7 @@ window.history.pushState("", "Dashboard", "/");
 {% endblock %}
 {% block content %}
 <div class="container">
+    {% if user.email != None %}
 	<div class="row  justify-content-center">
 	  <div class="col-4">
         <br>
@@ -18,6 +19,7 @@ window.history.pushState("", "Dashboard", "/");
         <span class="help-block">{{user.email}}</span>
   	  </div>
 	</div>
+    {% endif %}
 	<div>
 		<h1>
 			Welcome {{user.name}}!
