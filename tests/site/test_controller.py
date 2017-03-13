@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from flask.ext.oauthlib.client import OAuthResponse
-
+from BeautifulSoup import BeautifulSoup
 from app import create_app
 from flask import json, template_rendered
 from contextlib import nested, contextmanager
@@ -88,8 +88,8 @@ class CatalogTestCase(unittest.TestCase):
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
-        response = self.client.get('/api/package/%s/%s'%\
-                                   (self.publisher, self.package))    
+        response = self.client.get('/api/package/%s/%s' % \
+                                   (self.publisher, self.package))
         catalog = Catalog(json.loads(response.data))
         dataset = catalog.construct_dataset()
         self.assertEqual(dataset.get('readme'), 'README')
@@ -108,8 +108,8 @@ class CatalogTestCase(unittest.TestCase):
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
-        response = self.client.get('/api/package/%s/%s'%\
-                                   (self.publisher, self.package))    
+        response = self.client.get('/api/package/%s/%s' % \
+                                   (self.publisher, self.package))
         catalog = Catalog(json.loads(response.data))
         dataset = catalog.construct_dataset()
         self.assertEqual(dataset.get('readme'), '')
@@ -129,13 +129,13 @@ class CatalogTestCase(unittest.TestCase):
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
-        response = self.client.get('/api/package/%s/%s'%\
-                                   (self.publisher, self.package))    
+        response = self.client.get('/api/package/%s/%s' % \
+                                   (self.publisher, self.package))
         catalog = Catalog(json.loads(response.data))
         views = catalog.get_views()
         self.assertNotEqual(len(views), 0)
         self.assertEqual(views[0].get('type'), 'graph')
-        
+
     def test_get_views_if_views_dont_exist(self):
         descriptor = {
             'name': 'test',
@@ -225,7 +225,6 @@ class WebsiteTestCase(unittest.TestCase):
 
 
 class SignupEndToEndTestCase(unittest.TestCase):
-
     def setUp(self):
         self.app = create_app()
         self.client = self.app.test_client()
@@ -255,6 +254,7 @@ class SignupEndToEndTestCase(unittest.TestCase):
 
         def record(sender, template, context, **extra):
             recorded.append((template, context))
+
         template_rendered.connect(record, app)
         try:
             yield recorded
@@ -302,7 +302,7 @@ class SignupEndToEndTestCase(unittest.TestCase):
 
                     # Checking User Object passed with context
                     self.assertEqual(self.oAuth_user_info[
-                                     'login'], context['user'].name)
+                                         'login'], context['user'].name)
 
                     # Token sent along with context (For login)
                     self.assertIn('encoded_token', context)
@@ -318,7 +318,6 @@ class SignupEndToEndTestCase(unittest.TestCase):
 
 
 class ContextProcessorTestCase(TestCase):
-
     def create_app(self):
         os.putenv('STAGE', '')
         return create_app()
@@ -326,3 +325,37 @@ class ContextProcessorTestCase(TestCase):
     def test_should_have_s3_cdn_value(self):
         self.client.get('/')
         self.assert_context("s3_cdn", get_s3_cdn_prefix())
+
+
+class DataPackageShowTest(unittest.TestCase):
+
+    def setUp(self):
+        self.publisher = 'demo'
+        self.package = 'demo-package'
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            descriptor = json.loads(open('fixtures/datapackage.json').read())
+            readme = open('fixtures/README.md').read()
+            publisher = Publisher(name=self.publisher)
+            metadata = Package(name=self.package)
+            metadata.descriptor, metadata.readme = descriptor, readme
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
+            db.session.commit()
+
+    def test_short_read_plain_text(self):
+        response = self.client.get('/demo/demo-package')
+        soap = BeautifulSoup(response.data.decode("utf8"))
+        description = soap.findAll("div", {"class": "description"})
+
+        self.assertFalse(description[0].__contains__('##'))
+        self.assertFalse(description[0].__contains__('###'))
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()

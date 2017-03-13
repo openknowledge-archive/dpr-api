@@ -12,6 +12,8 @@ from app.package.models import BitStore
 from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
 from app.utils import get_s3_cdn_prefix
+from markdown import markdown
+from BeautifulSoup import BeautifulSoup
 
 site_blueprint = Blueprint('site', __name__)
 
@@ -86,9 +88,9 @@ def datapackage_show(publisher, package):
         description: Succesfuly loaded
     """
     metadata = json.loads(
-        app.test_client().\
-        get('/api/package/{publisher}/{package}'.\
-            format(publisher=publisher, package=package)).data)
+        app.test_client(). \
+            get('/api/package/{publisher}/{package}'. \
+                format(publisher=publisher, package=package)).data)
     try:
         if metadata['error_code'] == 'DATA_NOT_FOUND':
             return "404 Not Found", 404
@@ -99,14 +101,19 @@ def datapackage_show(publisher, package):
     dataViews = catalog.get_views()
 
     bitstore = BitStore(publisher, package)
-    datapackage_json_url_in_s3 = bitstore.\
+    datapackage_json_url_in_s3 = bitstore. \
         build_s3_object_url(request.headers['Host'],
                             'datapackage.json')
+    readme_short_markdown = markdown(metadata.get('readme', ''))
+    readme_short = ''.join(BeautifulSoup(readme_short_markdown).findAll(text=True)) \
+        .split('\n\n')[0].replace(' \n', '') \
+        .replace('\n', ' ').replace('/^ /', '')
 
     return render_template("dataset.html", dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
                            dataViews=dataViews,
+                           readmeShort=readme_short
                            ), 200
 
 
