@@ -19,75 +19,28 @@
     <!-- Page header -->
     <div class="navbar navbar-default">
       <div class="container">
-        <div class="row">
-          <div class="col-sm-2">
-            <a class="main-logo pull-left" href="/"></a>
-            <div class="navbutton">
-              <a href="/apidocs/index.html">API</a>
-              <a href="https://frictionlessdata.io/">About</a>
-            </div>
-          </div>
+        <div class="navbar-header">
+          <a class="main-logo pull-left" href="#"></a>
+        </div>
+        <div>
+          <ul class="nav navbar-nav navbar-center">
+            <li><a href="https://frictionlessdata.io/">About</a></li>
+            <li><a href="#">Publish Data</a></li>
+            <li><a href="#">Find Data</a></li>
+            <li><a href="#">Data Package</a></li>
+            <li><a href="/apidocs/index.html">API</a></li>
+          </ul>
 
-          <div class="col-sm-7 search-div">
-            <form class="form-inline" action="/search" method="GET">
-              <div class="form-group">
-                <input type="text" class="form-control" id="searchbox" placeholder="Data Package" name="q">
-              </div>
-            </form>
-          </div>
-          <div class="col-sm-2">
-            <div id="nav-bar-login"></div>
-          </div>
+          <ul class="nav navbar-nav navbar-right">
+            <li><div id="nav-bar-login"></div></li>
+          </ul>
         </div>
       </div>
-    </div>
+    </div><!-- End of page header -->
 
     {% block content %}{{content}}{% endblock %}
 
-    <footer>
-      <div class="container">
-        <div class="row">
-          <div class="col-sm-6">
-            <div class="copy">
-              <p>
-                Copyright © 2015 Open Knowledge International
-                <br />
-                  <a href="https://okfn.org/terms-of-use/">Terms of Use</a>
-                  &ndash;
-                  <a href="https://okfn.org/ip-policy/">IP Policy</a>
-                <br/>
-                <a href="https://opendefinition.org/okd/" title="Open Data">
-                  <img src="https://assets.okfn.org/images/ok_buttons/od_80x15_blue.png" alt="" border="" /></a>
-                <a href="https://opendefinition.org/ossd/" title="Open Online Software Service">
-                  <img src="https://assets.okfn.org/images/ok_buttons/os_80x15_orange_grey.png" alt="" border="" />
-                </a>
-              </p>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="row">
-              <div class="col-sm-8">
-                <p>This service is run by</p>
-                <img src="https://a.okfn.org/img/oki/landscape-rgb-165x43.png" alt="post" />
-              </div>
-              <div class="col-sm-4 connect">
-                <p>Connect with Us</p>
-                <ul class="list-inline">
-                  <li class="list-inline-item"><a href="https://twitter.com/okfnlabs"><i class="fa fa-twitter"></i></a></li>
-                  <li class="list-inline-item"><a href="https://facebook.com/OKFNetwork"><i class="fa fa-facebook"></i></a></li>
-                  <li class="list-inline-item"><a href="https://www.youtube.com/user/openknowledgefdn"><i class="fa fa-youtube"></i></a></li>
-                  <li class="list-inline-item"><a href="https://plus.google.com/112608652597658788737"><i class="fa fa-google-plus"></i></a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
-
     <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
     <script type="text/javascript" src="{{ s3_cdn }}/static/vendor/jwt-decode.min.js"></script>
     <script type="text/javascript" src="{{ s3_cdn }}/static/js/dashboard.js"></script>
 
@@ -126,7 +79,7 @@
       }
       function login() {
        $("#nav-bar-login")
-         .replaceWith('<a class="btn btn-small btn-warning pull-right search-div" href="/api/auth/login">Sign In With <span class="fa fa-github fa-lg"></span></a>')
+         .replaceWith('<a href="/api/auth/login">Sign In With <span class="fa fa-github fa-lg"></span></a>')
       }
     </script>
   </body>
