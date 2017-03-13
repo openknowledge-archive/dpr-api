@@ -28,13 +28,13 @@
   {% endfor %}
 {%- endmacro %}
 
-{% macro dataset_show(dataset, jsonDataPackage, dataViews, showDataApi, datapackageUrl) -%}
+{% macro dataset_show(dataset, jsonDataPackage, dataViews, showDataApi, datapackageUrl, readmeShort) -%}
 <div class="dataset show">
   <div class="row">
     <div class="col-md-8">
       <img src="{{dataset.image or 'https://assets.okfn.org/p/data/img/icon-128.png'}}"
         alt="{{dataset.title}}" class="logo" />
-      <div class="description">{{dataset.readme|truncate|markdown}} <a href="#readme">Read more</a></div>
+      <div class="description">{{readmeShort|truncate}} <a href="#readme">Read more</a></div>
 
       <div class="actions">
         <div class="btn-group">
