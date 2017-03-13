@@ -44,7 +44,7 @@ $brand-warning:         #ff5500 !default;
 //
 //## Font, line-height, and color for body text, headings, and more.
 
-$font-family-sans-serif:  Helvetica, Lato, Roboto, sans-serif !default;
+$font-family-sans-serif:  "Open Sans", Helvetica, Lato, sans-serif !default;
 $font-family-serif:       Lora, Georgia, Times, serif !default;
 //** Default monospace fonts for `<code>`, `<kbd>`, and `<pre>`.
 $font-family-monospace:   Menlo, Monaco, Consolas, "Courier New", monospace !default;
@@ -54,10 +54,10 @@ $font-size-base:          14px !default;
 // $font-size-large:         ceil(($font-size-base * 1.25)) !default; // ~18px
 // $font-size-small:         ceil(($font-size-base * 0.85)) !default; // ~12px
 //
-// $font-size-h1:            floor(($font-size-base * 2.6)) !default; // ~36px
-// $font-size-h2:            floor(($font-size-base * 2.15)) !default; // ~30px
-// $font-size-h3:            ceil(($font-size-base * 1.7)) !default; // ~24px
-// $font-size-h4:            ceil(($font-size-base * 1.25)) !default; // ~18px
+// $font-size-h1:            floor(($font-size-base * 1.6)) !default; // ~36px
+// $font-size-h2:            floor(($font-size-base * 1.4)) !default; // ~30px
+// $font-size-h3:            ceil(($font-size-base * 1.25)) !default; // ~24px
+// $font-size-h4:            ceil(($font-size-base * 1.1)) !default; // ~18px
 // $font-size-h5:            $font-size-base !default;
 // $font-size-h6:            ceil(($font-size-base * 0.85)) !default; // ~12px
 //
@@ -108,9 +108,9 @@ $icon-font-path: if($bootstrap-sass-asset-helper, "bootstrap/", "../bootstrap/as
 // $line-height-large:         1.3333333 !default; // extra decimals for Win 8.1 Chrome
 // $line-height-small:         1.5 !default;
 //
-$border-radius-base:        10px !default;
-$border-radius-large:       20px !default;
-$border-radius-small:       10px !default;
+$border-radius-base:        0px !default;
+$border-radius-large:       0px !default;
+$border-radius-small:       0px !default;
 //
 // //** Global color for active items (e.g., navs or dropdowns).
 // $component-active-color:    #fff !default;
@@ -193,8 +193,8 @@ $btn-font-weight:                lighter !default;
 //
 // //** Text color for `<input>`s
 // $input-color:                    $gray !default;
-// //** `<input>` border color
-$input-border:                   $brand-warning !default;
+//** `<input>` border color
+$input-border:                   black !default;
 //
 // // TODO: Rename `$input-border-radius` to `$input-border-radius-base` in v4
 // //** Default `.form-control` border radius
@@ -205,8 +205,8 @@ $input-border:                   $brand-warning !default;
 // //** Small `.form-control` border radius
 // $input-border-radius-small:      $border-radius-small !default;
 //
-// //** Border color for inputs on focus
-// $input-border-focus:             #66afe9 !default;
+//** Border color for inputs on focus
+$input-border-focus:             black !default;
 //
 // //** Placeholder text color
 // $input-color-placeholder:        #999 !default;
@@ -495,7 +495,7 @@ $navbar-default-bg:                white !default;
 $jumbotron-bg:                   $brand-primary !default;
 // $jumbotron-heading-color:        inherit !default;
 // $jumbotron-font-size:            ceil(($font-size-base * 1.5)) !default;
-$jumbotron-heading-font-size:    ceil(($font-size-base * 3.5)) !default;
+$jumbotron-heading-font-size:    ceil(($font-size-base * 2.5)) !default;
 //
 //
 // //== Form states and alerts

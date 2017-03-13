@@ -1,0 +1,21 @@
+/* Section 1
+====================================*/
+
+.section {
+  border-bottom: 1px solid;
+  background-color: #02bac1 !important;
+  background-image: url("../img/elephant-number.png");
+  background-repeat: no-repeat;
+  background-position: 18% 100%;
+  background-size: 75%;
+  padding: 100px 0 500px 0;
+  h3, p {
+    color: white;
+    margin-bottom: 30px;
+  }
+  input {
+    width: 50%;
+    margin: auto;
+    margin-bottom: 100px;
+  }
+}
