@@ -1,33 +1,25 @@
 /* Jumbotron main
 ====================================*/
 .jumbotron-primary {
-  background-image: url("../img/hero-team.jpg");
+  background-color: white;
+  border-bottom: 1px solid;
+  background-image: url("../img/elephant-dancing.png");
   background-repeat: no-repeat;
-  //background-position: -690% 10%;
-  //margin-bottom: 50px;
-  padding: 100px 0 50px 0;
-  width: 100vw;
-  height: 60vh;
-  color: white !important;
+  background-position: 95% 10%;
+  background-size: 18%;
 }
 .jumbotron {
-  .btn-warning {
-    margin-top: 30px;
-    margin-bottom: 50px;
-  }
-  .glyphicon-triangle-bottom {
-    font-size: 50px;
-    color: $brand-warning
-  }
-  .main-text {
-    font-family: $font-family-serif;
-  }
-  .secondary-text {
-    margin-top: auto;
-    font-size: $font-size-base;
+  margin-bottom: 0;
+  .terminal-heading {
+    color: $gray;
+    margin-bottom: 0;
+    span {
+      padding: 3px;
+      border: 1px solid;
+    }
   }
   h1 {
     font-weight: 200;
-    margin-bottom: 30px;
+    margin-bottom: 60px;
   }
 }

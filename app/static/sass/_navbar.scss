@@ -2,28 +2,33 @@
 ====================================*/
 
 .navbar {
-  a {
-    color: $gray;
+  -webkit-box-shadow: 0 6px 6px -6px #999;
+  -moz-box-shadow: 0 6px 6px -6px #999;
+  box-shadow: 0 6px 6px -6px #999;
+  .navbar-main {
+    width: 70%;
+    margin: auto;
   }
-  .signup {
-    color: $brand-warning;
-  }
-  .signup, .signin, .navbutton {
-    a {
-      margin-left: 10%;
+  .navbar-right {
+    li a {
+      color: $gray-dark;
     }
-    margin-top: $navbar-height / 2 - $font-size-base / 2;
-  }
-  .search-div {
-    margin-top: $navbar-height / 2 - $input-height-base / 2;
   }
   .main-logo {
-    width: 50px;
+    width: 140px;
     height: 50px;
     text-indent: 100%;
     white-space: nowrap;
     overflow: hidden;
-    background: url('../img/dpr.png') no-repeat;
+    background: url('../img/data-hub-logo.png') no-repeat;
     background-size: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .navbar-nav.navbar-center {
+    position: absolute;
+    left: 50%;
+    transform: translatex(-50%);
   }
 }
