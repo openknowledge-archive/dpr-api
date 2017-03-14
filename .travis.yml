@@ -18,6 +18,7 @@ python:
 
 services:
   - postgresql
+  - docker
 addons:
   postgresql: "9.5"
 
@@ -33,12 +34,15 @@ script: pytest tests
 
 after_success:
   coveralls
+
 before_deploy:
-  - export FLASK_CONFIGURATION=stage
+  - docker login -u="$DOCKER_USER"  -p="$DOCKER_PASS" registry.gitlab.com
+  - docker pull registry.gitlab.com/atomatic/dpr-deploy
+
 deploy:
   skip_cleanup: true
   provider: script
-  script: python zappa_deploy.py
+  script: docker run -it registry.gitlab.com/atomatic/dpr-deploy --extra-vars "environment_tier=staging github_client_id=$github_client_id github_client_secret=$github_client_secret aws_key=$aws_key aws_secret=$aws_secret region=$region domain_name=$domain_name bit_store_bucket_name=$bit_store_bucket_name run_env=docker" --tags "zappa"
   on:
     repo: frictionlessdata/dpr-api
     branch: deploy
