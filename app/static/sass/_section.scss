@@ -17,5 +17,8 @@
     width: 50%;
     margin: auto;
     margin-bottom: 100px;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    box-shadow: none !important;
   }
 }

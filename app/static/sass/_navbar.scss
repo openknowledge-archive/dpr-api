@@ -2,9 +2,7 @@
 ====================================*/
 
 .navbar {
-  -webkit-box-shadow: 0 6px 6px -6px #999;
-  -moz-box-shadow: 0 6px 6px -6px #999;
-  box-shadow: 0 6px 6px -6px #999;
+  border-bottom: 1px solid;
   .navbar-main {
     width: 70%;
     margin: auto;
@@ -27,6 +25,9 @@
     margin: 7.5px;
     input {
       border-color: $gray;
+      -webkit-box-shadow: none !important;
+      -moz-box-shadow: none !important;
+      box-shadow: none !important;
     }
   }
 }
