@@ -112,3 +112,13 @@ This will create two directories:
 - /app/templates
 
 When run ```python dpr.py``` it will take these html and scripts.
+
+## DPR continuous deployment process
+
+- git pull origin master
+- git checkout deploy
+  - git checkout -b deploy [if not exists loaclly]
+- git merge master
+- git push origin deploy
+
+That's it looks at https://travis-ci.org/frictionlessdata/dpr-api
