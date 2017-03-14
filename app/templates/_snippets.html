@@ -76,9 +76,9 @@
         <tbody>
         {% for resource in dataset.resources %}
           <tr>
-            <td><i class="icon-file-text-alt"></i><a href="#resource-{{resource.name}}">co2-mm-mlo</a></td>
+            <td><i class="icon-file-text-alt"></i><a href="#resource-{{resource.name}}">{{resource.name}}</a></td>
             <td></td>
-            <td>csv</td>
+            <td>{{ resource.format }}</td>
             <td class="download truncate">
                 <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}">
                     <i class="icon-download-alt"></i> Download
