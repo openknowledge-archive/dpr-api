@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% import '_snippets.html' as snippets %}
 
+{% block title %}
+{{publisher.title}}
+{% endblock %}
+
 {% block content %}
 <div class="container">
   <div class="show-grid row">

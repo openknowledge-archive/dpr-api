@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block title %}
+Dashboard {{user.name}}
+{% endblock %}
+
 {% block scripts%}
 <script>
 localStorage.setItem("encoded_token","{{encoded_token}}");
