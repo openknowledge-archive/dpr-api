@@ -5835,6 +5835,10 @@ button.close {
     overflow: hidden;
     background: url("../img/data-hub-logo.png") no-repeat;
     background-size: 100%; }
+  .navbar .searchbox {
+    margin: 7.5px; }
+    .navbar .searchbox input {
+      border-color: #757575; }
 
 @media (min-width: 768px) {
   .navbar-nav.navbar-center {
