@@ -23,6 +23,12 @@
     background: url('../img/data-hub-logo.png') no-repeat;
     background-size: 100%;
   }
+  .searchbox {
+    margin: 7.5px;
+    input {
+      border-color: $gray;
+    }
+  }
 }
 
 @media (min-width: 768px) {

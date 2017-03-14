@@ -20,14 +20,17 @@
     <div class="navbar navbar-default">
       <div class="container">
         <div class="navbar-header">
-          <a class="main-logo pull-left" href="#"></a>
+          <a class="main-logo pull-left" href="/"></a>
+        </div>
+        <div class="nav navbar-nav searchbox">
+          <form class="form-inline" action="/search" method="GET">
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="Find data" name="q">
+            </div>
+          </form>
         </div>
         <div>
-          <ul class="nav navbar-nav navbar-center">
-            <li><a href="https://frictionlessdata.io/">About</a></li>
-            <li><a href="#">Publish Data</a></li>
-            <li><a href="#">Find Data</a></li>
-            <li><a href="#">Data Package</a></li>
+          <ul class="nav navbar-nav">
             <li><a href="/apidocs/index.html">API</a></li>
           </ul>
 

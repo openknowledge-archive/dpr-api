@@ -39,7 +39,7 @@ class CatalogTestCase(unittest.TestCase):
             db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
-                                   (self.publisher, self.package))    
+                                   (self.publisher, self.package))
         catalog = Catalog(json.loads(response.data))
         dataset = catalog.construct_dataset()
         self.assertEqual(dataset.get('name'), descriptor.get('name'))
@@ -62,7 +62,7 @@ class CatalogTestCase(unittest.TestCase):
             db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
-                                   (self.publisher, self.package))    
+                                   (self.publisher, self.package))
         catalog = Catalog(json.loads(response.data))
         dataset = catalog.construct_dataset('http://example.com/')
         self.assertEqual(dataset.\
@@ -151,7 +151,7 @@ class CatalogTestCase(unittest.TestCase):
             db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
-                                   (self.publisher, self.package))    
+                                   (self.publisher, self.package))
         catalog = Catalog(json.loads(response.data))
         views = catalog.get_views()
         self.assertEqual(views, [])
@@ -265,9 +265,6 @@ class SignupEndToEndTestCase(unittest.TestCase):
         # Loading Home
         rv = self.client.get('/')
         self.assertNotIn('404', rv.data.decode("utf8"))
-
-        # Sign Up button
-        self.assertIn('Sign Up', rv.data.decode("utf8"))
 
         with nested(patch("flask_oauthlib.client.OAuthRemoteApp.authorized_response"),
                     patch('flask_oauthlib.client.OAuthRemoteApp.get'),
