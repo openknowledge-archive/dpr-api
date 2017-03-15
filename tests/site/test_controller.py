@@ -301,9 +301,6 @@ class SignupEndToEndTestCase(unittest.TestCase):
                     self.assertEqual(self.oAuth_user_info[
                                          'login'], context['user'].name)
 
-                    # Token sent along with context (For login)
-                    self.assertIn('encoded_token', context)
-
                     # Dashboad loaded with status code 200
                     self.assertEqual(rv.status_code, 200)
 

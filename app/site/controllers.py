@@ -4,14 +4,14 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from flask import Blueprint, render_template, json, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, \
+    json, request, redirect, url_for, make_response
 from flask import current_app as app
-import jwt
+from app.auth.models import JWT
 from app.site.models import Catalog
 from app.package.models import BitStore
 from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
-from app.utils import get_s3_cdn_prefix
 from markdown import markdown
 from BeautifulSoup import BeautifulSoup
 
@@ -31,23 +31,14 @@ def index():
       200:
         description: Succesfuly loaded home page
     """
-    try:
-        if request.method == "POST":
-            encoded_token = request.form.get('encoded_token', '')
-            if encoded_token:
-                try:
-                    payload = jwt.decode(encoded_token, app.config['API_KEY'])
-                except Exception as e:
-                    app.logger.error(e)
-                    return redirect(request.headers['Host'] + '/logout')
-                user = User().get_userinfo_by_id(payload['user'])
-                if user:
-                    return render_template("dashboard.html", user=user,
-                                           title='Dashboard'), 200
-                return redirect(request.headers['Host'] + '/logout')
-        return render_template("index.html", title='Home'), 200
-    except Exception:
-        return redirect(url_for('.logout'))
+    user, exception = get_user_from_cookie()
+    if user:
+        return render_template("dashboard.html",
+                               user=user,
+                               title='Dashboard'), 200
+    if exception:
+        return redirect(request.headers['Host'] + '/logout')
+    return render_template("index.html", title='Home'), 200
 
 
 @site_blueprint.route("/logout", methods=["GET"])
@@ -61,7 +52,9 @@ def logout():
       302:
         description: Load the Home Page
     """
-    return render_template("logout.html", title='Logout'), 200
+    resp = make_response(render_template("logout.html", title='Logout'), 200)
+    resp.set_cookie('jwt', '', expires=0)
+    return resp
 
 
 @site_blueprint.route("/<publisher>/<package>", methods=["GET"])
@@ -87,6 +80,10 @@ def datapackage_show(publisher, package):
       200:
         description: Succesfuly loaded
     """
+    user, exception = get_user_from_cookie()
+    if exception:
+        return redirect(request.headers['Host'] + '/logout')
+
     metadata = json.loads(
         app.test_client(). \
             get('/api/package/{publisher}/{package}'. \
@@ -109,7 +106,8 @@ def datapackage_show(publisher, package):
         .split('\n\n')[0].replace(' \n', '') \
         .replace('\n', ' ').replace('/^ /', '')
 
-    return render_template("dataset.html", dataset=dataset,
+    return render_template("dataset.html", user=user,
+                           dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
                            dataViews=dataViews,
@@ -119,21 +117,41 @@ def datapackage_show(publisher, package):
 
 @site_blueprint.route("/<publisher>", methods=["GET"])
 def publisher_dashboard(publisher):
+    user, exception = get_user_from_cookie()
+    if exception:
+        return redirect(request.headers['Host'] + '/logout')
+
     datapackage_list = DataPackageQuery(query_string="* publisher:{publisher}"
                                         .format(publisher=publisher)).get_data()
     publisher = Publisher.get_publisher_info(publisher)
 
-    return render_template("publisher.html", publisher=publisher,
+    return render_template("publisher.html",
+                           user=user,
+                           publisher=publisher,
                            datapackage_list=datapackage_list), 200
 
 
 @site_blueprint.route("/search", methods=["GET"])
 def search_package():
+    user, exception = get_user_from_cookie()
     q = request.args.get('q')
     if q is None:
         q = ''
     datapackage_list = DataPackageQuery(query_string=q.strip()).get_data(20)
-    return render_template("search.html",
+    return render_template("search.html", user=user,
                            datapackage_list=datapackage_list,
                            total_count=len(datapackage_list),
                            query_term=q), 200
+
+
+def get_user_from_cookie():
+    token = request.cookies.get('jwt')
+    user, exception = None, None
+    if token:
+        try:
+            payload = JWT(app.config['API_KEY']).decode(token)
+            user = User().get_userinfo_by_id(payload['user'])
+        except Exception as e:
+            app.logger.error(e)
+            exception = e
+    return user, exception

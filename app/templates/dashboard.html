@@ -4,12 +4,6 @@
 Dashboard {{user.name}}
 {% endblock %}
 
-{% block scripts%}
-<script>
-localStorage.setItem("encoded_token","{{encoded_token}}");
-window.history.pushState("", "Dashboard", "/");
-</script>
-{% endblock %}
 {% block content %}
 <div class="container">
     {% if user.email != None %}

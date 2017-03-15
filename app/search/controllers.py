@@ -24,8 +24,8 @@ def search_packages():
             - in: query
               name: q
               type: string
-              required: true
-              description: search query string e.g. q=query publisher=pub
+              required: false
+              description: search query string e.g. q=query publisher:pub
         responses:
             500:
                 description: Internal Server Error

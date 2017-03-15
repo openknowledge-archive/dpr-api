@@ -35,7 +35,17 @@
           </ul>
 
           <ul class="nav navbar-nav navbar-right">
-            <li><div id="nav-bar-login"></div></li>
+            {% if not user %}
+              <li>
+                <a href="/api/auth/login">Sign In With <span class="fa fa-github fa-lg"></span></a>
+              </li>
+            {% else %}
+              <li>
+                <button class="btn btn-small btn-outline-success p-0">
+                  <a class="nav-link" href="/logout">Logout</a>
+                </button>
+              </li>
+            {% endif %}
           </ul>
         </div>
       </div>
@@ -58,32 +68,6 @@
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
-    </script>
-    <script type="text/javascript">
-      var local_jwt = localStorage.getItem('encoded_token');
-      if (local_jwt != null){
-            var decoded = jwt_decode(local_jwt);
-            var currentTime = Math.floor((new Date).getTime()/1000);
-            if (decoded.exp < currentTime){
-                localStorage.removeItem("encoded_token");
-                login();
-            } else{
-              $("#nav-bar-login")
-                .replaceWith('<button class="btn btn-small btn-outline-success p-0" id="logout123"> ' +
-                  '<a class="nav-link" href="/logout">Logout</a> ' +
-                  '</button>');
-              $('#logout123').on('click', function(e) {
-                localStorage.removeItem("encoded_token");
-              });
-            }
-        }
-      else {
-        login();
-      }
-      function login() {
-       $("#nav-bar-login")
-         .replaceWith('<a href="/api/auth/login">Sign In With <span class="fa fa-github fa-lg"></span></a>')
-      }
     </script>
   </body>
 
