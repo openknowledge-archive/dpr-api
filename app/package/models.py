@@ -382,6 +382,6 @@ class Package(db.Model):
         """
         instance = Package.query.join(Publisher)\
             .filter(Package.name == package_name,
-                    Publisher.name == publisher_name).first()
+                    Publisher.name == publisher_name).all()
         return len(instance) > 0
 

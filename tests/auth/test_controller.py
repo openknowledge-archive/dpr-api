@@ -196,7 +196,7 @@ class AuthorizeUploadTestCase(unittest.TestCase):
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher, 'super_secret'
             self.pub = Publisher(name=self.publisher)
-            self.pub.packages.append(Package(name='test_package'))
+            self.pub.packages.append(Package(name=self.package))
             association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.pub
             self.user.publishers.append(association)
