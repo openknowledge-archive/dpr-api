@@ -122,16 +122,18 @@ class BitStore(object):
                    key=self.build_s3_key(path))
 
     def generate_pre_signed_post_object(self, path, md5,
-                                        acl='public-read',
-                                        file_type='binary/octet-stream'):
+                                        acl='public-read'):
         """
         This method produce required data to upload file from client side
-        for uploading data at client side
+        for uploading data at client side. The Content-Type is set to
+        text/plain for any type of file. This will avoid security risks (e.g.
+        someone uploading html with malicious JS in it and then users
+        opening that file as html).
+
         :param path: The relative path of the object
         :param md5: The md5 hash of the file to be uploaded
 
         :param acl: The object ACL default is public_read
-        :param file_type: The type of the file, default is binary/octet-stream
         :return: dict containing S3 url and post params
         """
         bucket_name = app.config['S3_BUCKET_NAME']
@@ -142,7 +144,7 @@ class BitStore(object):
                                                  Fields={
                                                     'acl': acl,
                                                     'Content-MD5': str(md5),
-                                                    'Content-Type': file_type},
+                                                    'Content-Type': 'text/plain'},
                                                  Conditions=[
                                                   {"acl": "public-read"},
                                                   ["starts-with", "$Content-Type", ""],

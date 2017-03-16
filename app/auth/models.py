@@ -62,8 +62,6 @@ class FileData(object):
 
     def _generate_bitstore_url(self):
         kwargs = {}
-        if 'type' in self.props:
-            kwargs['file_type'] = self.props['type']
         if 'acl' in self.props:
             kwargs['acl'] = self.props['acl']
         post = self.bitstore.\

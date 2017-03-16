@@ -127,6 +127,7 @@ class BitStoreTestCase(unittest.TestCase):
                              's3-{region}.amazonaws.com'.
                              format(region=self.app.config['AWS_REGION']))
             self.assertEqual('public-read', post['fields']['acl'])
+            self.assertEqual('text/plain', post['fields']['Content-Type'])
 
     @mock_s3
     def test_get_readme_object_key(self):
