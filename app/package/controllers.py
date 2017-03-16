@@ -372,7 +372,7 @@ def finalize_publish():
         if jwt_status:
             user_id = user_info['user']
 
-        if Package.is_package_exists(package):
+        if Package.is_package_exists(publisher, package):
             status = check_is_authorized('Package::Update', publisher, package, user_id)
         else:
             status = check_is_authorized('Package::Create', publisher, package, user_id)
