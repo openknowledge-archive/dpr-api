@@ -126,7 +126,10 @@ class BitStore(object):
         """
         This method produce required data to upload file from client side
         for uploading data at client side. The Content-Type is set to
-        text/plain for any type of file.
+        text/plain for any type of file. This will avoid security risks (e.g.
+        someone uploading html with malicious JS in it and then users
+        opening that file as html).
+
         :param path: The relative path of the object
         :param md5: The md5 hash of the file to be uploaded
 
