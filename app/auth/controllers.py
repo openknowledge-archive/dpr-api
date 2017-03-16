@@ -203,7 +203,7 @@ def authorize_upload():
         publisher, package_name = metadata['owner'], metadata['name']
         res_payload = {'filedata': {}}
 
-        if Package.is_package_exists(package_name):
+        if Package.is_package_exists(publisher, package_name):
             status = check_is_authorized('Package::Update', publisher, package_name, user_id)
         else:
             status = check_is_authorized('Package::Create', publisher, package_name, user_id)

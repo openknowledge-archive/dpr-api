@@ -133,8 +133,9 @@ class GetAllMetaDataTestCase(unittest.TestCase):
 
 class FinalizeMetaDataTestCase(unittest.TestCase):
     publisher = 'test_publisher'
+    publisher1 = 'test_publisher1'
     package = 'test_package'
-    user_id = 1
+    user_id, user_id1 = 1, 2
     url = '/api/package/upload'
     jwt_url = '/api/auth/token'
     datapackage_url = 'https://bits.datapackaged.com/metadata/' \
@@ -157,7 +158,18 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
             publisher.packages.append(Package(name=self.package))
             association.publisher = publisher
             self.user.publishers.append(association)
+
+            self.user1 = User()
+            self.user1.id = self.user_id1
+            self.user1.email, self.user1.name, self.user1.secret = \
+                'test1@test.com', self.publisher1, 'super_secret'
+            publisher1 = Publisher(name=self.publisher1)
+            association1 = PublisherUser(role=UserRoleEnum.owner)
+            association1.publisher = publisher1
+            self.user.publishers.append(association1)
+
             db.session.add(self.user)
+            db.session.add(self.user1)
             db.session.commit()
         response = self.client.post(self.jwt_url,
                                     data=json.dumps({
@@ -167,6 +179,15 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
                                     content_type='application/json')
         data = json.loads(response.data)
         self.jwt = data['token']
+
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher1,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt1 = data['token']
 
     @patch('app.package.models.Package.create_or_update')
     @patch('app.package.models.BitStore.get_metadata_body')
@@ -201,11 +222,11 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         self.assertEqual(500, response.status_code)
 
     def test_throw_400_if_user_not_permitted_for_this_operation(self):
-        auth = "%s" % self.jwt
+        auth = "%s" % self.jwt1
         url = '/api/package/upload'
         datapackage_url = 'https://bits.datapackaged.com/metadata/' \
                           '{pub}/{pack}/_v/latest/datapackage.com'. \
-            format(pub='test_publisher1', pack=self.package)
+            format(pub='test_publisher', pack=self.package)
         response = self.client.post(url,
                                     data=json.dumps(dict(datapackage=datapackage_url)),
                                     headers={'Auth-Token': auth},
