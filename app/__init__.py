@@ -10,7 +10,7 @@ import boto3
 import sqlalchemy
 from botocore.client import Config
 from flasgger import Swagger
-from flask import Flask, session
+from flask import Flask, session, request, g
 from flask_cors import CORS
 from flaskext.markdown import Markdown
 from flask_gravatar import Gravatar
@@ -19,9 +19,11 @@ from werkzeug.utils import import_string
 from .database import db
 from app.utils import get_s3_cdn_prefix
 from app.auth.controllers import auth_blueprint, bitstore_blueprint
+from app.auth.models import JWT
 from app.package.controllers import package_blueprint
 from app.site.controllers import site_blueprint
 from app.profile.controllers import profile_blueprint
+from app.profile.models import User
 from app.search.controllers import search_blueprint
 
 app_config = {
@@ -108,6 +110,18 @@ def create_app():
 
     @app.context_processor
     def populate_context_variable():
-        return dict(s3_cdn=get_s3_cdn_prefix())
+        return dict(s3_cdn=get_s3_cdn_prefix(),
+                    current_user=g.current_user)
+
+    @app.before_request
+    def get_user_from_cookie():
+        token = request.cookies.get('jwt')
+        g.current_user = None
+        if token:
+            try:
+                payload = JWT(app.config['API_KEY']).decode(token)
+                g.current_user = User().get_userinfo_by_id(payload['user'])
+            except Exception as e:
+                app.logger.error(e)
 
     return app

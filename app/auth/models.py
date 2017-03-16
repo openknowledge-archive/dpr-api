@@ -10,8 +10,9 @@ from app.package.models import BitStore
 
 
 class JWT(object):
+
     def __init__(self, api_key, user_id=None,
-                 expiration_hour=1):
+                 expiration_hour=24):
         self.secret = api_key
         self.user_id = user_id
         self.expiration_hour = expiration_hour

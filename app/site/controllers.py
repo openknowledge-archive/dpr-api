@@ -4,14 +4,14 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from flask import Blueprint, render_template, json, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, \
+    json, request, redirect, g, make_response
 from flask import current_app as app
-import jwt
+from app.auth.models import JWT
 from app.site.models import Catalog
 from app.package.models import BitStore
 from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
-from app.utils import get_s3_cdn_prefix
 from markdown import markdown
 from BeautifulSoup import BeautifulSoup
 
@@ -21,39 +21,28 @@ site_blueprint = Blueprint('site', __name__)
 @site_blueprint.route("/", methods=["GET", "POST"])
 def index():
     """
-    Loads home page
+    Renders index.html if no token found in cookie.
+    If token found in cookie then it renders dashboard.html.
     ---
     tags:
       - site
     responses:
       404:
-        description: Publiser does not exist
+        description: Publisher does not exist
       200:
-        description: Succesfuly loaded home page
+        description: Successfully loaded home page
     """
-    try:
-        if request.method == "POST":
-            encoded_token = request.form.get('encoded_token', '')
-            if encoded_token:
-                try:
-                    payload = jwt.decode(encoded_token, app.config['API_KEY'])
-                except Exception as e:
-                    app.logger.error(e)
-                    return redirect(request.headers['Host'] + '/logout')
-                user = User().get_userinfo_by_id(payload['user'])
-                if user:
-                    return render_template("dashboard.html", user=user,
-                                           title='Dashboard'), 200
-                return redirect(request.headers['Host'] + '/logout')
-        return render_template("index.html", title='Home'), 200
-    except Exception:
-        return redirect(url_for('.logout'))
+    if g.current_user:
+        return render_template("dashboard.html",
+                               title='Dashboard'), 200
+    return render_template("index.html", title='Home'), 200
 
 
 @site_blueprint.route("/logout", methods=["GET"])
 def logout():
     """
-    Loads Home page if user already login
+    Sets blank cookie value with expiry time zero
+    and renders logout.html page
     ---
     tags:
       - site
@@ -61,7 +50,10 @@ def logout():
       302:
         description: Load the Home Page
     """
-    return render_template("logout.html", title='Logout'), 200
+    g.current_user = None
+    resp = make_response(render_template("logout.html", title='Logout'), 200)
+    resp.set_cookie('jwt', '', expires=0)
+    return resp
 
 
 @site_blueprint.route("/<publisher>/<package>", methods=["GET"])
@@ -85,8 +77,9 @@ def datapackage_show(publisher, package):
       404:
         description: Datapackage does not exist
       200:
-        description: Succesfuly loaded
+        description: Successfully loaded
     """
+
     metadata = json.loads(
         app.test_client(). \
             get('/api/package/{publisher}/{package}'. \
@@ -109,7 +102,8 @@ def datapackage_show(publisher, package):
         .split('\n\n')[0].replace(' \n', '') \
         .replace('\n', ' ').replace('/^ /', '')
 
-    return render_template("dataset.html", dataset=dataset,
+    return render_template("dataset.html",
+                           dataset=dataset,
                            datapackageUrl=datapackage_json_url_in_s3,
                            showDataApi=True, jsonDataPackage=dataset,
                            dataViews=dataViews,
@@ -123,7 +117,8 @@ def publisher_dashboard(publisher):
                                         .format(publisher=publisher)).get_data()
     publisher = Publisher.get_publisher_info(publisher)
 
-    return render_template("publisher.html", publisher=publisher,
+    return render_template("publisher.html",
+                           publisher=publisher,
                            datapackage_list=datapackage_list), 200
 
 
