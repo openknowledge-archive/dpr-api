@@ -21,7 +21,8 @@ site_blueprint = Blueprint('site', __name__)
 @site_blueprint.route("/", methods=["GET", "POST"])
 def index():
     """
-    Loads home page
+    Renders index.html if no token found in cookie.
+    If token found in cookie then it renders dashboard.html.
     ---
     tags:
       - site
@@ -31,9 +32,6 @@ def index():
       200:
         description: Successfully loaded home page
     """
-    if g.jwt_exception:
-        return redirect(request.headers['Host'] + '/logout')
-
     if g.current_user:
         return render_template("dashboard.html",
                                title='Dashboard'), 200
@@ -43,7 +41,8 @@ def index():
 @site_blueprint.route("/logout", methods=["GET"])
 def logout():
     """
-    Loads Home page if user already login
+    Sets blank cookie value with expiry time zero
+    and renders logout.html page
     ---
     tags:
       - site
@@ -80,8 +79,6 @@ def datapackage_show(publisher, package):
       200:
         description: Successfully loaded
     """
-    if g.jwt_exception:
-        return redirect(request.headers['Host'] + '/logout')
 
     metadata = json.loads(
         app.test_client(). \
@@ -116,9 +113,6 @@ def datapackage_show(publisher, package):
 
 @site_blueprint.route("/<publisher>", methods=["GET"])
 def publisher_dashboard(publisher):
-    if g.jwt_exception:
-        return redirect(request.headers['Host'] + '/logout')
-
     datapackage_list = DataPackageQuery(query_string="* publisher:{publisher}"
                                         .format(publisher=publisher)).get_data()
     publisher = Publisher.get_publisher_info(publisher)
@@ -130,8 +124,6 @@ def publisher_dashboard(publisher):
 
 @site_blueprint.route("/search", methods=["GET"])
 def search_package():
-    if g.jwt_exception:
-        return redirect(request.headers['Host'] + '/logout')
     q = request.args.get('q')
     if q is None:
         q = ''

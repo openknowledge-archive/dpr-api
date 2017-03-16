@@ -116,13 +116,12 @@ def create_app():
     @app.before_request
     def get_user_from_cookie():
         token = request.cookies.get('jwt')
-        g.current_user, g.jwt_exception = None, None
+        g.current_user = None
         if token:
             try:
                 payload = JWT(app.config['API_KEY']).decode(token)
                 g.current_user = User().get_userinfo_by_id(payload['user'])
             except Exception as e:
                 app.logger.error(e)
-                g.jwt_exception = e
 
     return app
