@@ -35,15 +35,13 @@
           </ul>
 
           <ul class="nav navbar-nav navbar-right">
-            {% if not user %}
+            {% if current_user == None %}
               <li>
                 <a href="/api/auth/login">Sign In With <span class="fa fa-github fa-lg"></span></a>
               </li>
             {% else %}
               <li>
-                <button class="btn btn-small btn-outline-success p-0">
-                  <a class="nav-link" href="/logout">Logout</a>
-                </button>
+                <a class="nav-link" href="/logout">Logout</a>
               </li>
             {% endif %}
           </ul>

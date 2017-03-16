@@ -5,7 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from flask import Blueprint, request, render_template, \
-    jsonify, session, make_response
+    jsonify, session, make_response, g
 from flask import current_app as app
 from app.profile.models import User
 from app.auth.models import JWT, FileData
@@ -56,7 +56,8 @@ def callback_handling():
         user = User().create_or_update_user_from_callback(user_info.data)
         jwt_helper = JWT(app.config['API_KEY'], user.id)
         session.pop('github_token', None)
-        resp = make_response(render_template("dashboard.html", user=user,
+        g.current_user = user
+        resp = make_response(render_template("dashboard.html",
                              title='Dashboard'), 200)
         resp.set_cookie('jwt', jwt_helper.encode())
         return resp

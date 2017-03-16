@@ -1,28 +1,34 @@
 {% extends "base.html" %}
 
 {% block title %}
-Dashboard {{user.name}}
+Dashboard {{current_user.name}}
+{% endblock %}
+
+{% block scripts%}
+<script>
+window.history.pushState("", "Dashboard", "/");
+</script>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    {% if user.email != None %}
+    {% if current_user.email != None %}
 	<div class="row  justify-content-center">
 	  <div class="col-4">
         <br>
-        <img src="{{user.email | gravatar(size=50)}}" class="img-thumbnail"/>
+        <img src="{{current_user.email | gravatar(size=50)}}" class="img-thumbnail"/>
         <br>
         <br>
         <span class="fa fa-envelope"></span>
-        <span class="help-block">{{user.email}}</span>
+        <span class="help-block">{{current_user.email}}</span>
   	  </div>
 	</div>
     {% endif %}
 	<div>
 		<h1>
-			Welcome {{user.name}}!
+			Welcome {{current_user.name}}!
 		</h1>
-		<h5>Your Access Token: {{user.secret}}</h5>
+		<h5>Your Access Token: {{current_user.secret}}</h5>
 	</div>
 	<div>
 		<h3>Start publishing your data packages in 3 easy steps:</h3>
@@ -36,9 +42,9 @@ Install dpmpy, the data package manager  command line tool:
 Set your configuration:
 
 	$ dpmpy configure
-	> Username:  # {{user.name}}
+	> Username:  # {{current_user.name}}
 	# Use your secret token here (also visible at the top of the page)
-	> Your access_token:  # {{user.secret}}
+	> Your access_token:  # {{current_user.secret}}
 	# Use server url Eg: https://staging.datapackaged.com/
 	> Server URL:
 
