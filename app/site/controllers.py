@@ -127,7 +127,7 @@ def search_package():
     q = request.args.get('q')
     if q is None:
         q = ''
-    datapackage_list = DataPackageQuery(query_string=q.strip()).get_data(20)
+    datapackage_list = DataPackageQuery(query_string=q.strip()).get_data(1000)
     return render_template("search.html",
                            datapackage_list=datapackage_list,
                            total_count=len(datapackage_list),
