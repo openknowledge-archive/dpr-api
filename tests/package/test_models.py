@@ -459,6 +459,27 @@ class PackageTestCase(unittest.TestCase):
         status = Package.is_package_exists(self.publisher_one, 'non-exists-package')
         self.assertFalse(status)
 
+    def test_update_status_with_tag(self):
+        Package.create_or_update_version(self.publisher_one,
+                                         'ooo',
+                                         '1.0')
+        Package.create_or_update_version(self.publisher_one,
+                                         'ooo',
+                                         '1.1')
+        status = Package.change_status(self.publisher_one,
+                                       'ooo', PackageStateEnum.deleted)
+        self.assertTrue(status)
+
+    def test_delete_with_tag(self):
+        Package.create_or_update_version(self.publisher_one,
+                                         'ooo',
+                                         '1.0')
+        Package.create_or_update_version(self.publisher_one,
+                                         'ooo',
+                                         '1.1')
+        status = Package.delete_data_package(self.publisher_one, 'ooo')
+        self.assertTrue(status)
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
