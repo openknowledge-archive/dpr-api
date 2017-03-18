@@ -13,8 +13,12 @@ from app.profile.models import Publisher
 
 class DataPackageQuery(object):
 
-    def __init__(self, query_string):
+    def __init__(self, query_string, limit=None):
         self.query_string = query_string
+        try:
+            self.limit = min(int(limit), 1000)
+        except (ValueError, TypeError):
+            self.limit = 20
 
     def _build_sql_query(self, query, query_filters):
 
@@ -50,13 +54,12 @@ class DataPackageQuery(object):
                 break
         return qu, qu_filters
 
-    def get_data(self, limit=None):
+    def get_data(self):
         data_list = []
         q, qf = self._parse_query_string()
-        if limit is None:
-            results = self._build_sql_query(q, qf).all()
-        else:
-            results = self._build_sql_query(q, qf).limit(limit)
+
+        results = self._build_sql_query(q, qf).limit(self.limit)
+
         for result in results:
             data = result.__dict__
             data['descriptor'] = data['descriptor']

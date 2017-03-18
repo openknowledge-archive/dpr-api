@@ -47,13 +47,9 @@ def search_packages():
         if q is None:
             q = ''
         limit = request.args.get('limit')
-        try:
-            limit = int(limit)
-        except (ValueError, TypeError):
-            limit = 20
 
-        result = DataPackageQuery(query_string=q.strip())\
-            .get_data(limit=limit)
+        result = DataPackageQuery(query_string=q.strip(),
+                                  limit=limit).get_data()
         return jsonify(dict(items=result, total_count=len(result)))
     except Exception as e:
         app.logger.error(e)
