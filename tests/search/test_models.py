@@ -126,12 +126,16 @@ class DataPackageQueryTestCase(unittest.TestCase):
     def test_should_return_data_package_with_limit(self):
 
         query_string = "details publisher:pub1"
-        dpq = DataPackageQuery(query_string)
-        self.assertEqual(3, len(dpq.get_data(limit=5)))
+        dpq = DataPackageQuery(query_string, limit=5)
+        self.assertEqual(3, len(dpq.get_data()))
 
         query_string = "details publisher:pub1 publisher:pub2"
-        dpq = DataPackageQuery(query_string)
-        self.assertEqual(3, len(dpq.get_data(limit=3)))
+        dpq = DataPackageQuery(query_string, limit=3)
+        self.assertEqual(3, len(dpq.get_data()))
+
+    def test_limit_should_be_maximum_1000(self):
+        dpq = DataPackageQuery('details publisher:pub1', limit=1005)
+        self.assertEqual(1000, dpq.limit)
 
     def tearDown(self):
         with self.app.app_context():

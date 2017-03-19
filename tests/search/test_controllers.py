@@ -58,6 +58,30 @@ class SearchPackagesTestCase(unittest.TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(6, len(result['items']))
 
+    def test_should_return_max_result_set_by_limit(self):
+        url = "/api/search/package?limit=3"
+        response = self.client.get(url)
+        result = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(3, len(result['items']))
+
+    def test_should_return_20_result_if_limit_invalid(self):
+        with self.app.test_request_context():
+            pub = Publisher(name='big_publisher')
+            for i in range(0, 30):
+                pub.packages\
+                    .append(Package(name='pack{i}'.format(i=i),
+                                    descriptor={"title": "pack1 details one"},
+                                    readme="Big readme one"))
+            db.session.add(pub)
+            db.session.commit()
+
+        url = "/api/search/package?limit=lem"
+        response = self.client.get(url)
+        result = json.loads(response.data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(20, len(result['items']))
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
