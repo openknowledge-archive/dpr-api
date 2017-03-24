@@ -1,1 +1,1 @@
-web: gunicorn dpr:application
+web: python dpr.py
