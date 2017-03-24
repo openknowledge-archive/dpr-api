@@ -10,8 +10,5 @@ from app import create_app
 application = create_app()
 
 if __name__ == "__main__":
-    # from gevent.wsgi import WSGIServer
-    # http_server = WSGIServer(('', 5000), application)
-    # http_server.serve_forever()
     port = int(os.environ.get('PORT', 5000))
     application.run(port=port, host='0.0.0.0')

@@ -4,7 +4,7 @@ Flask-SQLAlchemy==2.1
 Flask-Markdown==0.3
 Flask-Gravatar==0.4.2
 Flask-OAuthlib==0.9.3
-zappa==0.28.2
+# zappa==0.28.2
 boto3==1.4.3
 flasgger==0.5.13
 python-dotenv==0.6.0
@@ -17,4 +17,5 @@ blinker==1.4
 enum34==1.1.6
 gevent==1.2.1
 BeautifulSoup==3.2.1
+# for running on heroku
 gunicorn==19.7.1
