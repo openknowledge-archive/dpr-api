@@ -28,21 +28,6 @@ git submodule init
 git submodule update
 ```
 
-Then build the JS bundle:
-
-```
-cd dpr-js
-npm install
-npm run build
-```
-
-This will create two directories:
-
-```
-/app/static/scripts
-/app/templates
-```
-
 ### Database
 
 Create a postgres database
