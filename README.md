@@ -3,35 +3,49 @@
 [![Build Status](https://travis-ci.org/frictionlessdata/dpr-api.svg?branch=master)](https://travis-ci.org/frictionlessdata/dpr-api)
 [![Coverage Status](https://coveralls.io/repos/github/frictionlessdata/dpr-api/badge.svg?branch=master)](https://coveralls.io/github/frictionlessdata/dpr-api?branch=master)
 
+## Installation (for Developers)
 
-Requirement python 2.7
+Requires python 2.7
 
 ```
-$ virtualenv env
-$ source env/bin/activate
-For test use 
-$ pip install -r requirements.txt
-$ pip install -r requirements.test.txt
-else
-$ pip install -r requirements.txt
+pip install -r requirements.txt
+
+# tests - install additional dependencies
+pip install -r requirements.test.txt
+
+# if you encounter errors with psycopg2 you may need to install it manually 
+sudo apt-get install libpq-dev python-dev
+pip install psycopg2
 ```
 
-## Environment Setting:
-Plz put .env file in root directory and add environment variables to that
-```
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-S3_BUCKET_NAME=
-FLASKS3_BUCKET_NAME=
-SQLALCHEMY_DATABASE_URI=
-```
-Rename the env.template file to .env file.
+### Submodules
 
+The javascript portion of the app comes from a different repo. That repo must
+be submoduled in and then built.
 
-### Set up postgres database
+```
+git submodule init
+git submodule update
+```
+
+Then build the JS bundle:
+
+```
+cd dpr-js
+npm install
+npm run build
+```
+
+This will create two directories:
+
+```
+/app/static/scripts
+/app/templates
+```
+
+### Database
+
+Create a postgres database
 
 ```
 $ psql -U postgres -c "create user dpr_user password 'secret' createdb;"
@@ -39,23 +53,25 @@ $ psql -U postgres -c "create database dpr_db owner=dpr_user;"
 
 # create tables
 python manager.py db upgrade
-
-# you may need to install psysopg2 manually if comand throws errors
-$ sudo apt-get install libpq-dev python-dev
-$ pip install psycopg2
 ```
 
-### DPR API project. 
-This is flask based project. We can also deploy this in AWS lambda using zappa.
+### Environment Configuration
 
-#### Local Deployment Process: 
-For local testing we can start the project using:
+Rename the env.template file to .env file and edit it.
+
+TODO: guidance about this including how to use the DB you created in the
+previous step.
+
+### Running locally
+
+You can now run the app locally! To do, run:
     
 ```
-$ python dpr.py
+python dpr.py
 ```
 
-#### Lambda Deployment Process:
+### Lambda Deployment Process:
+
 The lambda configuration is in zappa_settings.json
 There are different environment to deploy.
 
@@ -65,60 +81,34 @@ There are different environment to deploy.
     For further deployment:
     $  zappa update stage
 
-##### Zappa Configuration:
-```
-s3_bucket: Which bucket the zip will be deployed
-aws_region: aws region
-environment_variables.FLASK_CONFIGURATION what config class the app will take from 
-   app.config.py 
-```
-    
-## Api Doc:
-All api documentation is maintained by [flasgger](https://github.com/rochacbruno/flasgger)
 
-The swagger UI Url path is {host}/apidocs/index.html
-    
-## Testing:
-Before running tests plz run:
+## Testing
+
+Before running tests run:
+
 ```
 $ export FLASK_CONFIGURATION=test
 ```
-. So that tests are not dependent on any env variable. By default it is dependent on
+
+This ensures that tests are not dependent on any env variable. By default it is dependent on
 local postgresql instance.
 
-All tests are in tests directory. We use pytest for testing
+TODO: explain how to set up this postgresql instance.
 
-To run all tests please run this in the base directory:
+We use pytest for testing. All tests are in tests directory. To run the tests do:
 
 ```
 pytest tests
 ```
 
-* Some times pytest got cached by bash so tests may fail as it points to /usr/local/pytest
- not the virtual env pytest
- then plz run ```./env/bin/pytest tests```
+## Continuous deployment process
 
-## Submodules:
-
-This project has a sub module dpr-js
-To run locally
 ```
-$ cd dpr-js
-$ npm install
-$ npm run build
+git pull origin master
+git checkout deploy
+# if you do not yet have the deploy branch
+git checkout -b deploy
+git merge master
+git push origin deploy
 ```
-This will create two directories:
-- /app/static/scripts
-- /app/templates
 
-When run ```python dpr.py``` it will take these html and scripts.
-
-## DPR continuous deployment process
-
-- git pull origin master
-- git checkout deploy
-  - git checkout -b deploy [if not exists loaclly]
-- git merge master
-- git push origin deploy
-
-That's it looks at https://travis-ci.org/frictionlessdata/dpr-api
