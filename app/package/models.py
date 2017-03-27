@@ -117,7 +117,7 @@ class BitStore(object):
                    version=self.version)
 
     def build_s3_object_url(self, domain_name, path):
-        return 'https://bits.{base_url}/{key}'.\
+        return 'https://bits-{base_url}/{key}'.\
             format(base_url=domain_name,
                    key=self.build_s3_key(path))
 
@@ -386,4 +386,3 @@ class Package(db.Model):
             .filter(Package.name == package_name,
                     Publisher.name == publisher_name).all()
         return len(instance) > 0
-
