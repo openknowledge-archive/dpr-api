@@ -35,13 +35,13 @@ window.history.pushState("", "Dashboard", "/");
 		<br>
 {% filter markdown %}
 
-Install dpmpy, the data package manager  command line tool:
+Install dpm, the data package manager  command line tool:
 
 	$ [sudo] pip install git+https://github.com/frictionlessdata/dpm-py.git
 
 Set your configuration:
 
-	$ dpmpy configure
+	$ dpm configure
 	> Username:  # {{current_user.name}}
 	# Use your secret token here (also visible at the top of the page)
 	> Your access_token:  # {{current_user.secret}}
@@ -51,7 +51,7 @@ Set your configuration:
 Publish
 
 	$ cd your-data-package-directory/
-	$ dpmpy publish
+	$ dpm publish
 {% endfilter %}
 	</div>
 </div>
