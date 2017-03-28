@@ -8,13 +8,6 @@ import os
 from flask import jsonify
 
 
-def get_zappa_prefix():
-    env = os.getenv('STAGE', '')
-    if env is not '':
-        return '/%s' % (env, )
-    return env
-
-
 def get_s3_cdn_prefix():
     env = os.getenv('STAGE', '')
     if env is not '':
