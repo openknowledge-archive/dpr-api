@@ -13,7 +13,7 @@ pip install -r requirements.txt
 # tests - install additional dependencies
 pip install -r requirements.test.txt
 
-# if you encounter errors with psycopg2 you may need to install it manually 
+# if you encounter errors with psycopg2 you may need to install it manually
 sudo apt-get install libpq-dev python-dev
 pip install psycopg2
 ```
@@ -50,22 +50,10 @@ previous step.
 ### Running locally
 
 You can now run the app locally! To do, run:
-    
+
 ```
 python dpr.py
 ```
-
-### Lambda Deployment Process:
-
-The lambda configuration is in zappa_settings.json
-There are different environment to deploy.
-
-    # Right now only dev env config is there.
-    $ zappa deploy stage [This is for first time deployment]
-    
-    For further deployment:
-    $  zappa update stage
-
 
 ## Testing
 
@@ -96,4 +84,3 @@ git checkout -b deploy
 git merge master
 git push origin deploy
 ```
-
