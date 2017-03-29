@@ -50,6 +50,7 @@ class SearchPackagesTestCase(unittest.TestCase):
             pack6 = Package(name='pack6')
             pack6.tags.append(PackageTag(descriptor={"title": "pack6 details six"}))
             self.pub2.packages.append(pack6)
+
             db.session.add(self.pub1)
             db.session.add(self.pub2)
             db.session.commit()

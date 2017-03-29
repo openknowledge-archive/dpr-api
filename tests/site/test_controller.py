@@ -57,7 +57,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
+            metadata.tags.append(PackageTag(descriptor=descriptor))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -83,8 +83,8 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
-            metadata.readme = readme
+            metadata.tags.append(PackageTag(descriptor=descriptor,
+                                            readme=readme))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -104,7 +104,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
+            metadata.tags.append(PackageTag(descriptor=descriptor))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -125,7 +125,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
+            metadata.tags.append(PackageTag(descriptor=descriptor))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -146,7 +146,7 @@ class CatalogTestCase(unittest.TestCase):
             db.create_all()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
+            metadata.tags.append(PackageTag(descriptor=descriptor))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -186,7 +186,7 @@ class WebsiteTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
+            metadata.tags.append(PackageTag(descriptor=descriptor))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -204,7 +204,7 @@ class WebsiteTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
+            metadata.tags.append(PackageTag(descriptor=descriptor))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -335,7 +335,8 @@ class DataPackageShowTest(unittest.TestCase):
             readme = open('fixtures/README.md').read()
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor, metadata.readme = descriptor, readme
+            metadata.tags.append(PackageTag(descriptor=descriptor, readme=readme))
+
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()

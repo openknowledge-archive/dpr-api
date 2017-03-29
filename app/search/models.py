@@ -64,16 +64,11 @@ class DataPackageQuery(object):
 
         for result in results:
             tag = filter(lambda t: t.tag == 'latest', result.tags)[0]
-            data = result.__dict__
-            data['descriptor'] = tag['descriptor']
-            data['status'] = data['status'].value
-            p = result.publisher
-            data['publisher_name'] = p.name
-            if '_sa_instance_state' in data:
-                data.pop('_sa_instance_state', None)
-
+            data = {'name': result.name,
+                    'descriptor': tag.descriptor,
+                    'readme': tag.readme,
+                    'status': result.status.value,
+                    'publisher_name': result.publisher.name}
             data_list.append(data)
-        for data in data_list:
-            if 'publisher' in data:
-                data.pop('publisher', None)
+
         return data_list
