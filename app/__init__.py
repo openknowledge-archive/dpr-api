@@ -17,7 +17,6 @@ from flask_gravatar import Gravatar
 from flask_oauthlib.client import OAuth
 from werkzeug.utils import import_string
 from .database import db
-from app.utils import get_s3_cdn_prefix
 from app.auth.controllers import auth_blueprint, bitstore_blueprint
 from app.auth.models import JWT
 from app.package.controllers import package_blueprint
@@ -109,8 +108,7 @@ def create_app():
 
     @app.context_processor
     def populate_context_variable():
-        return dict(s3_cdn=get_s3_cdn_prefix(),
-                    current_user=g.current_user)
+        return dict(current_user=g.current_user)
 
     @app.before_request
     def get_user_from_cookie():

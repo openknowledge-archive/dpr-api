@@ -12,7 +12,6 @@ from contextlib import nested, contextmanager
 from mock import patch
 import unittest
 import os
-from app.utils import get_s3_cdn_prefix
 from flask_testing import TestCase
 from app.database import db
 from app.site.models import Catalog
@@ -315,10 +314,6 @@ class ContextProcessorTestCase(TestCase):
     def create_app(self):
         os.putenv('STAGE', '')
         return create_app()
-
-    def test_should_have_s3_cdn_value(self):
-        self.client.get('/')
-        self.assert_context("s3_cdn", get_s3_cdn_prefix())
 
 
 class DataPackageShowTest(unittest.TestCase):
