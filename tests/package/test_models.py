@@ -11,7 +11,7 @@ import unittest
 import json
 from app import create_app
 from app.database import db
-from app.package.models import BitStore, Package, PackageStateEnum
+from app.package.models import BitStore, Package, PackageStateEnum, PackageTag
 from app.profile.models import User, Publisher, UserRoleEnum, PublisherUser
 
 
@@ -21,8 +21,8 @@ class BitStoreTestCase(unittest.TestCase):
 
     def test_metadata_s3_key(self):
         metadata = BitStore(publisher="pub_test", package="test_package")
-        expected = "{t}/pub_test/test_package/_v/latest/datapackage.json".\
-                   format(t=metadata.prefix)
+        expected = "{t}/pub_test/test_package/_v/latest/datapackage.json". \
+            format(t=metadata.prefix)
         self.assertEqual(expected, metadata.build_s3_key('datapackage.json'))
 
     def test_metadata_s3_prefix(self):
@@ -49,7 +49,7 @@ class BitStoreTestCase(unittest.TestCase):
                                 body='hi')
             key = metadata.build_s3_key('datapackage.json')
             metadata.save_metadata()
-            obs_list = list(s3.list_objects(Bucket=bucket_name, Prefix=key).\
+            obs_list = list(s3.list_objects(Bucket=bucket_name, Prefix=key). \
                             get('Contents'))
             self.assertEqual(1, len(obs_list))
             self.assertEqual(key, obs_list[0]['Key'])
@@ -295,6 +295,7 @@ class PackageTestCase(unittest.TestCase):
         self.publisher_two = 'test_publisher2'
         self.package_one = 'test_package1'
         self.package_two = 'test_package2'
+        self.package_three = 'test_package3'
         self.app = create_app()
         self.app.app_context().push()
 
@@ -315,20 +316,29 @@ class PackageTestCase(unittest.TestCase):
             user2.publishers.append(association2)
 
             metadata1 = Package(name=self.package_one)
-            metadata1.descriptor = dict(name='test_one')
+            tag1 = PackageTag(descriptor=dict(name='test_one'))
+            metadata1.tags.append(tag1)
             publisher1.packages.append(metadata1)
 
             metadata2 = Package(name=self.package_two)
-            metadata2.descriptor = dict(name='test_two')
+            tag2 = PackageTag(descriptor=dict(name='test_two'))
+            metadata2.tags.append(tag2)
             publisher1.packages.append(metadata2)
 
             metadata3 = Package(name=self.package_one)
-            metadata3.descriptor = dict(name='test_three')
+            tag3 = PackageTag(descriptor=dict(name='test_three'))
+            metadata3.tags.append(tag3)
             publisher2.packages.append(metadata3)
 
             metadata4 = Package(name=self.package_two)
-            metadata4.descriptor = dict(name='test_four')
+            tag4 = PackageTag(descriptor=dict(name='test_four'))
+            metadata4.tags.append(tag4)
             publisher2.packages.append(metadata4)
+
+            metadata5 = Package(name=self.package_three)
+            tag5 = PackageTag(descriptor=dict(name='test_four'))
+            metadata5.tags.append(tag5)
+            publisher2.packages.append(metadata5)
 
             db.session.add(user1)
             db.session.add(user2)
@@ -341,17 +351,21 @@ class PackageTestCase(unittest.TestCase):
         self.assertEqual(2, len(res))
 
     def test_update_fields_if_instance_present(self):
-        metadata = Package.query.join(Publisher)\
+        metadata = Package.query.join(Publisher) \
             .filter(Publisher.name == self.publisher_one,
                     Package.name == self.package_one).one()
-        self.assertEqual(metadata.descriptor['name'], "test_one")
+
+        descriptor = metadata.tags[0].descriptor
+
+        self.assertEqual(descriptor['name'], "test_one")
         Package.create_or_update(self.package_one, self.publisher_one,
                                  descriptor=json.dumps(dict(name='sub')),
                                  private=True)
         metadata = Package.query.join(Publisher) \
             .filter(Publisher.name == self.publisher_one,
                     Package.name == self.package_one).one()
-        self.assertEqual(json.loads(metadata.descriptor)['name'], "sub")
+        descriptor = metadata.tags[0].descriptor
+        self.assertEqual(json.loads(descriptor)['name'], "sub")
         self.assertEqual(metadata.private, True)
 
     def test_insert_if_not_present(self):
@@ -405,7 +419,7 @@ class PackageTestCase(unittest.TestCase):
                    Package.name == self.package_one).all()
         self.assertEqual(0, len(data))
         data = Publisher.query.all()
-        self.assertEqual(1, len(data))
+        self.assertEqual(2, len(data))
 
     def test_return_false_if_error_occur(self):
         status = Package.delete_data_package("fake_package",
@@ -413,44 +427,56 @@ class PackageTestCase(unittest.TestCase):
         self.assertFalse(status)
 
     def test_should_populate_new_versioned_data_package(self):
-        Package.create_or_update_version(self.publisher_one,
-                                         self.package_two, 'tag_one')
-        latest_data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_two,
-                   Package.version == 'latest').one()
-        tagged_data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_two,
-                   Package.version == 'tag_one').one()
-        self.assertEqual(latest_data.name, tagged_data.name)
-        self.assertEqual('tag_one', tagged_data.version)
+        Package.create_or_update_tag(self.publisher_one,
+                                     self.package_two, 'tag_one')
+        package = Package.query.join(Publisher) \
+            .filter(Publisher.name == self.publisher_one,
+                    Package.name == self.package_two).one()
+
+        latest_data = PackageTag.query.join(Package) \
+            .filter(Package.id == package.id,
+                    PackageTag.tag == 'latest').one()
+
+        tagged_data = PackageTag.query.join(Package) \
+            .filter(Package.id == package.id,
+                    PackageTag.tag == 'tag_one').one()
+
+        self.assertEqual(latest_data.package_id, tagged_data.package_id)
+        self.assertEqual('tag_one', tagged_data.tag)
 
     def test_should_update_data_package_if_preexists(self):
         with self.app.test_request_context():
             pub = Publisher.query.filter_by(name=self.publisher_one).one()
-            pub.packages.append(Package(name=self.package_two,
-                                        version='tag_one',
-                                        readme='old_readme'))
+            package = Package.query.join(Publisher)\
+                .filter(Publisher.name == self.publisher_one,
+                        Package.name == self.package_two)\
+                .one()
+            package.tags.append(PackageTag(tag='tag_one', readme='old_readme'))
+            pub.packages.append(package)
             db.session.add(pub)
             db.session.commit()
-        latest_data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_two,
-                   Package.version == 'latest').one()
-        tagged_data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_two,
-                   Package.version == 'tag_one').one()
+
+        package = Package.query.join(Publisher) \
+            .filter(Publisher.name == self.publisher_one,
+                    Package.name == self.package_two).one()
+
+        latest_data = PackageTag.query.join(Package) \
+            .filter(Package.id == package.id,
+                    PackageTag.tag == 'latest').one()
+
+        tagged_data = PackageTag.query.join(Package) \
+            .filter(Package.id == package.id,
+                    PackageTag.tag == 'tag_one').one()
+
         self.assertNotEqual(latest_data.readme, tagged_data.readme)
 
-        Package.create_or_update_version(self.publisher_one,
-                                         self.package_two,
-                                         'tag_one')
-        tagged_data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_two,
-                   Package.version == 'tag_one').one()
+        Package.create_or_update_tag(self.publisher_one,
+                                     self.package_two,
+                                     'tag_one')
+        tagged_data = PackageTag.query.join(Package) \
+            .filter(Package.id == package.id,
+                    PackageTag.tag == 'tag_one').one()
+
         self.assertEqual(latest_data.readme, tagged_data.readme)
 
     def test_is_package_exists(self):
@@ -458,6 +484,28 @@ class PackageTestCase(unittest.TestCase):
         self.assertTrue(status)
         status = Package.is_package_exists(self.publisher_one, 'non-exists-package')
         self.assertFalse(status)
+
+    def test_update_status_with_tag(self):
+        Package.create_or_update_tag(self.publisher_two,
+                                     self.package_three,
+                                     '1.0')
+        Package.create_or_update_tag(self.publisher_two,
+                                     self.package_three,
+                                     '1.1')
+        status = Package.change_status(self.publisher_two,
+                                       self.package_three,
+                                       PackageStateEnum.deleted)
+        self.assertTrue(status)
+
+    def test_delete_with_tag(self):
+        Package.create_or_update_tag(self.publisher_two,
+                                     self.package_three,
+                                     '1.0')
+        Package.create_or_update_tag(self.publisher_two,
+                                     self.package_three,
+                                     '1.1')
+        status = Package.delete_data_package(self.publisher_two, self.package_three)
+        self.assertTrue(status)
 
     def tearDown(self):
         with self.app.app_context():

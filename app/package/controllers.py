@@ -155,7 +155,7 @@ def tag_data_package(publisher, package):
             return handle_error('ATTRIBUTE_MISSING', 'version not found', 400)
 
         bitstore = BitStore(publisher, package)
-        status_db = Package.create_or_update_version(publisher, package, data['version'])
+        status_db = Package.create_or_update_tag(publisher, package, data['version'])
         status_bitstore = bitstore.copy_to_new_version(data['version'])
 
         if status_db is False or status_bitstore is False:
@@ -208,7 +208,7 @@ def delete_data_package(publisher, package):
     try:
         bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.change_acl('private')
-        status_db = Package.change_status(publisher, package)
+        status_db = Package.change_status(publisher, package, PackageStateEnum.deleted)
         if status_acl and status_db:
             return jsonify({"status": "OK"}), 200
         if not status_acl:
@@ -433,18 +433,21 @@ def get_metadata(publisher, package):
     """
     try:
         data = Package.query.join(Publisher).\
-            filter(Publisher.name == publisher, Package.name == package).\
+            filter(Publisher.name == publisher,
+                   Package.name == package,
+                   Package.status == PackageStateEnum.active).\
             first()
         if data is None:
             return handle_error('DATA_NOT_FOUND',
                                 'No metadata found for the package',
                                 404)
+        tag = filter(lambda t: t.tag == 'latest', data.tags)[0]
         metadata = {
             'id': data.id,
             'name': data.name,
             'publisher': data.publisher.name,
-            'readme': data.readme or '',
-            'descriptor': data.descriptor
+            'readme': tag.readme or '',
+            'descriptor': tag.descriptor
         }
         return jsonify(metadata), 200
     except Exception as e:

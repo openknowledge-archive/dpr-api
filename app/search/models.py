@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import re
 import sqlalchemy
 from sqlalchemy import or_
-from app.package.models import Package
+from app.package.models import Package, PackageTag, PackageStateEnum
 from app.profile.models import Publisher
 
 
@@ -34,9 +34,12 @@ class DataPackageQuery(object):
             sql_query = sql_query.filter(or_(*sa_filters))
 
         if query != '*' or not query.strip():
-            sql_query = sql_query.filter(Package.descriptor.op('->>')
-                                         ('title').cast(sqlalchemy.TEXT)
-                                         .ilike("%{q}%".format(q=query)))
+            sql_query = sql_query.join(Package.tags)\
+                .filter(PackageTag.descriptor.op('->>')('title')
+                        .cast(sqlalchemy.TEXT)
+                        .ilike("%{q}%".format(q=query)),
+                        PackageTag.tag == 'latest',
+                        Package.status == PackageStateEnum.active)
 
         return sql_query
 
@@ -61,16 +64,12 @@ class DataPackageQuery(object):
         results = self._build_sql_query(q, qf).limit(self.limit)
 
         for result in results:
-            data = result.__dict__
-            data['descriptor'] = data['descriptor']
-            data['status'] = data['status'].value
-            p = result.publisher
-            data['publisher_name'] = p.name
-            if '_sa_instance_state' in data:
-                data.pop('_sa_instance_state', None)
-
+            tag = filter(lambda t: t.tag == 'latest', result.tags)[0]
+            data = {'name': result.name,
+                    'descriptor': tag.descriptor,
+                    'readme': tag.readme,
+                    'status': result.status.value,
+                    'publisher_name': result.publisher.name}
             data_list.append(data)
-        for data in data_list:
-            if 'publisher' in data:
-                data.pop('publisher', None)
+
         return data_list

@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from app.database import db
 from app.package import models
 from app import create_app
-from app.package.models import Package, BitStore
+from app.package.models import Package, BitStore, PackageTag
 from app.profile.models import Publisher, PublisherUser, User, UserRoleEnum
 
 dot_env_path = join(dirname(__file__), '.env')
@@ -91,8 +91,11 @@ def populate_data(publisher_name):
         db.session.commit()
     publisher = Publisher.query.filter_by(name=publisher_name).first()
     metadata = Package(name="demo-package")
-    metadata.descriptor, metadata.status, metadata.private, metadata.readme \
-        = data, 'active', False, readme
+    metadata.status, metadata.private \
+        = 'active', False
+    tag = PackageTag(descriptor=data, readme=readme)
+
+    metadata.tags.append(tag)
 
     publisher.packages.append(metadata)
     db.session.add(publisher)

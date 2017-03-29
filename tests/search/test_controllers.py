@@ -8,7 +8,8 @@ import unittest
 import json
 from app import create_app
 from app.database import db
-from app.package.models import Package, Publisher
+from app.profile.models import Publisher
+from app.package.models import Package, PackageTag
 
 
 class SearchPackagesTestCase(unittest.TestCase):
@@ -24,21 +25,38 @@ class SearchPackagesTestCase(unittest.TestCase):
             self.pub2_name = 'pub2'
             self.pub1 = Publisher(name=self.pub1_name)
             self.pub2 = Publisher(name=self.pub2_name)
-            self.pub1.packages.append(Package(name='pack1', descriptor={"title": "pack1 details one"},
-                                              readme="Big readme one"))
-            self.pub1.packages.append(Package(name='pack2', descriptor={"title": "pack2 details two"},
-                                              readme="Big readme two"))
-            self.pub1.packages.append(Package(name='pack3', descriptor={"title": "pack3 details three"}))
+            pack1 = Package(name='pack1')
+            pack1.tags.append(PackageTag(descriptor={"title": "pack1 details one"},
+                                         readme="Big readme one"))
+            self.pub1.packages.append(pack1)
 
-            self.pub2.packages.append(Package(name='pack4', descriptor={"title": "pack4 details four"}))
-            self.pub2.packages.append(Package(name='pack5', descriptor={"title": "pack5 details five"}))
-            self.pub2.packages.append(Package(name='pack6', descriptor={"title": "pack6 details six"}))
+            pack2 = Package(name='pack2')
+            pack2.tags.append(PackageTag(descriptor={"title": "pack2 details two"},
+                                         readme="Big readme two"))
+            self.pub1.packages.append(pack2)
+
+            pack3 = Package(name='pack3')
+            pack3.tags.append(PackageTag(descriptor={"title": "pack3 details three"}))
+            self.pub1.packages.append(pack3)
+
+            pack4 = Package(name='pack4')
+            pack4.tags.append(PackageTag(descriptor={"title": "pack4 details four"}))
+            self.pub2.packages.append(pack4)
+
+            pack5 = Package(name='pack5')
+            pack5.tags.append(PackageTag(descriptor={"title": "pack5 details five"}))
+            self.pub2.packages.append(pack5)
+
+            pack6 = Package(name='pack6')
+            pack6.tags.append(PackageTag(descriptor={"title": "pack6 details six"}))
+            self.pub2.packages.append(pack6)
+
             db.session.add(self.pub1)
             db.session.add(self.pub2)
             db.session.commit()
 
     def test_should_return_data_package_filter_by_publisher(self):
-        url = "/api/search/package?q=* publisher:pub1".format(name=self.pub1_name)
+        url = "/api/search/package?q=* publisher:pub1"
         response = self.client.get(url)
         result = json.loads(response.data)
         self.assertEqual(200, response.status_code)
@@ -69,10 +87,11 @@ class SearchPackagesTestCase(unittest.TestCase):
         with self.app.test_request_context():
             pub = Publisher(name='big_publisher')
             for i in range(0, 30):
+                pack = Package(name='pack{i}'.format(i=i))
+                pack.tags.append(PackageTag(descriptor={"title": "pack1 details one"},
+                                            readme="Big readme one"))
                 pub.packages\
-                    .append(Package(name='pack{i}'.format(i=i),
-                                    descriptor={"title": "pack1 details one"},
-                                    readme="Big readme one"))
+                    .append(pack)
             db.session.add(pub)
             db.session.commit()
 
