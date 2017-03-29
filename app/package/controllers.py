@@ -208,7 +208,7 @@ def delete_data_package(publisher, package):
     try:
         bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.change_acl('private')
-        status_db = Package.change_status(publisher, package)
+        status_db = Package.change_status(publisher, package, PackageStateEnum.deleted)
         if status_acl and status_db:
             return jsonify({"status": "OK"}), 200
         if not status_acl:
