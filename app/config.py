@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 class BaseConfig(object):
     required_config = ['AWS_REGION', 'SQLALCHEMY_DATABASE_URI',
-                       'S3_BUCKET_NAME', 'FLASKS3_BUCKET_NAME',
+                       'S3_BUCKET_NAME',
                        'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                        "GITHUB_CLIENT_ID", 'GITHUB_CLIENT_SECRET']
 
@@ -38,15 +38,9 @@ class BaseConfig(object):
     GITHUB_CLIENT_ID = 'id'
     GITHUB_CLIENT_SECRET = 'secret'
 
-    SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/dpr_db_test'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://dpr_user:secret@localhost/dpr_db_test'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     S3_BUCKET_NAME = "test"
-
-    FLASKS3_BUCKET_NAME = "test"
-    FLASKS3_FILEPATH_HEADERS = {
-        r'/*\.css': {'Content-Type': 'text/css'},
-        r'/*\.js': {'Content-Type': "text/javascript"}
-    }
 
     def check_required_config(self):
         for conf in self.required_config:
@@ -56,7 +50,7 @@ class BaseConfig(object):
 
 
 class DevelopmentConfig(BaseConfig):
-    required_config = ['S3_BUCKET_NAME', 'FLASKS3_BUCKET_NAME',
+    required_config = ['S3_BUCKET_NAME',
                        'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                        'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET',
                        'SQLALCHEMY_DATABASE_URI']
@@ -70,7 +64,6 @@ class DevelopmentConfig(BaseConfig):
     TESTING = True
     # need to add as test would fail
     S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-    FLASKS3_BUCKET_NAME = os.environ.get('FLASKS3_BUCKET_NAME')
     FLASKS3_REGION = os.environ.get('AWS_REGION')
 
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
