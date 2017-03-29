@@ -101,7 +101,7 @@ class DataPackageQueryTestCase(unittest.TestCase):
         query_string = "abc"
         dpq = DataPackageQuery(query_string)
         query, filters = dpq._parse_query_string()
-        self.assertEqual(2, len(dpq._build_sql_query(query, filters)
+        self.assertEqual(3, len(dpq._build_sql_query(query, filters)
                                 .whereclause._from_objects))
 
     def test_sql_query_should_not_contain_like_stmt(self):
