@@ -84,6 +84,20 @@ class GetMetaDataTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200) 
         self.assertEqual(data['readme'], '')
 
+    def test_should_not_visible_after_soft_delete(self):
+        descriptor = {'name': 'test description'}
+        with self.app.app_context():
+            publisher = Publisher(name=self.publisher)
+            metadata = Package(name=self.package)
+            metadata.tags.append(PackageTag(descriptor=descriptor))
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
+            db.session.commit()
+            Package.delete_data_package(self.publisher, self.package)
+        response = self.client. \
+            get('/api/package/%s/%s' % (self.publisher, self.package))
+        self.assertEqual(response.status_code, 404)
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()

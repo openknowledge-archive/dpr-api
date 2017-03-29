@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import re
 import sqlalchemy
 from sqlalchemy import or_
-from app.package.models import Package, PackageTag
+from app.package.models import Package, PackageTag, PackageStateEnum
 from app.profile.models import Publisher
 
 
@@ -38,7 +38,8 @@ class DataPackageQuery(object):
                 .filter(PackageTag.descriptor.op('->>')('title')
                         .cast(sqlalchemy.TEXT)
                         .ilike("%{q}%".format(q=query)),
-                        PackageTag.tag == 'latest')
+                        PackageTag.tag == 'latest',
+                        Package.status == PackageStateEnum.active)
 
         return sql_query
 

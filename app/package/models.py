@@ -254,7 +254,7 @@ class Package(db.Model):
                        index=True, default=PackageStateEnum.active)
     private = db.Column(db.BOOLEAN, default=False)
 
-    publisher_id = db.Column(db.Integer, ForeignKey('publisher.id'))
+    publisher_id = db.Column(db.Integer, ForeignKey('publisher.id', ondelete='CASCADE'))
     publisher = relationship("Publisher", back_populates="packages",
                              cascade="save-update, merge, delete, delete-orphan",
                              single_parent=True)
@@ -361,8 +361,8 @@ class Package(db.Model):
                 filter(Publisher.name == publisher_name,
                        Package.name == package_name).one()
             package_id = data.id
-            meta_data = Package.query.get(package_id)
-            db.session.delete(meta_data)
+            Package.query.filter(Package.id == package_id).delete()
+            # db.session.delete(meta_data)
             db.session.commit()
             return True
         except Exception as e:
@@ -413,7 +413,7 @@ class PackageTag(db.Model):
     descriptor = db.Column(db.JSON)
     readme = db.Column(db.TEXT)
 
-    package_id = db.Column(db.Integer, ForeignKey('package.id'))
+    package_id = db.Column(db.Integer, ForeignKey("package.id", ondelete='CASCADE'))
 
     package = relationship("Package", back_populates="tags",
                            cascade="save-update, merge, delete, delete-orphan",

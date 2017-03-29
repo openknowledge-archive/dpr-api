@@ -419,7 +419,7 @@ class PackageTestCase(unittest.TestCase):
                    Package.name == self.package_one).all()
         self.assertEqual(0, len(data))
         data = Publisher.query.all()
-        self.assertEqual(1, len(data))
+        self.assertEqual(2, len(data))
 
     def test_return_false_if_error_occur(self):
         status = Package.delete_data_package("fake_package",

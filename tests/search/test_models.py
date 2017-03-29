@@ -17,11 +17,12 @@ class DataPackageQueryTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
         self.app.app_context().push()
+        self.pub1_name = 'pub1'
+        self.pub2_name = 'pub2'
         with self.app.test_request_context():
             db.drop_all()
             db.create_all()
-            self.pub1_name = 'pub1'
-            self.pub2_name = 'pub2'
+
             self.pub1 = Publisher(name=self.pub1_name)
             self.pub2 = Publisher(name=self.pub2_name)
 
@@ -155,6 +156,12 @@ class DataPackageQueryTestCase(unittest.TestCase):
     def test_limit_should_be_maximum_1000(self):
         dpq = DataPackageQuery('details publisher:pub1', limit=1005)
         self.assertEqual(1000, dpq.limit)
+
+    def test_should_not_visible_after_soft_delete(self):
+        Package.delete_data_package(self.pub1_name, 'pack1')
+        query_string = "details publisher:pub1"
+        dpq = DataPackageQuery(query_string, limit=3)
+        self.assertEqual(2, len(dpq.get_data()))
 
     def tearDown(self):
         with self.app.app_context():

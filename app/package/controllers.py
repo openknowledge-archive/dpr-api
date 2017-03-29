@@ -433,7 +433,9 @@ def get_metadata(publisher, package):
     """
     try:
         data = Package.query.join(Publisher).\
-            filter(Publisher.name == publisher, Package.name == package).\
+            filter(Publisher.name == publisher,
+                   Package.name == package,
+                   Package.status == PackageStateEnum.active).\
             first()
         if data is None:
             return handle_error('DATA_NOT_FOUND',
