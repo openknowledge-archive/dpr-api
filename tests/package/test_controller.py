@@ -11,7 +11,7 @@ from mock import patch
 from moto import mock_s3
 from app import create_app
 from app.database import db
-from app.package.models import Package,  BitStore, PackageStateEnum
+from app.package.models import Package, BitStore, PackageStateEnum, PackageTag
 from app.profile.models import User, Publisher, UserRoleEnum, PublisherUser
 
 
@@ -37,7 +37,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
+            metadata.tags.append(PackageTag(descriptor=descriptor))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -52,8 +52,8 @@ class GetMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
-            metadata.descriptor = descriptor
-            metadata.readme = readme
+            metadata.tags.append(PackageTag(descriptor=descriptor,
+                                            readme=readme))
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
@@ -73,6 +73,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
             metadata = Package(name=self.package)
+            metadata.tags.append(PackageTag(descriptor=descriptor))
             metadata.descriptor = descriptor
             publisher.packages.append(metadata)
             db.session.add(publisher)
@@ -920,10 +921,11 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.auth = "%s" % self.jwt
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_version')
-    def test_return_200_if_all_goes_well(self, create_or_update_version, copy_to_new_version):
+    @patch('app.package.models.Package.create_or_update_tag')
+    def test_return_200_if_all_goes_well(self, create_or_update_tag,
+                                         copy_to_new_version):
         copy_to_new_version.return_value = True
-        create_or_update_version.return_value = True
+        create_or_update_tag.return_value = True
         response = self.client.post(self.url,
                                     data=json.dumps({
                                         'version': 'tag_one'
@@ -933,10 +935,11 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_version')
-    def test_throw_400_if_version_missing(self, create_or_update_version, copy_to_new_version):
+    @patch('app.package.models.Package.create_or_update_tag')
+    def test_throw_400_if_version_missing(self, create_or_update_tag,
+                                          copy_to_new_version):
         copy_to_new_version.return_value = True
-        create_or_update_version.return_value = True
+        create_or_update_tag.return_value = True
         response = self.client.post(self.url,
                                     data=json.dumps({
                                         'version_fail': 'tag_one'
@@ -948,10 +951,11 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertEqual('ATTRIBUTE_MISSING', data['error_code'])
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_version')
-    def test_throw_500_if_failed_to_tag(self, create_or_update_version, copy_to_new_version):
+    @patch('app.package.models.Package.create_or_update_tag')
+    def test_throw_500_if_failed_to_tag(self, create_or_update_tag,
+                                        copy_to_new_version):
         copy_to_new_version.return_value = False
-        create_or_update_version.return_value = True
+        create_or_update_tag.return_value = True
         response = self.client.post(self.url,
                                     data=json.dumps({
                                         'version': 'tag_one'
@@ -1003,11 +1007,11 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertTrue('Contents' not in objects_nu)
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_version')
-    def test_allow_if_member_of_publisher(self, create_or_update_version,
+    @patch('app.package.models.Package.create_or_update_tag')
+    def test_allow_if_member_of_publisher(self, create_or_update_tag,
                                           copy_to_new_version):
         copy_to_new_version.return_value = False
-        create_or_update_version.return_value = True
+        create_or_update_tag.return_value = True
         response = self.client.post(self.jwt_url,
                                     data=json.dumps({
                                         'username': self.user_member_name,

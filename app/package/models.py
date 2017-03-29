@@ -250,43 +250,45 @@ class Package(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     name = db.Column(db.TEXT, index=True)
-    version = db.Column(db.TEXT, index=True, default='latest')
-    descriptor = db.Column(db.JSON)
     status = db.Column(db.Enum(PackageStateEnum, native_enum=False),
                        index=True, default=PackageStateEnum.active)
     private = db.Column(db.BOOLEAN, default=False)
-    readme = db.Column(db.TEXT)
 
     publisher_id = db.Column(db.Integer, ForeignKey('publisher.id'))
     publisher = relationship("Publisher", back_populates="packages",
                              cascade="save-update, merge, delete, delete-orphan",
                              single_parent=True)
 
+    tags = relationship("PackageTag", back_populates="package")
+
     __table_args__ = (
-        UniqueConstraint("name", "version", "publisher_id"),
+        UniqueConstraint("name", "publisher_id"),
     )
 
     @staticmethod
-    def create_or_update_version(publisher_name, package_name, version):
+    def create_or_update_tag(publisher_name, package_name, tag):
         try:
-            data_latest = Package.query.join(Publisher). \
-                filter(Publisher.name == publisher_name,
-                       Package.name == package_name,
-                       Package.version == 'latest').one()
-            instance = Package.query.join(Publisher). \
-                filter(Publisher.name == publisher_name,
-                       Package.name == package_name,
-                       Package.version == version).first()
-            update_props = ['name', 'version', 'descriptor', 'status',
-                            'private', 'readme', 'publisher_id']
-            if instance is None:
-                instance = Package()
+            package = Package.query.join(Publisher)\
+                .filter(Publisher.name == publisher_name,
+                        Package.name == package_name).one()
+
+            data_latest = PackageTag.query.join(Package)\
+                .filter(Package.id == package.id,
+                        PackageTag.tag == 'latest').one()
+
+            tag_instance = PackageTag.query.join(Package) \
+                .filter(Package.id == package.id,
+                        PackageTag.tag == tag).first()
+
+            update_props = ['descriptor', 'readme', 'package_id']
+            if tag_instance is None:
+                tag_instance = PackageTag()
 
             for update_prop in update_props:
-                setattr(instance, update_prop, getattr(data_latest, update_prop))
-            instance.version = version
+                setattr(tag_instance, update_prop, getattr(data_latest, update_prop))
+            tag_instance.tag = tag
 
-            db.session.add(instance)
+            db.session.add(tag_instance)
             db.session.commit()
             return True
         except Exception as e:
@@ -305,11 +307,21 @@ class Package(db.Model):
         instance = Package.query.join(Publisher)\
             .filter(Package.name == name,
                     Publisher.name == publisher_name).first()
+
         if not instance:
             instance = Package(name=name)
             instance.publisher_id = pub_id
+            tag_instance = PackageTag()
+            instance.tags.append(tag_instance)
+        else:
+            tag_instance = PackageTag.query.join(Package) \
+                .filter(Package.id == instance.id,
+                        PackageTag.tag == 'latest').one()
         for key, value in kwargs.items():
-            setattr(instance, key, value)
+            if key not in ['descriptor', 'readme']:
+                setattr(instance, key, value)
+            else:
+                setattr(tag_instance, key, value)
         db.session.add(instance)
         db.session.commit()
 
@@ -386,3 +398,27 @@ class Package(db.Model):
             .filter(Package.name == package_name,
                     Publisher.name == publisher_name).all()
         return len(instance) > 0
+
+
+class PackageTag(db.Model):
+
+    __tablename__ = 'package_tag'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    tag = db.Column(db.TEXT, index=True, default='latest')
+    tag_description = db.Column(db.Text)
+
+    descriptor = db.Column(db.JSON)
+    readme = db.Column(db.TEXT)
+
+    package_id = db.Column(db.Integer, ForeignKey('package.id'))
+
+    package = relationship("Package", back_populates="tags",
+                           cascade="save-update, merge, delete, delete-orphan",
+                           single_parent=True)
+
+    __table_args__ = (
+        UniqueConstraint("tag", "package_id"),
+    )
