@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 from flask import Blueprint, request, render_template, \
     jsonify, session, make_response, g
 from flask import current_app as app
+from sqlalchemy.orm.exc import NoResultFound
+
 from app.profile.models import User
 from app.auth.models import JWT, FileData
 from app.package.models import Package
@@ -125,8 +127,10 @@ def get_jwt():
                                 'secret can not be empty',
                                 400)
         elif user_name is not None:
-            user = User.query.filter_by(name=user_name).first()
-            if user is None:
+            try:
+                user = User.query.filter_by(name=user_name).one()
+            except NoResultFound as e:
+                app.logger.error(e)
                 return handle_error('USER_NOT_FOUND',
                                     'user does not exists',
                                     404)
@@ -134,8 +138,10 @@ def get_jwt():
                 verify = True
                 user_id = user.id
         elif email is not None:
-            user = User.query.filter_by(email=email).first()
-            if user is None:
+            try:
+                user = User.query.filter_by(email=email).one()
+            except NoResultFound as e:
+                app.logger.error(e)
                 return handle_error('USER_NOT_FOUND',
                                     'user does not exists',
                                     404)
