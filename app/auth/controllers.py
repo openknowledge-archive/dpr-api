@@ -56,7 +56,7 @@ def callback_handling():
         session['github_token'] = (resp['access_token'], '')
         user_info = github.get('user')
         user = User().create_or_update_user_from_callback(user_info.data)
-        jwt_helper = JWT(app.config['API_KEY'], user.id)
+        jwt_helper = JWT(app.config['JWT_SEED'], user.id)
         session.pop('github_token', None)
         g.current_user = user
         resp = make_response(render_template("dashboard.html",
@@ -149,7 +149,7 @@ def get_jwt():
                 verify = True
                 user_id = user.id
         if verify:
-            return jsonify({'token': JWT(app.config['API_KEY'],
+            return jsonify({'token': JWT(app.config['JWT_SEED'],
                                          user_id).encode()}), 200
         else:
             return handle_error('SECRET_ERROR',
@@ -202,7 +202,7 @@ def authorize_upload():
     """
     try:
         user_id = None
-        jwt_status, user_info = get_user_from_jwt(request, app.config['API_KEY'])
+        jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
         if jwt_status:
             user_id = user_info['user']
 

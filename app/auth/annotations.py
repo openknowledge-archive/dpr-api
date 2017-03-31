@@ -19,7 +19,7 @@ from app.profile.models import Publisher
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        status, data = get_user_from_jwt(request, app.config['API_KEY'])
+        status, data = get_user_from_jwt(request, app.config['JWT_SEED'])
         if status:
             _request_ctx_stack.top.current_user = data
             return f(*args, **kwargs)
@@ -33,7 +33,7 @@ def is_allowed(action):
         @wraps(f)
         def wrapped(*args, **kwargs):
             user_id, instance = None, None
-            jwt_status, user_info = get_user_from_jwt(request, app.config['API_KEY'])
+            jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
             if jwt_status:
                 user_id = user_info['user']
             status = check_is_authorized(action, kwargs['publisher'], kwargs['package'], user_id)
