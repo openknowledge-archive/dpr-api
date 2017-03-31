@@ -58,8 +58,9 @@ def get_github_oauth(oauth, client_id, client_secret):
 def create_app():
 
     app = Flask(__name__)
-    app.secret_key = 'dpr-api-secret-key'
     app.config.from_object(get_config_class_name())
+
+    app.secret_key = app.config['JWT_SEED']
 
     db.init_app(app)
 
@@ -116,7 +117,7 @@ def create_app():
         g.current_user = None
         if token:
             try:
-                payload = JWT(app.config['API_KEY']).decode(token)
+                payload = JWT(app.config['JWT_SEED']).decode(token)
                 g.current_user = User().get_userinfo_by_id(payload['user'])
             except Exception as e:
                 app.logger.error(e)

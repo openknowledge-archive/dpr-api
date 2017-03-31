@@ -368,7 +368,7 @@ def finalize_publish():
         datapackage_url = data['datapackage']
         publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
         user_id = None
-        jwt_status, user_info = get_user_from_jwt(request, app.config['API_KEY'])
+        jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
         if jwt_status:
             user_id = user_info['user']
 

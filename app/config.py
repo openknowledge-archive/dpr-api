@@ -14,7 +14,7 @@ class BaseConfig(object):
                        'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                        "GITHUB_CLIENT_ID", 'GITHUB_CLIENT_SECRET']
 
-    API_KEY = "dpr-api-key"
+    JWT_SEED = "dpr-api-key"
     DEBUG = True
     TESTING = True
     SWAGGER = {
@@ -62,6 +62,9 @@ class DevelopmentConfig(BaseConfig):
 
     DEBUG = True
     TESTING = True
+
+    JWT_SEED = os.environ.get("JWT_SEED")
+
     # need to add as test would fail
     S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
     FLASKS3_REGION = os.environ.get('AWS_REGION')
@@ -77,5 +80,11 @@ class DevelopmentConfig(BaseConfig):
 
 
 class StageConfig(DevelopmentConfig):
+
+    required_config = ['S3_BUCKET_NAME', 'JWT_SEED',
+                       'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
+                       'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET',
+                       'SQLALCHEMY_DATABASE_URI']
+
     DEBUG = False
     TESTING = False
