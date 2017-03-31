@@ -40,3 +40,6 @@ class ConfigTestCase(unittest.TestCase):
         app = create_app()
         self.assertEqual(True, app.config['TESTING'])
         self.assertEqual(True, app.config['DEBUG'])
+
+    def tearDown(self):
+        os.environ["FLASK_CONFIGURATION"] = "test"
