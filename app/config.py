@@ -88,3 +88,8 @@ class StageConfig(DevelopmentConfig):
 
     DEBUG = False
     TESTING = False
+
+
+class ProductionConfig(StageConfig):
+    TESTING = False
+    DEBUG = False

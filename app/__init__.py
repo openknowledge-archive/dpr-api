@@ -29,7 +29,8 @@ app_config = {
     "base": "app.config.BaseConfig",
     "test": "app.config.BaseConfig",
     "development": "app.config.DevelopmentConfig",
-    "stage": "app.config.StageConfig"
+    "stage": "app.config.StageConfig",
+    "prod": "app.config.ProductionConfig"
 }
 
 
@@ -88,9 +89,6 @@ def create_app():
                       aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY']
                       )
     app.config['S3'] = s3
-
-    if app.config.get('TESTING') is False:
-        flask_s3.create_all(app)
 
     oauth = OAuth(app=app)
     CORS(app)
