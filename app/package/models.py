@@ -380,7 +380,7 @@ class Package(db.Model):
         try:
             instance = Package.query.join(Publisher) \
                 .filter(Package.name == package_name,
-                        Publisher.name == publisher_name).first()
+                        Publisher.name == publisher_name).one()
             return instance
         except Exception as e:
             app.logger.error(e)
