@@ -46,6 +46,9 @@ def dropdb():
 
 @manager.command
 def populate():
+    user_name, full_name, email = 'examples', 'Examples', 'examples@test.com'
+    populate_db(email, user_name, full_name,
+                'c053521f4f3331908d89df39bba922190a69f0ea99f7ca24')
     user_name, full_name, email = 'core', 'Test Admin', 'core@test.com'
     populate_db(email, user_name, full_name,
                 'c053521f4f3331908d89df39bba922190a69f0ea99f7ca12')
