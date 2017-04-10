@@ -16,7 +16,7 @@ $gray-light:            #BDBDBD !default;
 $gray-blue:             #dcedfd !default;
 // $gray-lighter:           lighten($gray-base, 93.5%) !default; // #eee
 //
-$brand-primary:         #28ceac !default; //cambridge blue
+$brand-primary:         #02bac1 !default; //cambridge blue
 // $brand-success:         #5cb85c !default;
 // $brand-info:            #5bc0de !default;
 $brand-warning:         #ff5500 !default;
@@ -709,7 +709,7 @@ $jumbotron-heading-font-size:    ceil(($font-size-base * 2.5)) !default;
 // //##
 //
 // $panel-bg:                    #fff !default;
-// $panel-body-padding:          15px !default;
+$panel-body-padding:          25px !default;
 // $panel-heading-padding:       10px 15px !default;
 // $panel-footer-padding:        $panel-heading-padding !default;
 // $panel-border-radius:         $border-radius-base !default;

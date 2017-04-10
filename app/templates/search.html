@@ -8,22 +8,21 @@ Search
 {% block content %}
   <div class="container">
     <div class="col-md-8 pb-4">
-      <h1>Search</h1>
+      <h1>Search result</h1>
       <div id="custom-search-input">
         <form id="search-page-search-form" class="input-group col-md-12" action="/search" method="GET">
           <input id="search-page-search" type="text" class="form-control input-lg" placeholder="Search ..." name="q" value="{{ query_term }}" required/>
-          <span class="input-group-btn">
-            <button class="btn btn-lg" type="submit">
+          <div class="input-group-btn">
+            <button class="btn btn-default btn-lg" type="submit">
               <i class="fa fa-search"></i>
             </button>
-          </span>
+          </div>
         </form>
       </div>
     </div>
     {% if total_count %}
     <div class="col-md-8 pb-4">
-      <h6>{{ total_count }} packages Found</h6>
-      <h6>for <b>"{{ query_term }}"</b></h6>
+      <h4 class="search-summary">{{ total_count }} packages found for <b>"{{ query_term }}"</b></h4>
       {{ snippets.search_package_list(datapackage_list) }}
     </div>
     {% endif %}
