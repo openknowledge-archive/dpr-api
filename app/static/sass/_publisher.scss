@@ -9,3 +9,9 @@ h2 {
   -moz-box-shadow: none !important;
   box-shadow: none !important;
 }
+
+.badge {
+  font-size: 0.6em;
+  color: #212121;
+  background-color: lighten($gray, 40%);
+}
