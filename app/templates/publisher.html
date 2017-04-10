@@ -41,12 +41,12 @@
 <script>
 function dpFilterFunction() {
   var packages = document.getElementById("publisher-package-list")
-       .getElementsByClassName("card");
+       .getElementsByClassName("panel");
   var input = document.getElementById('publisher-package-input');
   var filter = input.value.toLowerCase();
   for (var i=0; i < packages.length; i++){
     var pack = packages[i];
-    var a = pack.getElementsByClassName("card-title")[0].innerText.toLowerCase();
+    var a = pack.getElementsByTagName("h4")[0].innerText.toLowerCase();
     if (a.indexOf(filter) > -1){
       pack.style.display = "";
     } else {
