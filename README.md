@@ -76,15 +76,11 @@ DOMAIN=<<Full Domain. Eg: dev.example.com>>
 DPR_API_GIT=<<Git URL For Repo>>
 ```
 
-For local development you can leave empty all variables except following ones:
+NOTE: For local development you can leave empty env variables for deployment, but
+Please provide valid AWS/Github credentials, region or bucket name. You can set
+JWT_SEED to any string.
 
-- SQLALCHEMY_DATABASE_URI
-- JWT_SEED
-- AWS_REGION
-- GITHUB_CLIENT_ID
-- GITHUB_CLIENT_SECRET
-
-You can use any string you like, Eg: "development", for all of them, except `SQLALCHEMY_DATABASE_URI`
+> TODO: Local development should not be depended on remote instances such as AWS or Github
 
 SQLALCHEMY_DATABASE_URI should follow the general form for a postgresq connection URI:
 `postgres://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]`
