@@ -48,7 +48,7 @@ class Publisher(db.Model):
         publisher_info['description'] = publisher.description
         publisher_info['title'] = publisher.title
         publisher_info['name'] = publisher.name
-        publisher_info['joined'] = str(publisher.created_at)
+        publisher_info['joined'] = publisher.created_at.strftime("%B %Y")
         return publisher_info
 
 

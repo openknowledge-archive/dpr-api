@@ -143,8 +143,7 @@
           <span class="fa fa-files-o"></span>
           {{ package.descriptor.title }}
         </h4>
-        <h6><b>{{ package.name }}</b></h6>
-        <h6>Resources: {{ package.descriptor.resources|length }}</h6>
+        <h6><b>{{ package.name }}</b> | resources: {{ package.descriptor.resources|length }}</h6>
 
         {% if package.readme %}
           <p class="panel-text">
