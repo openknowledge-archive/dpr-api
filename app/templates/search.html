@@ -25,6 +25,10 @@ Search
       <h4 class="search-summary">{{ total_count }} packages found for <b>"{{ query_term }}"</b></h4>
       {{ snippets.search_package_list(datapackage_list) }}
     </div>
+    {% else %}
+    <div class="col-md-8 pb-4">
+      <h4 class="search-summary">0 packages found for <b>"{{ query_term }}"</b></h4>
+    </div>
     {% endif %}
   </div>
 {% endblock %}
