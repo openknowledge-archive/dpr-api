@@ -50,9 +50,9 @@ $ python manager.py createdb
 $ python manager.py populate
 ```
 
-Note: Be careful! Doing so **all** of you data will be erased. **Never, ever** run
-`python manager.py dropdb` on production database like RDS or any other, unless you
-are super confident what are you doing!
+Note: Be careful! Executing commands above would erase all the data from database.
+**Never, ever** run `python manager.py dropdb` on production database like RDS or
+any other, unless you are super confident what are you doing!
 
 ### Environment Configuration
 
