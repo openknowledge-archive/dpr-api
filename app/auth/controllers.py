@@ -22,8 +22,7 @@ bitstore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore'
 @auth_blueprint.route("/callback")
 def callback_handling():
     """
-    This ia callback api when we redirect the api to Auth0 or any external
-    Auth provider.
+    Callback API for redirecting to Auth0 or any external auth provider.
     ---
     tags:
         - auth
@@ -71,7 +70,7 @@ def callback_handling():
 @auth_blueprint.route("/token", methods=['POST'])
 def get_jwt():
     """
-    This API is responsible for returning JWT token
+    Returns JWT token
     ---
     tags:
         - auth
@@ -80,7 +79,7 @@ def get_jwt():
           name: email
           type: string
           required: false
-          description: user email id
+          description: user email
         - in: body
           name: username
           type: string
@@ -163,7 +162,7 @@ def get_jwt():
 @auth_blueprint.route("/login", methods=['GET'])
 def auth0_login():
     """
-    This API is responsible for Login through external auth provider
+    Login through external auth provider
     ---
     tags:
         - auth
@@ -175,8 +174,7 @@ def auth0_login():
 @bitstore_blueprint.route('/authorize', methods=['POST'])
 def authorize_upload():
     """
-    This API is responsible for generate signed urls for multiple files
-    to post data to S3
+    Generates signed URLs for multiple files for posting data to S3
     ---
     tags:
         - auth
@@ -185,7 +183,7 @@ def authorize_upload():
           name: data
           type: map
           required: true
-          description: publisher name and package name, and file details
+          description: publisher name, package name and file details
     responses:
         200:
             description: Success

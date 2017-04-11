@@ -45,7 +45,7 @@ class GetMetaDataTestCase(unittest.TestCase):
             get('/api/package/%s/%s' % (self.publisher, self.package))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        
+
     def test_return_all_metadata_is_there(self):
         descriptor = {'name': 'test description'}
         readme = 'README'
@@ -81,7 +81,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))
         data = json.loads(response.data)
-        self.assertEqual(response.status_code, 200) 
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(data['readme'], '')
 
     def test_should_not_visible_after_soft_delete(self):
@@ -353,60 +353,6 @@ class SaveMetaDataTestCase(unittest.TestCase):
             db.session.remove()
             db.drop_all()
             db.engine.dispose()
-
-
-class DataProxyTestCase(unittest.TestCase):
-    publisher = 'test_pub'
-    package = 'test_package'
-    resource = 'test_resource'
-    url = '/api/package/dataproxy/{publisher}/{package}/r/{resource}.csv'\
-        .format(publisher=publisher, package=package, resource=resource)
-
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
-
-    @patch("app.package.models.BitStore.get_s3_object")
-    @patch("app.package.models.BitStore.build_s3_key")
-    def test_return_200_if_all_right_for_csv(self, build_key, get_s3_object):
-        build_key.return_value = ''
-        get_s3_object.return_value = 'test_header_0,test_header_1\n'\
-                                     + 'test_value_0,test_value_3'
-        response = self.client.get(self.url)
-        data = response.data
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(data, 'test_header_0,test_header_1\n'\
-                                     + 'test_value_0,test_value_3\n')
-
-    @patch("app.package.models.BitStore.get_s3_object")
-    @patch("app.package.models.BitStore.build_s3_key")
-    def test_return_200_if_all_right_for_json(self, build_key, get_s3_object):
-        build_key.return_value = ''
-        get_s3_object.return_value = 'test_header_0,test_header_1\n'\
-                                     + 'test_value_0,test_value_1\n'\
-                                     + 'test_value_2,test_value_3'
-        self.url = self.url.split('.csv')[0] + '.json'
-        response = self.client.get(self.url)
-        data = response.data
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(data, '['
-                         + '{"test_header_0": "test_value_2", '
-                         + '"test_header_1": "test_value_3"},'
-                         + '{"test_header_0": "test_value_0", '
-                         + '"test_header_1": "test_value_1"}'
-                         + ']')
-
-    @patch("app.package.models.BitStore.get_s3_object")
-    @patch("app.package.models.BitStore.build_s3_key")
-    def test_throw_500_if_not_able_to_get_data_from_s3(self,
-                                                       build_key,
-                                                       get_s3_object):
-        build_key.return_value = ''
-        get_s3_object.side_effect = Exception('failed')
-        response = self.client.get(self.url)
-        data = json.loads(response.data)
-        self.assertEqual(500, response.status_code)
-        self.assertEqual(data['message'], 'failed')
 
 
 class EndToEndTestCase(unittest.TestCase):

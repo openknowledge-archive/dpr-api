@@ -15,8 +15,7 @@ search_blueprint = Blueprint('search', __name__, url_prefix='/api/search')
 @search_blueprint.route("/package", methods=["GET"])
 def search_packages():
     """
-        DPR data package search operation.
-        This API is responsible for searching data package
+        Data Package Search
         ---
         tags:
             - search
