@@ -177,7 +177,7 @@ def authorize_upload():
     Generates signed URLs for multiple files for posting data to S3
     ---
     tags:
-        - auth
+        - package
     parameters:
         - in: body
           name: data
