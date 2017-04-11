@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, \
     json, request, redirect, g, make_response
 from flask import current_app as app
 from app.auth.models import JWT
-from app.site.models import Catalog
+from app.site.models import Packaged
 from app.package.models import BitStore
 from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
@@ -22,15 +22,7 @@ site_blueprint = Blueprint('site', __name__)
 def index():
     """
     Renders index.html if no token found in cookie.
-    If token found in cookie then it renders dashboard.html.
-    ---
-    tags:
-      - site
-    responses:
-      404:
-        description: Publisher does not exist
-      200:
-        description: Successfully loaded home page
+    If token found in cookie then it renders dashboard.html
     """
     if g.current_user:
         return render_template("dashboard.html",
@@ -43,12 +35,6 @@ def logout():
     """
     Sets blank cookie value with expiry time zero
     and renders logout.html page
-    ---
-    tags:
-      - site
-    responses:
-      302:
-        description: Load the Home Page
     """
     g.current_user = None
     resp = make_response(render_template("logout.html", title='Logout'), 200)
@@ -60,24 +46,6 @@ def logout():
 def datapackage_show(publisher, package):
     """
     Loads datapackage page for given owner
-    ---
-    tags:
-      - site
-    parameters:
-      - name: publisher
-        in: path
-        type: string
-        required: true
-        description: datapackage owner name
-      - name: package
-        in: path
-        type: string
-        description: datapackage name
-    responses:
-      404:
-        description: Datapackage does not exist
-      200:
-        description: Successfully loaded
     """
 
     metadata = json.loads(
@@ -89,9 +57,9 @@ def datapackage_show(publisher, package):
             return "404 Not Found", 404
     except:
         pass
-    catalog = Catalog(metadata)
-    dataset = catalog.construct_dataset(request.url_root)
-    dataViews = catalog.get_views()
+    packaged = Packaged(metadata)
+    dataset = packaged.construct_dataset(request.url_root)
+    dataViews = packaged.get_views()
 
     bitstore = BitStore(publisher, package)
     datapackage_json_url_in_s3 = bitstore. \

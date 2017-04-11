@@ -14,12 +14,12 @@ import unittest
 import os
 from flask_testing import TestCase
 from app.database import db
-from app.site.models import Catalog
+from app.site.models import Packaged
 from app.package.models import Package, PackageTag
 from app.profile.models import User, Publisher, UserRoleEnum
 
 
-class CatalogTestCase(unittest.TestCase):
+class PackagedTestCase(unittest.TestCase):
     def setUp(self):
         self.publisher = 'demo'
         self.package = 'demo-package'
@@ -39,37 +39,12 @@ class CatalogTestCase(unittest.TestCase):
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))
-        catalog = Catalog(json.loads(response.data))
-        dataset = catalog.construct_dataset()
+        packaged = Packaged(json.loads(response.data))
+        dataset = packaged.construct_dataset()
         self.assertEqual(dataset.get('name'), descriptor.get('name'))
         self.assertEqual(dataset.get('owner'), self.publisher)
-        self.assertIn('localurl', dataset.get('resources')[0])
         self.assertNotEqual(len(dataset.get('views')), 0)
 
-    def test_adds_local_urls(self):
-        descriptor = {
-            'name': 'test',
-            'resources': [{'path': 'first.csv'},{'path': 'second.csv'}]
-        }
-        with self.app.app_context():
-            db.drop_all()
-            db.create_all()
-            publisher = Publisher(name=self.publisher)
-            metadata = Package(name=self.package)
-            metadata.tags.append(PackageTag(descriptor=descriptor))
-            publisher.packages.append(metadata)
-            db.session.add(publisher)
-            db.session.commit()
-        response = self.client.get('/api/package/%s/%s'%\
-                                   (self.publisher, self.package))
-        catalog = Catalog(json.loads(response.data))
-        dataset = catalog.construct_dataset('http://example.com/')
-        self.assertEqual(dataset.\
-                         get('resources')[0].get('localurl'),
-        'http://example.com/api/dataproxy/demo/demo-package/r/first.csv')
-        self.assertEqual(dataset.\
-                         get('resources')[1].get('localurl'),
-        'http://example.com/api/dataproxy/demo/demo-package/r/second.csv')
 
     def test_adds_readme_if_there_is(self):
         descriptor = {
@@ -89,8 +64,8 @@ class CatalogTestCase(unittest.TestCase):
             db.session.commit()
         response = self.client.get('/api/package/%s/%s' % \
                                    (self.publisher, self.package))
-        catalog = Catalog(json.loads(response.data))
-        dataset = catalog.construct_dataset()
+        packaged = Packaged(json.loads(response.data))
+        dataset = packaged.construct_dataset()
         self.assertEqual(dataset.get('readme'), 'README')
 
     def test_adds_empty_readme_if_there_is_not(self):
@@ -109,8 +84,8 @@ class CatalogTestCase(unittest.TestCase):
             db.session.commit()
         response = self.client.get('/api/package/%s/%s' % \
                                    (self.publisher, self.package))
-        catalog = Catalog(json.loads(response.data))
-        dataset = catalog.construct_dataset()
+        packaged = Packaged(json.loads(response.data))
+        dataset = packaged.construct_dataset()
         self.assertEqual(dataset.get('readme'), '')
 
     def test_get_views(self):
@@ -130,8 +105,8 @@ class CatalogTestCase(unittest.TestCase):
             db.session.commit()
         response = self.client.get('/api/package/%s/%s' % \
                                    (self.publisher, self.package))
-        catalog = Catalog(json.loads(response.data))
-        views = catalog.get_views()
+        packaged = Packaged(json.loads(response.data))
+        views = packaged.get_views()
         self.assertNotEqual(len(views), 0)
         self.assertEqual(views[0].get('type'), 'graph')
 
@@ -151,8 +126,8 @@ class CatalogTestCase(unittest.TestCase):
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))
-        catalog = Catalog(json.loads(response.data))
-        views = catalog.get_views()
+        packaged = Packaged(json.loads(response.data))
+        views = packaged.get_views()
         self.assertEqual(views, [])
 
     def tearDown(self):
