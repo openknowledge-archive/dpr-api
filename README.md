@@ -37,22 +37,64 @@ $ psql -U postgres -c "create user dpr_user password 'secret' createdb;"
 $ psql -U postgres -c "create database dpr_db owner=dpr_user;"
 
 # create tables
-python manager.py db upgrade
+$ python manager.py createdb
+$ python manager.py populate
 ```
+
+While development, if you make changes to database structure, Eg: added new table,
+renamed column etc... You will have to **drop** all the tables and recreate them
+
+```
+$ python manager.py dropdb
+$ python manager.py createdb
+$ python manager.py populate
+```
+
+Note: Be careful! Executing commands above would erase all the data from database.
+**Never, ever** run `python manager.py dropdb` on production database like RDS or
+any other, unless you are super confident what are you doing!
 
 ### Environment Configuration
 
 Rename the env.template file to .env file and edit it.
 
-TODO: guidance about this including how to use the DB you created in the
-previous step.
+```
+JWT_SEED=<<Super Secret Key For Flask Sessions>>
+SQLALCHEMY_DATABASE_URI=<<Postgres Database URI>>*
+S3_BUCKET_NAME=<<AWS S3 Bucket Name For Data Storage>>
+AWS_ACCESS_KEY_ID= <<AWS Access Key>>
+AWS_SECRET_ACCESS_KEY= <<AWS Secret Access Key>>
+AWS_REGION= <<AWS Region >>
+GITHUB_CLIENT_ID= <<Github Client ID>>
+GITHUB_CLIENT_SECRET= <<Github Client Secret>>
+
+# For Deploy
+PROJECT= <<Project Name>>
+DOMAIN_BASE= <<Domain Base. Eg: example.com>>
+STAGE=<<Project Stage. Eg: dev>>
+DOMAIN=<<Full Domain. Eg: dev.example.com>>
+DPR_API_GIT=<<Git URL For Repo>>
+```
+
+NOTE: For local development you can leave empty env variables for deployment, but
+Please provide valid AWS/Github credentials, region or bucket name. You can set
+JWT_SEED to any string.
+
+> TODO: Local development should not be depended on remote instances such as AWS or Github
+
+SQLALCHEMY_DATABASE_URI should follow the general form for a postgresq connection URI:
+`postgres://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]`
+
+If you created postgres database by following our instructions above, it should look like this:
+
+`SQLALCHEMY_DATABASE_URI=postgres://dpr_user:secret@localhost/dpr_db`
 
 ### Running locally
 
 You can now run the app locally! To do, run:
 
 ```
-python dpr.py
+$ python dpr.py
 ```
 
 ## Testing
@@ -66,21 +108,15 @@ $ export FLASK_CONFIGURATION=test
 This ensures that tests are not dependent on any env variable. By default it is dependent on
 local postgresql instance.
 
-TODO: explain how to set up this postgresql instance.
+You would want to create separate database for tests, for not loosing all the data
+from development database, you are working with.
+
+```
+$ psql -U postgres -c "create database dpr_test_db owner=dpr_user;"
+```
 
 We use pytest for testing. All tests are in tests directory. To run the tests do:
 
 ```
-pytest tests
-```
-
-## Continuous deployment process
-
-```
-git pull origin master
-git checkout deploy
-# if you do not yet have the deploy branch
-git checkout -b deploy
-git merge master
-git push origin deploy
+$ pytest tests
 ```
