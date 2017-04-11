@@ -1,0 +1,22 @@
+.panel .panel-body {
+  p.panel-text {
+    color: $gray;
+    margin: 2em 0;
+  }
+
+  div.publisher {
+    padding-left: 0;
+  }
+}
+
+h4.search-summary {
+  color: $brand-primary;
+  margin: 1.5em 0em 0.8em 0em;
+}
+
+#search-page-search {
+  border-color: $gray;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  box-shadow: none !important;
+}

@@ -33,6 +33,9 @@
 }
 
 @media (min-width: 768px) {
+  .navbar {
+    margin-bottom: 30px;
+  }
   .navbar-nav.navbar-center {
     position: absolute;
     left: 50%;
