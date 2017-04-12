@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, \
     json, request, redirect, g, make_response
 from flask import current_app as app
 from app.auth.models import JWT
-from app.site.models import Catalog
+from app.site.models import Packaged
 from app.package.models import BitStore
 from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
@@ -57,9 +57,9 @@ def datapackage_show(publisher, package):
             return "404 Not Found", 404
     except:
         pass
-    catalog = Catalog(metadata)
-    dataset = catalog.construct_dataset(request.url_root)
-    dataViews = catalog.get_views()
+    packaged = Packaged(metadata)
+    dataset = packaged.construct_dataset(request.url_root)
+    dataViews = packaged.get_views()
 
     bitstore = BitStore(publisher, package)
     datapackage_json_url_in_s3 = bitstore. \
