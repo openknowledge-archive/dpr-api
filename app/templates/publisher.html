@@ -10,16 +10,16 @@
   <div class="row">
     <div class="col-sm-3">
       <img src="https://avatars3.githubusercontent.com/u/22451011?v=3&s=200" class="img-responsive img-thumbnail">
-      <h1>{{ publisher.name }}</h1>
       {% if publisher.title %}
-        <h4>{{ publisher.title }}</h4>
+        <h1>{{ publisher.title }}</h1>
       {% endif %}
+      <h1>[{{ publisher.name }}]</h1>
       <p><span class="fa fa-calendar"></span> Member since {{ publisher.joined }}</p>
     </div>
     <div class="col-sm-offset-1 col-sm-8">
       <div class="row">
         <div class="col-sm-6 col-xs-12">
-          <h2>Data packages <span class="badge">{{datapackage_list|length}}</span></h2>
+          <h2>Data Packages <span class="badge">{{datapackage_list|length}}</span></h2>
         </div>
         <div class="col-sm-6">
           <div class="input-group pull-right col-xs-12">

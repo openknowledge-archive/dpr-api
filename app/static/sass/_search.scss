@@ -20,3 +20,11 @@ h4.search-summary {
   -moz-box-shadow: none !important;
   box-shadow: none !important;
 }
+
+.btn-primary-outline {
+  border: 1px solid $brand-primary;
+  &:hover,
+  &:focus {
+    color: $brand-primary;
+  }
+}

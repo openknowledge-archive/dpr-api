@@ -5826,6 +5826,11 @@ h4.search-summary {
   -moz-box-shadow: none !important;
   box-shadow: none !important; }
 
+.btn-primary-outline {
+  border: 1px solid #02bac1; }
+  .btn-primary-outline:hover, .btn-primary-outline:focus {
+    color: #02bac1; }
+
 h2 {
   margin-top: 0; }
 
