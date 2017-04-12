@@ -21,80 +21,6 @@ from app.auth.annotations import check_is_authorized, get_user_from_jwt
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
 
 
-@package_blueprint.route("/<publisher>/<package>", methods=["PUT"])
-@requires_auth
-@is_allowed('Package::Create')
-def save_metadata(publisher, package):
-    """
-    DPR metadata put operation.
-    This API is responsible for pushing  datapackage.json to S3.
-    ---
-    tags:
-        - package
-    parameters:
-        - in: path
-          name: publisher
-          type: string
-          required: true
-          description: publisher name
-        - in: path
-          name: package
-          type: string
-          required: true
-          description: package name
-        - in: header
-          name: Authorization
-          type: string
-          required: true
-          description: >
-            Jwt token in format of "bearer {token}.
-            The token can be generated from /api/auth/token"
-    responses:
-        400:
-            description: JWT is invalid or req body is not valid
-        401:
-            description: Invalid Header for JWT
-        403:
-            description: User name and publisher not matched
-        404:
-            description: User not found
-        500:
-            description: Internal Server Error
-        200:
-            description: Success Message
-            schema:
-                id: put_package_success
-                properties:
-                    status:
-                        type: string
-                        description: Status of the operation
-                        default: OK
-    """
-    try:
-        user = _request_ctx_stack.top.current_user
-        user_id = user['user']
-        user = User.query.filter_by(id=user_id).first()
-        if user is not None:
-            if user.name == publisher:
-                metadata = BitStore(publisher=publisher,
-                                    package=package,
-                                    body=request.data)
-                is_valid = metadata.validate()
-                if not is_valid:
-                    return handle_error('INVALID_DATA',
-                                        'Missing required field in metadata',
-                                        400)
-                metadata.save_metadata()
-                return jsonify({"status": "OK"}), 200
-            return handle_error('NOT_PERMITTED',
-                                'user name and publisher not matched',
-                                403)
-        return handle_error('USER_NOT_FOUND', 'user not found', 404)
-    except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
-
-
 @package_blueprint.route("/<publisher>/<package>/tag", methods=["POST"])
 @requires_auth
 @is_allowed('Package::Update')
@@ -125,9 +51,7 @@ def tag_data_package(publisher, package):
           name: Authorization
           type: string
           required: true
-          description: >
-            Jwt token in format of "bearer {token}.
-            The token can be generated from /api/auth/token"
+          description: JWT Token
     responses:
         400:
             description: JWT is invalid or req body is not valid
@@ -170,8 +94,8 @@ def tag_data_package(publisher, package):
 @is_allowed('Package::Delete')
 def delete_data_package(publisher, package):
     """
-    DPR data package soft delete operation.
-    This API is responsible for mark for delete of data package
+    DPR Data Package Soft Delete
+    Marks Data Package as private
     ---
     tags:
         - package
@@ -187,12 +111,10 @@ def delete_data_package(publisher, package):
           required: true
           description: package name
         - in: header
-          name: Authorization
+          name: authorization
           type: string
           required: true
-          description: >
-            Jwt token in format of "bearer {token}.
-            The token can be generated from /api/auth/token"
+          description: JWT Token
     responses:
         500:
             description: Internal Server Error
@@ -245,9 +167,7 @@ def undelete_data_package(publisher, package):
           name: Authorization
           type: string
           required: true
-          description: >
-            Jwt token in format of "bearer {token}.
-            The token can be generated from /api/auth/token"
+          description: JWT Token
     responses:
         500:
             description: Internal Server Error
@@ -301,9 +221,7 @@ def purge_data_package(publisher, package):
           name: Authorization
           type: string
           required: true
-          description: >
-            Jwt token in format of "bearer {token}.
-            The token can be generated from /api/auth/token"
+          description: JWT Token
     responses:
         500:
             description: Internal Server Error
@@ -335,31 +253,30 @@ def purge_data_package(publisher, package):
 @requires_auth
 def finalize_publish():
     """
-    Data package finalize operation.
-    This API is responsible for getting the Data Package (datapackage.json, README)
-    and importing it into our MetaStore.
+    Data Package finalize operation.
+
+    Gets the datapackage.json and README for Data Package and imports into database.
     ---
     tags:
         - package
     parameters:
         - in: body
+          name: url
           type: map
           required: true
-          description: data package url
+          description: URL to bitstore (S3) for Data Package.
         - in: header
-          name: Authorization
+          name: authorization
           type: string
           required: true
-          description: >
-            Jwt token in format of "{token}.
-            The token can be generated from /api/auth/token"
+          description: JWT Token
     responses:
         200:
-            description: Data transfer complete
+            description: Data Uploaded
         400:
-            description: UN-AUTHORIZE
+            description: Un-Authorized
         401:
-            description: Invalid Header for JWT
+            description: Invalid Header For JWT
         500:
             description: Internal Server Error
     """
@@ -454,79 +371,11 @@ def get_metadata(publisher, package):
         return handle_error('GENERIC_ERROR', e.message, 500)
 
 
-@package_blueprint.route("/dataproxy/<publisher>/<package>/r/<resource>.json",
-                         methods=["GET"])
-@package_blueprint.route("/dataproxy/<publisher>/<package>/r/<resource>.csv",
-                         methods=["GET"])
-def get_resource(publisher, package, resource):
-    """
-    DPR resource get operation.
-    This API is responsible for getting resource from S3.
-    ---
-    tags:
-        - package
-    parameters:
-        - in: path
-          name: publisher
-          type: string
-          required: true
-          description: publisher name
-        - in: path
-          name: package
-          type: string
-          required: true
-          description: package name - to retrieve the data package metadata
-        - in: path
-          name: resource
-          type: string
-          required: true
-          description: resource index or name
-    responses:
-
-        200:
-            description: Get Data package for one key
-            schema:
-                id: get_data_package
-                properties:
-                    data:
-                        type: string
-                        description: The resource
-        500:
-            description: Internal Server Error
-    """
-    try:
-        path = request.path
-        metadata = BitStore(publisher, package)
-        if path.endswith('csv'):
-            resource_key = metadata.build_s3_key(resource + '.csv')
-            data = metadata.get_s3_object(resource_key)
-
-            def generate():
-                for row in data.splitlines():
-                    yield row + '\n'
-            return Response(generate()), 200
-        else:
-            resource_key = metadata.build_s3_key(resource + '.csv')
-            data = metadata.get_s3_object(resource_key)
-            data = csv.DictReader(data.splitlines())
-            # taking first and adding at the end to avoid last comma
-            first_row = next(data)
-
-            def generate():
-                yield '['
-                for row in data:
-                    yield json.dumps(row) + ','
-                yield json.dumps(first_row)+']'
-            return Response(generate(), content_type='application/json'), 200
-    except Exception as e:
-        return handle_error('GENERIC_ERROR', e.message, 500)
-
-
 @package_blueprint.route("/<publisher>", methods=["GET"])
 def get_all_metadata_names_for_publisher(publisher):
     """
-    DPR meta-data get operation.
-    This API is responsible for getting All keys for the publisher
+    Get Packages For Publisher
+    Returns all packages published under given publisher
     ---
     tags:
         - package
@@ -545,12 +394,13 @@ def get_all_metadata_names_for_publisher(publisher):
                     data:
                         type: array
                         items:
-                            type: string
-                        description: All data package names for the publisher
+                            type: array
+                            items:
+                                type: string
         500:
             description: Internal Server Error
         404:
-            description: No metadata found for the package
+            description: No Data Package Found For The Publisher
     """
     try:
         metadata = Package.query.join(Publisher).\
@@ -558,7 +408,7 @@ def get_all_metadata_names_for_publisher(publisher):
             filter(Publisher.name == publisher).all()
         if len(metadata) is 0:
             return handle_error('DATA_NOT_FOUND',
-                                'No metadata found for the package',
+                                'No Data Package Found For The Publisher',
                                 404)
         keys = []
         for d in metadata:

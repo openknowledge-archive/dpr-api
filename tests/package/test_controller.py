@@ -45,7 +45,7 @@ class GetMetaDataTestCase(unittest.TestCase):
             get('/api/package/%s/%s' % (self.publisher, self.package))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        
+
     def test_return_all_metadata_is_there(self):
         descriptor = {'name': 'test description'}
         readme = 'README'
@@ -81,7 +81,7 @@ class GetMetaDataTestCase(unittest.TestCase):
         response = self.client.get('/api/package/%s/%s'%\
                                    (self.publisher, self.package))
         data = json.loads(response.data)
-        self.assertEqual(response.status_code, 200) 
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(data['readme'], '')
 
     def test_should_not_visible_after_soft_delete(self):
@@ -255,209 +255,64 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
             db.engine.dispose()
 
 
-class SaveMetaDataTestCase(unittest.TestCase):
-    publisher = 'test_publisher'
-    package = 'test_package'
-    user_id = 1
-    url = '/api/package/%s/%s' % (publisher, package)
-    jwt_url = '/api/auth/token'
-
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
-        with self.app.app_context():
-            db.drop_all()
-            db.create_all()
-            self.user = User()
-            self.user.id = self.user_id
-            self.user.email, self.user.name, self.user.secret = \
-                'test@test.com', self.publisher, 'super_secret'
-            self.pub = Publisher(name=self.publisher)
-            association = PublisherUser(role=UserRoleEnum.owner)
-            association.publisher = self.pub
-            self.user.publishers.append(association)
-
-            db.session.add(self.user)
-            db.session.commit()
-        response = self.client.post(self.jwt_url,
-                                    data=json.dumps({
-                                        'username': self.publisher,
-                                        'secret': 'super_secret'
-                                    }),
-                                    content_type='application/json')
-        data = json.loads(response.data)
-        self.jwt = data['token']
-
-    def test_should_throw_error_if_auth_header_missing(self):
-        response = self.client.put(self.url)
-        self.assertEqual(401, response.status_code)
-
-    @patch('app.package.models.BitStore.save_metadata')
-    def test_return_200_if_all_right(self, save):
-        save.return_value = None
-        auth = "%s" % self.jwt
-        response = self.client.put(self.url,
-                                   headers={'Auth-Token': auth},
-                                   data=json.dumps({'name': 'package'}))
-        self.assertEqual(200, response.status_code)
-
-    @patch('app.package.models.BitStore.save_metadata')
-    def test_return_403_if_user_not_matches_publisher(self, save):
-        save.return_value = None
-        auth = "%s" % self.jwt
-        response = self.client.put('/api/package/not-a-publisher/%s'%self.package,
-                                   headers={'Auth-Token': auth},
-                                   data=json.dumps({'name': 'package'}))
-        self.assertEqual(403, response.status_code)
-
-    @patch('app.package.models.BitStore.save_metadata')
-    def test_return_403_if_user_not_found_so_not_permitted_this_action(self, save):
-        with self.app.app_context():
-            db.drop_all()
-            db.create_all()
-        save.return_value = None
-        auth = "%s" % self.jwt
-        response = self.client.put(self.url,
-                                   headers={'Auth-Token': auth},
-                                   data=json.dumps({'name': 'package'}))
-
-        self.assertEqual(403, response.status_code)
-
-    @patch('app.package.models.BitStore.save_metadata')
-    def test_return_500_for_internal_error(self, save):
-        save.side_effect = Exception('some problem')
-        auth = "%s" % self.jwt
-        response = self.client.put(self.url, headers={'Auth-Token': auth},
-                                   data=json.dumps({'name': 'package'}))
-        data = json.loads(response.data)
-        self.assertEqual(500, response.status_code)
-        self.assertEqual('GENERIC_ERROR', data['error_code'])
-
-    @patch('app.package.models.BitStore.save_metadata')
-    def test_throw_400_if_meta_data_is_invalid(self, save):
-        save.return_value = None
-        auth = "%s" % self.jwt
-        response = self.client.put(self.url, headers={'Auth-Token': auth},
-                                   data=json.dumps({'name1': 'package'}))
-        data = json.loads(response.data)
-        self.assertEqual(400, response.status_code)
-        self.assertEqual(data['error_code'], 'INVALID_DATA')
-        # test metadata has no name
-        response = self.client.put(self.url, headers={'Auth-Token': auth},
-                                   data=json.dumps({'name': ''}))
-        self.assertEqual(400, response.status_code)
-        self.assertEqual(data['error_code'], 'INVALID_DATA')
-
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
-
-
-class DataProxyTestCase(unittest.TestCase):
-    publisher = 'test_pub'
-    package = 'test_package'
-    resource = 'test_resource'
-    url = '/api/package/dataproxy/{publisher}/{package}/r/{resource}.csv'\
-        .format(publisher=publisher, package=package, resource=resource)
-
-    def setUp(self):
-        self.app = create_app()
-        self.client = self.app.test_client()
-
-    @patch("app.package.models.BitStore.get_s3_object")
-    @patch("app.package.models.BitStore.build_s3_key")
-    def test_return_200_if_all_right_for_csv(self, build_key, get_s3_object):
-        build_key.return_value = ''
-        get_s3_object.return_value = 'test_header_0,test_header_1\n'\
-                                     + 'test_value_0,test_value_3'
-        response = self.client.get(self.url)
-        data = response.data
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(data, 'test_header_0,test_header_1\n'\
-                                     + 'test_value_0,test_value_3\n')
-
-    @patch("app.package.models.BitStore.get_s3_object")
-    @patch("app.package.models.BitStore.build_s3_key")
-    def test_return_200_if_all_right_for_json(self, build_key, get_s3_object):
-        build_key.return_value = ''
-        get_s3_object.return_value = 'test_header_0,test_header_1\n'\
-                                     + 'test_value_0,test_value_1\n'\
-                                     + 'test_value_2,test_value_3'
-        self.url = self.url.split('.csv')[0] + '.json'
-        response = self.client.get(self.url)
-        data = response.data
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(data, '['
-                         + '{"test_header_0": "test_value_2", '
-                         + '"test_header_1": "test_value_3"},'
-                         + '{"test_header_0": "test_value_0", '
-                         + '"test_header_1": "test_value_1"}'
-                         + ']')
-
-    @patch("app.package.models.BitStore.get_s3_object")
-    @patch("app.package.models.BitStore.build_s3_key")
-    def test_throw_500_if_not_able_to_get_data_from_s3(self,
-                                                       build_key,
-                                                       get_s3_object):
-        build_key.return_value = ''
-        get_s3_object.side_effect = Exception('failed')
-        response = self.client.get(self.url)
-        data = json.loads(response.data)
-        self.assertEqual(500, response.status_code)
-        self.assertEqual(data['message'], 'failed')
-
-
 class EndToEndTestCase(unittest.TestCase):
-    auth_token_url = '/api/auth/token'
-    publisher = 'test_publisher'
+
+    publisher_name = 'test_publisher'
     package = 'test_package'
-    meta_data_url = '/api/package/%s/%s' % (publisher, package)
+    url = "/api/package/{pub}/{pac}/tag".format(pub=publisher_name,
+                                                pac=package)
+    jwt_url = '/api/auth/token'
     bitstore_url = '/api/datastore/authorize'
     finalize_url = '/api/package/upload'
     test_data_package = {'name': 'test_package'}
     datapackage_url = 'https://bits.datapackaged.com/metadata/' \
                       '{pub}/{pack}/_v/latest/datapackage.com'. \
-        format(pub=publisher, pack=package)
+        format(pub=publisher_name, pack=package)
 
     def setUp(self):
         self.app = create_app()
         self.client = self.app.test_client()
         with self.app.app_context():
+            self.bucket_name = self.app.config['S3_BUCKET_NAME']
             db.drop_all()
             db.create_all()
             self.user = User()
             self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
-                'test@test.com', self.publisher, 'super_secret'
+                'test@test.com', self.publisher_name, 'super_secret'
 
-            self.publisherObj = Publisher(name=self.publisher)
+            self.publisher = Publisher(name=self.publisher_name)
 
             association = PublisherUser(role=UserRoleEnum.owner)
-            association.publisher = self.publisherObj
+            association.publisher = self.publisher
+
+            metadata = Package(name=self.package)
+            self.publisher.packages.append(metadata)
             self.user.publishers.append(association)
 
             db.session.add(self.user)
             db.session.commit()
 
-    @patch('app.package.models.BitStore.get_readme_object_key')
+    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.package.models.Package.create_or_update_tag')
     @patch('app.package.models.Package.create_or_update')
     @patch('app.package.models.BitStore.get_metadata_body')
+    @patch('app.package.models.BitStore.get_readme_object_key')
     @patch('app.package.models.BitStore.get_s3_object')
+    @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.BitStore.generate_pre_signed_post_object')
-    @patch('app.package.models.BitStore.save_metadata')
-    def test_publish_end_to_end(self, save, generate_pre_signed_post_object,
-                                get_s3_object, get_metadata_body,
-                                create_or_update, get_readme_object_key):
-        # Sending Username & Secret key
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': 'test_publisher',
-                                  'email': None,
-                                  'secret': 'super_secret'
-                              }),
-                              content_type='application/json')
+    def test_publish_end_to_end(self, generate_pre_signed_post_object,
+                                change_acl, get_s3_object,get_readme_object_key,
+                                get_metadata_body, create_or_update,
+                                create_or_update_tag,copy_to_new_version):
+
+        # # Sending Username & Secret key
+        rv = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                        'username': self.publisher_name,
+                                        'secret': 'super_secret'
+                                    }),
+                                    content_type='application/json')
         # Testing Token received
         self.assertIn('token', rv.data)
         self.assertEqual(200, rv.status_code)
@@ -465,23 +320,20 @@ class EndToEndTestCase(unittest.TestCase):
         # Sending recived token to server with Authentication Header
         token = json.loads(rv.data)['token']
         self.auth = "%s" % token  # Saving token for future use
-        save.return_value = None
-        rv = self.client.put(self.meta_data_url, headers=dict(Authorization=self.auth),
-                             data=json.dumps(self.test_data_package))
+        copy_to_new_version.return_value = True
+        create_or_update_tag.return_value = True
+        rv = self.client.post(self.url,
+                                    data=json.dumps({
+                                        'name': 'test_package',
+                                        'version': 'tag_one'
+                                    }),
+                                    content_type='application/json',
+                                    headers=dict(Authorization=self.auth))
         # Testing Authentication status
         self.assertEqual({'status': 'OK'}, json.loads(rv.data))
         self.assertEqual(200, rv.status_code)
 
-        # Adding to Meta Data
-        descriptor = {'name': 'test description'}
-        with self.app.app_context():
-            p = Publisher.query.filter_by(name=self.publisher).one()
-            metadata = Package(name=self.package)
-            p.packages.append(metadata)
-            metadata.descriptor = json.dumps(descriptor)
-            db.session.add(p)
-            db.session.commit()
-        rv = self.client.get('/api/package/%s' % (self.publisher,))
+        rv = self.client.get('/api/package/%s' % (self.publisher_name,))
         data = json.loads(rv.data)
         # Testing Meta Data
         self.assertEqual(len(data['data']), 1)
@@ -492,7 +344,7 @@ class EndToEndTestCase(unittest.TestCase):
                                                         'fields': {}}
         rv = self.client.post(self.bitstore_url,
                               data=json.dumps({
-                                  'metadata': {'owner': 'pub1', 'name': 'package1'},
+                                  'metadata': {'owner': self.publisher_name, 'name': self.package},
                                   'filedata': {
                                       'README.md': {
                                           'md5': '',
@@ -503,19 +355,20 @@ class EndToEndTestCase(unittest.TestCase):
                               content_type='application/json',
                               headers=dict(Authorization=self.auth))
         # Testing S3 link
+        self.assertEqual(200, rv.status_code)
         self.assertEqual('https://trial_url',
                          json.loads(rv.data)['filedata']['README.md']['upload_url'])
-        self.assertEqual(200, rv.status_code)
 
         # Finalize
         get_metadata_body.return_value = json.dumps(dict(name='package'))
         create_or_update.return_value = None
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
+        change_acl.return_value = None
         rv = self.client.post(self.finalize_url,
-                              data=json.dumps(dict(datapackage=self.datapackage_url)),
-                              headers=dict(Authorization=self.auth),
-                              content_type='application/json')
+                                    data=json.dumps(dict(datapackage=self.datapackage_url)),
+                                    headers={'Auth-Token': self.auth},
+                                    content_type='application/json')
         # Test Data
         self.assertEqual(200, rv.status_code)
         data = json.loads(rv.data)
