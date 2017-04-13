@@ -99,7 +99,8 @@ class SearchPackagesTestCase(unittest.TestCase):
         response = self.client.get(url)
         result = json.loads(response.data)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(20, len(result['items']))
+        # extra 6 packages from the setup so we expect 36 packages
+        self.assertEqual(36, len(result['items']))
 
     def tearDown(self):
         with self.app.app_context():
