@@ -18,7 +18,7 @@ class DataPackageQuery(object):
         try:
             self.limit = min(int(limit), 1000)
         except (ValueError, TypeError):
-            self.limit = 20
+            self.limit = 500
 
     def _build_sql_query(self, query, query_filters):
 
