@@ -50,11 +50,18 @@ def callback_handling():
         resp = github.authorized_response()
         if resp is None or resp.get('access_token') is None:
             return handle_error('Access Denied',
-                                request.args['error_description'],
+                                request.args.get('error_description'),
                                 400)
         session['github_token'] = (resp['access_token'], '')
         user_info = github.get('user')
-        user = User().create_or_update_user_from_callback(user_info.data)
+        user_info = user_info.data
+        # in case user Email is not public
+        if not user_info.get('email'):
+            emails = github.get('user/emails').data
+            for email in emails:
+                if email.get('primary'):
+                    user_info['email'] = email.get('email')
+        user = User().create_or_update_user_from_callback(user_info)
         jwt_helper = JWT(app.config['JWT_SEED'], user.id)
         session.pop('github_token', None)
         g.current_user = user

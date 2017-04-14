@@ -144,7 +144,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
     def test_throw_500_if_error_getting_user_info_from_oauth(self, authorized_response):
-        authorized_response.return_value = {'name': 'bond'}
+        authorized_response.return_value = {'name': 'bond','access_token': 'token'}
 
         response = self.client.get('/api/auth/callback?code=123')
 
@@ -152,6 +152,16 @@ class CallbackHandlingTestCase(unittest.TestCase):
 
         self.assertEqual(data['error_code'], 'GENERIC_ERROR')
         self.assertEqual(response.status_code, 500)
+
+    @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
+    def test_throw_400_access_denied_if_authorized_response_is_none(self, authorized_response):
+        authorized_response.return_value = None
+        response = self.client.get('/api/auth/callback?code=123')
+
+        data = json.loads(response.data)
+
+        self.assertEqual(data['error_code'], 'Access Denied')
+        self.assertEqual(response.status_code, 400)
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
     @patch('flask_oauthlib.client.OAuthRemoteApp.get')
@@ -170,6 +180,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
         self.assertEqual(create_user.call_count, 1)
         self.assertEqual(jwt_helper.call_count, 1)
         self.assertEqual(response.status_code, 200)
+
 
     def tearDown(self):
         with self.app.app_context():
