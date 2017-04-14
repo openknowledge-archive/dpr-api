@@ -5852,6 +5852,31 @@ h2 {
   padding-left: 5%;
   padding-right: 5%; }
 
+.table {
+  font-size: 12px; }
+
+.ReactVirtualized__Table__headerRow {
+  height: 30px !important;
+  padding-top: 5px;
+  border: 1px solid #ddd;
+  border-bottom-width: 2px; }
+
+.ReactVirtualized__Table__headerColumn {
+  border-right: 1px solid #ddd; }
+  .ReactVirtualized__Table__headerColumn:last-of-type {
+    border-right: 0; }
+
+.ReactVirtualized__Table__row {
+  border-bottom: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd; }
+
+.ReactVirtualized__Table__rowColumn {
+  padding-top: 5px;
+  border-right: 1px solid #ddd; }
+  .ReactVirtualized__Table__rowColumn:last-of-type {
+    border-right: 0; }
+
 /* Navbar
 ====================================*/
 .navbar {
