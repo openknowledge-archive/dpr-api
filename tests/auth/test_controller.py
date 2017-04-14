@@ -154,7 +154,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
-    def test_throw_400_access_denieed_if_authorized_respnse_is_none(self, authorized_response):
+    def test_throw_400_access_denied_if_authorized_response_is_none(self, authorized_response):
         authorized_response.return_value = None
         response = self.client.get('/api/auth/callback?code=123')
 
