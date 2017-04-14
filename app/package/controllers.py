@@ -111,7 +111,7 @@ def delete_data_package(publisher, package):
           required: true
           description: package name
         - in: header
-          name: authorization
+          name: Authorization
           type: string
           required: true
           description: JWT Token
@@ -266,7 +266,7 @@ def finalize_publish():
           required: true
           description: URL to bitstore (S3) for Data Package.
         - in: header
-          name: authorization
+          name: Authorization
           type: string
           required: true
           description: JWT Token
