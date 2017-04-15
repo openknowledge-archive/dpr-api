@@ -93,7 +93,7 @@ def create_app():
     oauth = OAuth(app=app)
     CORS(app)
     Swagger(app)
-    Markdown(app)
+    Markdown(app, safe_mode='escape')
     Gravatar(app)
 
     github = get_github_oauth(oauth, app.config['GITHUB_CLIENT_ID'],
