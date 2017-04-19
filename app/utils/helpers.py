@@ -13,7 +13,7 @@ def text_to_markdown(text):
     Then it converts any markdown syntax into html and returns the result.
     """
     ALLOWED_TAGS = [
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'br', 'b', 'i',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'br', 'b', 'i', 'span',
         'strong', 'em', 'a', 'pre', 'code', 'img', 'tt', 'div', 'ins', 'del',
         'sup', 'sub', 'p', 'ol', 'ul', 'table', 'thead', 'tbody', 'tfoot',
         'blockquote', 'dl', 'dt', 'dd', 'kbd', 'q', 'samp', 'var', 'hr', 'ruby',
@@ -32,7 +32,7 @@ def text_to_markdown(text):
                 'rowspan', 'rules', 'scope', 'selected', 'shape', 'size',
                 'span', 'start', 'summary', 'tabindex', 'target', 'title',
                 'type', 'usemap', 'valign', 'value', 'vspace', 'width',
-                'itemprop'
+                'itemprop', 'class'
             ],
         'a': ['href'],
         'img': ['src', 'longdesc'],
@@ -42,8 +42,9 @@ def text_to_markdown(text):
         'ins': ['cite'],
         'q': ['cite']
     }
-
-    sanitizedText = bleach.clean(text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
-    markdown_to_safe_html = markdown(sanitizedText,
-                             extensions=[GithubFlavoredMarkdownExtension()])
-    return markdown_to_safe_html
+    markdown_to_html = markdown(text,
+                                extensions=[GithubFlavoredMarkdownExtension()])
+    sanitized_html = bleach.clean(markdown_to_html,
+                                tags=ALLOWED_TAGS,
+                                attributes=ALLOWED_ATTRIBUTES)
+    return sanitized_html
