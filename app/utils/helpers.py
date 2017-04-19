@@ -7,6 +7,9 @@ from __future__ import unicode_literals
 from markdown import markdown
 from mdx_gfm import GithubFlavoredMarkdownExtension
 import bleach
+import re
+import json
+
 
 def text_to_markdown(text):
     """ This method takes any text and sanitizes it from unsafe html tags.
@@ -48,3 +51,20 @@ def text_to_markdown(text):
                                 tags=ALLOWED_TAGS,
                                 attributes=ALLOWED_ATTRIBUTES)
     return sanitized_html
+
+
+def dp_in_readme(readme, dp):
+    """ This method takes a readme and data package as arguments. If there is dp
+    variables in readme, it returns readme with datapackage json embed into it.
+    Dp variables must be wrapped in double curly braces and can be one of:
+    datapackage.json, datapackage, dp.json, dp.
+    """
+    regex = "({{ ?)(datapackage(\.json)?|dp(\.json)?)( ?}})"
+    dp_copy = dict(dp)
+    if 'readme' in dp_copy:
+        dp_copy.pop('readme')
+    if 'owner' in dp_copy:
+        dp_copy.pop('owner')
+    dp_as_md = '\n```json\n' + json.dumps(dp_copy, indent=2) + '\n```\n'
+    readme_with_dp = re.sub(regex, dp_as_md, readme)
+    return readme_with_dp
