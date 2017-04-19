@@ -20,3 +20,7 @@ class HelpersTestCase(unittest.TestCase):
                 "<a href='https://example.com'>test</a>"
             ),
             '<p><a href="https://example.com">test</a></p>')
+
+    def test_blockquotes_working(self):
+        self.assertEqual(text_to_markdown("> this is a blockquote"),
+            '<blockquote>\n<p>this is a blockquote</p>\n</blockquote>')
