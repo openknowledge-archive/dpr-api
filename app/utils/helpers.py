@@ -54,10 +54,10 @@ def text_to_markdown(text):
 
 
 def dp_in_readme(readme, dp):
-    """ This method takes a readme and data package as arguments. If there is dp
-    variables in readme, it returns readme with datapackage json embed into it.
-    Dp variables must be wrapped in double curly braces and can be one of:
-    datapackage.json, datapackage, dp.json, dp.
+    """ This method takes a readme and data package descriptor as arguments. If
+    there is dp variables in readme, it returns readme with datapackage json
+    embed into it. Dp variables must be wrapped in double curly braces and can
+    be one of: datapackage.json, datapackage, dp.json, dp.
     """
     regex = "({{ ?)(datapackage(\.json)?|dp(\.json)?)( ?}})"
     dp_copy = dict(dp)
