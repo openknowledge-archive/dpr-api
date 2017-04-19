@@ -29,8 +29,12 @@ def callback_handling():
     response:
         500:
             description: Internal Server Error
+        404:
+            description: Email Not Found For User
+        400:
+            description: Access Denied
         200:
-            description: Updated Db with user
+            description: Updated DB with user
             schema:
                 id: auth_callback
                 properties:
@@ -58,6 +62,8 @@ def callback_handling():
         # in case user Email is not public
         if not user_info.get('email'):
             emails = github.get('user/emails').data
+            if not len(emails):
+                return handle_error('Not Found', 'Email not found', 404)
             for email in emails:
                 if email.get('primary'):
                     user_info['email'] = email.get('email')
