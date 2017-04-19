@@ -13,7 +13,7 @@ class HelpersTestCase(unittest.TestCase):
 
     def test_disallowed_tags(self):
         self.assertEqual(text_to_markdown("<script>test</script>"),
-                         "<p>&lt;script&gt;test&lt;/script&gt;</p>")
+                         "&lt;script&gt;test&lt;/script&gt;")
 
     def test_allowed_attr_working(self):
         self.assertEqual(text_to_markdown(
