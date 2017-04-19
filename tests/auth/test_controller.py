@@ -154,6 +154,26 @@ class CallbackHandlingTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
+    @patch('flask_oauthlib.client.OAuthRemoteApp.get')
+    def test_throw_404_if_email_not_found(self, get_user,authorized_response):
+        authorized_response.return_value = {'access_token': 'token'}
+        get_user.side_effect = lambda k:{
+            'user': OAuthResponse(
+                resp=None,
+                content=json.dumps(dict()),
+                content_type='application/json'
+            ),
+            'user/emails': OAuthResponse(
+                resp=None,
+                content=json.dumps([]),
+                content_type='application/json')
+        }.get(k, 'unhandled request %s'%k)
+        response = self.client.get('/api/auth/callback?code=123')
+        data = json.loads(response.data)
+        self.assertEqual(data['error_code'], 'Not Found')
+        self.assertEqual(response.status_code, 404)
+
+    @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
     def test_throw_400_access_denied_if_authorized_response_is_none(self, authorized_response):
         authorized_response.return_value = None
         response = self.client.get('/api/auth/callback?code=123')
@@ -167,15 +187,45 @@ class CallbackHandlingTestCase(unittest.TestCase):
     @patch('flask_oauthlib.client.OAuthRemoteApp.get')
     @patch('app.auth.models.JWT.encode')
     @patch('app.profile.models.User.create_or_update_user_from_callback')
+    def test_gets_private_email_and_return_200_if_all_right(self,
+                                     create_user, jwt_helper, get_user,
+                                     authorized_response):
+        authorized_response.return_value = {'access_token': 'token'}
+        get_user.side_effect = lambda k:{
+            'user': OAuthResponse(
+                resp=None,
+                content=json.dumps(dict()),
+                content_type='application/json'
+            ),
+            'user/emails': OAuthResponse(
+                resp=None,
+                content=json.dumps([{
+                            "email": "user@dpr.com",
+                            "verified": True,
+                            "primary": True
+                          }]),
+                content_type='application/json')
+        }.get(k, 'unhandled request %s'%k)
+        jwt_helper.return_value = "132432"
+        create_user.return_value = User(id=1, email="user@dpr.com", name='abc', secret='12345')
+        response = self.client.get('/api/auth/callback?code=123')
+        self.assertEqual(create_user.call_count, 1)
+        self.assertEqual(jwt_helper.call_count, 1)
+        self.assertEqual(response.status_code, 200)
+
+    @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
+    @patch('flask_oauthlib.client.OAuthRemoteApp.get')
+    @patch('app.auth.models.JWT.encode')
+    @patch('app.profile.models.User.create_or_update_user_from_callback')
     def test_return_200_if_all_right(self,
                                      create_user, jwt_helper, get_user,
                                      authorized_response):
         authorized_response.return_value = {'access_token': 'token'}
         get_user.return_value = OAuthResponse(resp=None,
-                                              content=json.dumps(dict()),
+                                              content=json.dumps(dict({'email': 'user@dpr.com'})),
                                               content_type='application/json')
         jwt_helper.return_value = "132432"
-        create_user.return_value = User(id=1, email="abc@abc.com", name='abc', secret='12345')
+        create_user.return_value = User(id=1, email="user@dpr.com", name='abc', secret='12345')
         response = self.client.get('/api/auth/callback?code=123')
         self.assertEqual(create_user.call_count, 1)
         self.assertEqual(jwt_helper.call_count, 1)
