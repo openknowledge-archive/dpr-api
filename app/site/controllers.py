@@ -12,7 +12,7 @@ from app.site.models import Packaged
 from app.package.models import BitStore
 from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
-from app.utils.helpers import text_to_markdown
+from app.utils.helpers import text_to_markdown, dp_in_readme
 from BeautifulSoup import BeautifulSoup
 
 site_blueprint = Blueprint('site', __name__)
@@ -59,7 +59,9 @@ def datapackage_show(publisher, package):
         pass
     packaged = Packaged(metadata)
     dataset = packaged.construct_dataset(request.url_root)
-    dataset["readme"] = text_to_markdown(dataset["readme"])
+    
+    readme_variables_replaced = dp_in_readme(dataset["readme"], dataset)
+    dataset["readme"] = text_to_markdown(readme_variables_replaced)
 
     dataViews = packaged.get_views()
 
