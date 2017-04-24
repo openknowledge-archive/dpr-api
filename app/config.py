@@ -17,6 +17,7 @@ class BaseConfig(object):
     JWT_SEED = "dpr-api-key"
     DEBUG = True
     TESTING = True
+    API_DOCS = '/apidocs/index.html'
     SWAGGER = {
         "swagger_version": "2.0",
         "title": "DPR API",
@@ -26,7 +27,7 @@ class BaseConfig(object):
                 "title": "v1",
                 "endpoint": 'spec',
                 "description": "First Cut for DPR API",
-                "route": '/spec',
+                "route": '/api/swagger.json',
                 "rule_filter": lambda rule: True
             }
         ]
@@ -85,7 +86,7 @@ class StageConfig(DevelopmentConfig):
                        'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                        'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET',
                        'SQLALCHEMY_DATABASE_URI']
-
+    API_DOCS = 'https://frictionlessdata.github.io/dpr-docs/developers/api/'
     DEBUG = False
     TESTING = False
 

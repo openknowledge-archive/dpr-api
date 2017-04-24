@@ -191,6 +191,11 @@ class WebsiteTestCase(unittest.TestCase):
         rv = self.client.get('/non-existing/demo-package')
         self.assertEqual(404, rv.status_code)
 
+    def test_api_docs(self):
+        rv = self.client.get(self.app.config['API_DOCS'])
+        self.assertEqual(200, rv.status_code)
+        assert 'swagger' in rv.data
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
