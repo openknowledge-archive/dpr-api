@@ -630,9 +630,9 @@ $jumbotron-heading-font-size:    ceil(($font-size-base * 2.5)) !default;
 // $alert-border-radius:         $border-radius-base !default;
 // $alert-link-font-weight:      bold !default;
 //
-// $alert-success-bg:            $state-success-bg !default;
-// $alert-success-text:          $state-success-text !default;
-// $alert-success-border:        $state-success-border !default;
+$alert-success-bg:            #fff !default;
+$alert-success-text:          $brand-primary !default;
+$alert-success-border:        $brand-primary !default;
 //
 // $alert-info-bg:               $state-info-bg !default;
 // $alert-info-text:             $state-info-text !default;
