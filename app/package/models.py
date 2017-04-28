@@ -14,6 +14,7 @@ from flask import current_app as app
 from sqlalchemy.orm import relationship
 from app.profile.models import Publisher
 from app.database import db
+from botocore.exceptions import ClientError
 
 
 class BitStore(object):
@@ -66,7 +67,9 @@ class BitStore(object):
             s3_client = app.config['S3']
             response = s3_client.get_object(Bucket=bucket_name, Key=key)
             return response['Body'].read()
-        except Exception:
+        except ClientError as e:
+            if e.response['Error']['Code'] != 'NoSuchKey':
+                raise e
             return None
 
     def get_readme_object_key(self):
@@ -77,7 +80,7 @@ class BitStore(object):
         :return: Value of the readme key if found else None
         :rtype: None or Str
         """
-        readme_key = None
+        readme_key = 'None'
         prefix = self.build_s3_key('')
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']

@@ -149,7 +149,7 @@ class BitStoreTestCase(unittest.TestCase):
             s3.create_bucket(Bucket=bucket_name)
             read_me_key = bit_store.build_s3_key('test.md')
             s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='')
-            self.assertEqual(bit_store.get_readme_object_key(), None)
+            self.assertEqual(bit_store.get_readme_object_key(), 'None')
 
     @mock_s3
     def test_return_none_if_object_found(self):
@@ -161,7 +161,7 @@ class BitStoreTestCase(unittest.TestCase):
             read_me_key = bit_store.build_s3_key('test.md')
             s3.put_object(Bucket=bucket_name, Key=read_me_key, Body='')
             self.assertEqual(bit_store.get_s3_object(read_me_key + "testing"), None)
-            self.assertEqual(bit_store.get_s3_object(None), None)
+            self.assertEqual(bit_store.get_s3_object('None'), None)
 
     @mock_s3
     def test_change_acl(self):
