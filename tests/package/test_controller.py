@@ -442,28 +442,28 @@ class SoftDeleteTestCase(unittest.TestCase):
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
-        change_acl.return_value = False
+        change_acl.side_effect = Exception('failed')
         change_status.return_value = True
         response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'Failed to change acl')
+        self.assertEqual(data['message'], 'failed')
 
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
     def test_throw_500_if_change_status_fails(self, change_status, change_acl):
         change_acl.return_value = True
-        change_status.return_value = False
+        change_status.side_effect = Exception('failed')
         response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'Failed to change status')
+        self.assertEqual(data['message'], 'failed')
 
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
     def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
         change_acl.side_effect = Exception('failed')
-        change_status.return_value = False
+        change_status.side_effect = Exception('failed')
         response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
@@ -548,24 +548,24 @@ class HardDeleteTestCase(unittest.TestCase):
     @patch('app.package.models.BitStore.delete_data_package')
     @patch('app.package.models.Package.delete_data_package')
     def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
-        bitstore_delete.return_value = False
+        bitstore_delete.side_effect = Exception('failed')
         db_delete.return_value = True
         auth = "%s" % self.jwt
         response = self.client.delete(self.url, headers={'Auth-Token': auth})
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'Failed to delete from s3')
+        self.assertEqual(data['message'], 'failed')
 
     @patch('app.package.models.BitStore.delete_data_package')
     @patch('app.package.models.Package.delete_data_package')
     def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
-        db_delete.return_value = False
+        db_delete.side_effect = Exception('failed')
         auth = "%s" % self.jwt
         response = self.client.delete(self.url, headers={'Auth-Token': auth})
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'Failed to delete from db')
+        self.assertEqual(data['message'], 'failed')
 
     @patch('app.package.models.BitStore.delete_data_package')
     @patch('app.package.models.Package.delete_data_package')
@@ -821,7 +821,7 @@ class TagDataPackageTestCase(unittest.TestCase):
     @patch('app.package.models.Package.create_or_update_tag')
     def test_throw_500_if_failed_to_tag(self, create_or_update_tag,
                                         copy_to_new_version):
-        copy_to_new_version.return_value = False
+        copy_to_new_version.side_effect = Exception('failed')
         create_or_update_tag.return_value = True
         response = self.client.post(self.url,
                                     data=json.dumps({
@@ -877,7 +877,7 @@ class TagDataPackageTestCase(unittest.TestCase):
     @patch('app.package.models.Package.create_or_update_tag')
     def test_allow_if_member_of_publisher(self, create_or_update_tag,
                                           copy_to_new_version):
-        copy_to_new_version.return_value = False
+        copy_to_new_version.side_effect = Exception('failed')
         create_or_update_tag.return_value = True
         response = self.client.post(self.jwt_url,
                                     data=json.dumps({

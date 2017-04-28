@@ -405,11 +405,6 @@ class PackageTestCase(unittest.TestCase):
                    Package.name == self.package_one).one()
         self.assertEqual(PackageStateEnum.active, data.status)
 
-    def test_return_false_if_failed_to_change_status(self):
-        status = Package.change_status(self.publisher_one, 'fake_package',
-                                       status='active')
-        self.assertFalse(status)
-
     def test_return_true_if_delete_data_package_success(self):
         status = Package.delete_data_package(self.publisher_one,
                                              self.package_one)
@@ -420,11 +415,6 @@ class PackageTestCase(unittest.TestCase):
         self.assertEqual(0, len(data))
         data = Publisher.query.all()
         self.assertEqual(2, len(data))
-
-    def test_return_false_if_error_occur(self):
-        status = Package.delete_data_package("fake_package",
-                                             self.package_one)
-        self.assertFalse(status)
 
     def test_should_populate_new_versioned_data_package(self):
         Package.create_or_update_tag(self.publisher_one,
