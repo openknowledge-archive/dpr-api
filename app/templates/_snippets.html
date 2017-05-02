@@ -30,20 +30,60 @@
 
 {% macro dataset_show(dataset, jsonDataPackage, dataViews, showDataApi, datapackageUrl, readmeShort) -%}
 <div class="dataset show">
-  <div class="row">
-    <div class="col-md-8">
-      <img src="{{dataset.image or 'https://assets.okfn.org/p/data/img/icon-128.png'}}"
-        alt="{{dataset.title}}" class="logo" />
-      <div class="description">{{readmeShort|truncate}} <a href="#readme">Read more</a></div>
+  <div class="row part">
+    <div class="col-md-4 info">
+      <h3>KEY INFORMATION</h3>
+      <p>Format:
+      {% for resource in dataset.resources %}
+      {{ resource.format }},
+      {% endfor %}
+      </p>
+
+      <p>More datasets from <a href="/{{ dataset.owner }} ">{{ dataset.owner }}</a></p>
+      <br>
+      <div class="btn-group">
+        <a href="{{ datapackageUrl }}" class="btn btn-small btn-default" target="_blank">Metadata</a>
+
+        {% if dataset.bugs and dataset.bugs.url %}
+        <a href="{{dataset.bugs.url}}" class="btn btn-small" target="_blank">Report an Issue</a>
+        {% endif %}
+      </div>
+      <br>
+      <div class="homepage truncate">
+        <p><i class="icon-home"></i> Home page: <a href="{{dataset.homepage}}" title="Home Page">{{dataset.homepage}}</a></p>
+      </div>
+      {% if dataset.licenses %}
+      <div class="license">
+        <i class="icon-legal"></i> <a href="{{dataset.licenses[0].url}}" title="Available under the following License">{{dataset.licenses[0].name or dataset.licenses[0].id}}</a>
+        <br />
+        <a href="https://opendefinition.org" title="This data is open data as per the Open Definition"><img src="https://assets.okfn.org/images/buttons/od_80x15_blue.png" /></a>
+      </div>
+      {% endif %}
+      <div class="source">
+        <p>Sources: {{listify(dataset.sources)}}</p>
+      </div>
+
+
+    </div>
+    <div class="col-md-4 text-center">
+      <img src="{{ s3_cdn }}/static/img/cube-elephant.png"
+        alt="{{dataset.title}}" class="img-responsive main-img" />
 
       <div class="actions">
-        <div class="btn-group">
-          <a href="#data" class="btn btn-large btn-primary"><i class="icon-download-alt icon-white"></i> Download Data</a>
+        <div class="row">
+          <a href="#data" class="btn btn-lg btn-primary">Download</a>
+        </div>
+        <div class="row">
+          <a href="#next-section">
+            <i class="fa fa-chevron-down fa-2x" aria-hidden="true" style="color:black"></i>
+          </a>
         </div>
       </div>
     </div>
-    <div class="col-md-4 sidebar">
-      <div class="btn-group">
+    <div class="col-md-4 info">
+      <h3>ABOUT</h3>
+      <div class="description">{{readmeShort|truncate}} <a href="#readme">Read more</a></div>
+      <!-- <div class="btn-group">
         <a href="{{ datapackageUrl }}" class="btn btn-small btn-default"><i class="icon-download-alt"></i> Metadata</a></a>
         {% if dataset.bugs and dataset.bugs.url %}
         <a href="{{dataset.bugs.url}}" class="btn btn-small" target="_blank"><i class="icon-exclamation-sign icon-white"></i> Report an Issue</a>
@@ -60,17 +100,18 @@
       <div class="source">
         <h5>Sources</h5>
         {{listify(dataset.sources)}}
-      </div>
+      </div> -->
     </div>
   </div>
 
-  <hr/>
-
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <div class="react-me" data-type="data-views"></div>
-  <div class="resources" id="data">
-    <h2>Data Files</h2>
-    <div class="resource-listing">
+  {% if dataset.views %}
+  <h2>VIEWS</h2>
+  {% endif %}
+  <div class="react-me part" data-type="data-views" id="next-section"></div>
+  <div class="resources part" id="data">
+    <h2>DATA FILES</h2>
+    <div class="resource-listing part">
       <table class="table resource-listing" style="border-radius:3px; padding:3px;margin-bottom:0">
         <thead></thead>
         <tbody>
@@ -90,12 +131,12 @@
       </table>
     </div>
     {% for resource in dataset.resources %}
-    <div class="resource-info">
-      <h3 id="resource-{{resource.name}}"><i class="icon-file-text-alt"></i> {{resource.name}}</h3>
-      <div id="resource-{{loop.index - 1}}" class="react-me"
+    <div class="resource-info part">
+      <h2 id="resource-{{resource.name}}">{{resource.name}}</h2>
+      <div id="resource-{{loop.index - 1}}" class="react-me part"
            data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
       {% if resource.format == "csv" %}
-       <h4>Field Information</h4>
+       <h2>FIELD INFORMATION</h2>
        <table class="table table-bordered table-striped resource-summary">
          <thead>
            <tr>
