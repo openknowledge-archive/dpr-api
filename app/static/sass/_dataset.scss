@@ -1,0 +1,31 @@
+.publisher {
+  font-style: italic;
+  font-size: 1.8em;
+}
+.dataset {
+  .main-img {
+    padding: 10%;
+  }
+  .info {
+    padding-top: 5%;
+  }
+  h2 {
+    font-size: 1.9em;
+  }
+  h3 {
+    font-size: 1.7em;
+    margin-bottom: 0.8em;
+  }
+  .actions .row {
+    margin-bottom: 2em;
+  }
+  .react-me {
+    text-align: center;
+  }
+  .part {
+    margin-bottom: 4em;
+  }
+  .btn-group {
+    margin-bottom: 10px;
+  }
+}
