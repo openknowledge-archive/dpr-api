@@ -1,5 +1,15 @@
 /* General stylings
 =====================================*/
+html {
+  height: 100%;
+  box-sizing: border-box;
+}
+body {
+  position: relative;
+  min-height: 100%;
+  padding-bottom: 82px;
+}
+
 .container {
   padding-left: 5%;
   padding-right: 5%;
