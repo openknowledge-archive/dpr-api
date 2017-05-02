@@ -22,6 +22,7 @@
         <div class="navbar-header">
           <a class="main-logo pull-left" href="/"></a>
         </div>
+        <!--
         <div class="nav navbar-nav searchbox">
           <form class="form-inline" action="/search" method="GET">
             <div class="form-group">
@@ -29,12 +30,16 @@
             </div>
           </form>
         </div>
+        -->
         <div>
-          <ul class="nav navbar-nav">
-            <li><a href="{{ config['API_DOCS'] }}">API</a></li>
-          </ul>
-
           <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a href="/#publish">Publish</a>
+            </li>
+            <li>
+              <a href="/search">Discover</a>
+            </li>
+            <!--
             {% if current_user == None %}
               <li>
                 <a href="/api/auth/login">Sign In With <span class="fa fa-github fa-lg"></span></a>
@@ -44,6 +49,7 @@
                 <a class="nav-link" href="/logout">Logout</a>
               </li>
             {% endif %}
+            -->
           </ul>
         </div>
       </div>
