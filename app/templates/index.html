@@ -9,78 +9,113 @@ Welcome Home
     <div class="jumbotron jumbotron-primary">
       <div class="container text-center">
         <div class="row">
-          <div class="col-sm-6 col-sm-offset-3">
-            <h1>One place to publish, install and find clean data packages!</h1>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-6">
-            <p class="terminal-heading"><strong>Publish</strong> from the command line <span class="glyphicon glyphicon-console"></span></p>
-          </div>
-          <div class="col-sm-6"></div>
-        </div>
-        <div class="row">
-          <div class="col-sm-6">
-            <img src="{{ s3_cdn }}/static/img/terminal-black.png" class="img-responsive" />
-          </div>
-          <div class="col-sm-6">
-            <img src="{{ s3_cdn }}/static/img/terminal-white.png" class="img-responsive" />
-          </div>
-        </div>
-        <div class="row">
-          <p>Start publishing now &mdash; it's free</p>
-          <a href="/api/auth/login" class="btn btn-lg btn-default">
-            Sign up for free with <span class="fa fa-github fa-lg"></span> GitHub
-          </a>
-        </div>
-      </div>
-    </div><!-- End of jumbotron main -->
-    <!-- Section 1 -->
-    <div class="section">
-      <div class="container">
-        <div class="row text-center">
-          <h3>Find Data Packages</h3>
+            <h1>Discover Data</h1>
         </div>
         <div class="row">
           <form action="/search" method="GET">
             <input type="text" class="form-control" placeholder="e.g. country" name="q">
           </form>
         </div>
+        <div class="row narrow">
+          <img src="{{ s3_cdn }}/static/img/two-elephants.png" class="img-responsive" />
+          <hr>
+        </div>
         <div class="row">
-          <div class="col-sm-4">
+          <p class="message">Discover, share and explore data</p>
+        </div>
+        <div class="row">
+          <a href="#next-section" class="btn btn-lg btn-default">
+            Read more
+          </a>
+        </div>
+        <div class="row">
+          <a href="#next-section">
+            <i class="fa fa-chevron-down fa-2x" aria-hidden="true" style="color:black"></i>
+          </a>
+        </div>
+      </div>
+    </div><!-- End of jumbotron main -->
+    <!-- Section 1 -->
+    <div class="section" id="next-section">
+      <div class="container">
+        <div class="row text-center">
+          <div class="col-md-5">
             <div class="row">
-              <div class="col-sm-4">
-                <img src="{{ s3_cdn }}/static/img/cube04.png" class="img-responsive" />
+              <h1>HAVE A LOOK AT OUR BEST DATA</h1>
+            </div>
+            <div class="row">
+              <div class="col-xs-3">
+                <img src="{{ s3_cdn }}/static/img/cube05.png" class="img-responsive" />
               </div>
-              <div class="col-sm-8">
+              <div class="col-xs-9">
+                <h3>Example Data Package</h3>
+                <p>Data Packages are a lightweight containerization format for data.
+                  They provide the foundation for frictionless data transport.</p>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xs-3">
+                <img src="{{ s3_cdn }}/static/img/cube05.png" class="img-responsive" />
+              </div>
+              <div class="col-xs-9">
+                <h3>Example Data Package</h3>
+                <p>Data Packages are a lightweight containerization format for data.
+                  They provide the foundation for frictionless data transport.</p>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xs-3">
+                <img src="{{ s3_cdn }}/static/img/cube05.png" class="img-responsive" />
+              </div>
+              <div class="col-xs-9">
+                <h3>Example Data Package</h3>
                 <p>Data Packages are a lightweight containerization format for data.
                   They provide the foundation for frictionless data transport.</p>
               </div>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-md-5 col-md-offset-2">
             <div class="row">
-              <div class="col-sm-4">
-                <img src="{{ s3_cdn }}/static/img/cube04.png" class="img-responsive" />
+              <h1>SHARE & STORE YOUR DATA</h1>
+            </div>
+            <div class="row">
+              <div class="col-xs-3">
+                <img src="{{ s3_cdn }}/static/img/cube06.png" class="img-responsive" />
               </div>
-              <div class="col-sm-8">
+              <div class="col-xs-9">
+                <h3>Example Data Package</h3>
                 <p>Data Packages are a lightweight containerization format for data.
                   They provide the foundation for frictionless data transport.</p>
               </div>
             </div>
-          </div>
-          <div class="col-sm-4">
+
             <div class="row">
-              <div class="col-sm-4">
-                <img src="{{ s3_cdn }}/static/img/cube04.png" class="img-responsive" />
+              <div class="col-xs-3">
+                <img src="{{ s3_cdn }}/static/img/cube06.png" class="img-responsive" />
               </div>
-              <div class="col-sm-8">
+              <div class="col-xs-9">
+                <h3>Example Data Package</h3>
+                <p>Data Packages are a lightweight containerization format for data.
+                  They provide the foundation for frictionless data transport.</p>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xs-3">
+                <img src="{{ s3_cdn }}/static/img/cube06.png" class="img-responsive" />
+              </div>
+              <div class="col-xs-9">
+                <h3>Example Data Package</h3>
                 <p>Data Packages are a lightweight containerization format for data.
                   They provide the foundation for frictionless data transport.</p>
               </div>
             </div>
           </div>
         </div>
+
+
       </div>
     </div><!-- End of section 1 -->
 {% endblock %}

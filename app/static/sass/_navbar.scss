@@ -2,7 +2,6 @@
 ====================================*/
 
 .navbar {
-  border-bottom: 1px solid;
   .navbar-main {
     width: 70%;
     margin: auto;
@@ -33,8 +32,8 @@
 }
 
 @media (min-width: 768px) {
-  .navbar {
-    margin-bottom: 30px;
+  .navbar .container {
+    padding-top: 0;
   }
   .navbar-nav.navbar-center {
     position: absolute;

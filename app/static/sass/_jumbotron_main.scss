@@ -1,12 +1,8 @@
 /* Jumbotron main
 ====================================*/
 .jumbotron-primary {
-  background-color: white;
-  border-bottom: 1px solid;
-  background-image: url("../img/elephant-dancing.png");
-  background-repeat: no-repeat;
-  background-position: 95% 10%;
-  background-size: 18%;
+  background: linear-gradient(90deg, #02bac1 50%, #ecd3ad 50%);
+  padding-bottom: 5em;
 }
 .jumbotron {
   padding-top: 10px;
@@ -21,6 +17,23 @@
   }
   h1 {
     font-weight: 200;
-    margin-bottom: 60px;
+    margin-bottom: 30px;
+  }
+  form {
+    margin-bottom: 30px;
+    padding: 0 25%;
+  }
+  .narrow {
+    padding: 0 35%;
+    hr {
+      margin-bottom: 0;
+      border-top: 2px solid #000;
+    }
+  }
+  .message {
+    font-style: italic;
+  }
+  a {
+    margin: 20px 0;
   }
 }
