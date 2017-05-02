@@ -14,6 +14,7 @@ class BaseConfig(object):
                        'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                        "GITHUB_CLIENT_ID", 'GITHUB_CLIENT_SECRET']
 
+    DOMAIN = "datapackaged.com"
     JWT_SEED = "dpr-api-key"
     DEBUG = True
     TESTING = True
@@ -42,6 +43,7 @@ class BaseConfig(object):
     SQLALCHEMY_DATABASE_URI = 'postgresql://dpr_user:secret@localhost/dpr_db_test'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     S3_BUCKET_NAME = "test"
+    BITSTORE_URL = 'https://bits.' + DOMAIN
 
     def check_required_config(self):
         for conf in self.required_config:

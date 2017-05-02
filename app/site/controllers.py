@@ -59,16 +59,14 @@ def datapackage_show(publisher, package):
         pass
     packaged = Packaged(metadata)
     dataset = packaged.construct_dataset(request.url_root)
-    
+
     readme_variables_replaced = dp_in_readme(dataset["readme"], dataset)
     dataset["readme"] = text_to_markdown(readme_variables_replaced)
 
     dataViews = packaged.get_views()
 
     bitstore = BitStore(publisher, package)
-    datapackage_json_url_in_s3 = bitstore. \
-        build_s3_object_url(request.headers['Host'],
-                            'datapackage.json')
+    datapackage_json_url_in_s3 = bitstore.build_s3_object_url('datapackage.json')
     readme_short_markdown = text_to_markdown(metadata.get('readme', ''))
     readme_short = ''.join(BeautifulSoup(readme_short_markdown).findAll(text=True)) \
         .split('\n\n')[0].replace(' \n', '') \

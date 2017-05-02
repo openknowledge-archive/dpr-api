@@ -116,9 +116,9 @@ class BitStore(object):
             format(prefix=self.build_s3_base_prefix(),
                    version=self.version)
 
-    def build_s3_object_url(self, domain_name, path):
-        return 'https://bits-{base_url}/{key}'.\
-            format(base_url=domain_name,
+    def build_s3_object_url(self, path):
+        return '{base_url}/{key}'.\
+            format(base_url=app.config['BITSTORE_URL'],
                    key=self.build_s3_key(path))
 
     def generate_pre_signed_post_object(self, path, md5,
