@@ -86,7 +86,7 @@ class StageConfig(DevelopmentConfig):
                        'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                        'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET',
                        'SQLALCHEMY_DATABASE_URI']
-    API_DOCS = 'https://frictionlessdata.github.io/dpr-docs/developers/api/'
+    API_DOCS = 'https://docs.datapackaged.com/developers/api/'
     DEBUG = False
     TESTING = False
 
