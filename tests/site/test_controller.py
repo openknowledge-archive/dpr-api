@@ -14,7 +14,6 @@ import unittest
 import os
 from flask_testing import TestCase
 from app.database import db
-from app.site.models import Packaged
 from app.package.models import Package, PackageTag
 from app.profile.models import User, Publisher, UserRoleEnum
 
