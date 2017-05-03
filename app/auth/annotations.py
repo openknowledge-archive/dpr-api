@@ -9,7 +9,7 @@ from functools import wraps
 from flask import current_app as app
 from flask import request, _request_ctx_stack
 
-from app.utils import handle_error
+from app.utils import InvalidUsage
 from app.auth.models import JWT
 from app.auth.authorization import is_authorize
 from app.package.models import Package
@@ -38,7 +38,7 @@ def is_allowed(action):
                 user_id = user_info['user']
             status = check_is_authorized(action, kwargs['publisher'], kwargs['package'], user_id)
             if not status:
-                return handle_error("NOT_ALLOWED", "The operation is not allowed", 403)
+                raise InvalidUsage("The operation is not allowed", 403)
             return f(*args, **kwargs)
         return wrapped
     return wrapper
@@ -54,12 +54,11 @@ def get_user_from_jwt(req, api_key):
         token = req.values.get('jwt')
 
     if not token:
-        return False, handle_error('authorization_header_missing',
-                                   'Authorization header is expected', 401)
+        raise InvalidUsage('Authorization header is expected', 401)
     try:
         return True, jwt_helper.decode(token)
     except Exception as e:
-        return False, handle_error('jwt_error', e.message, 400)
+        raise InvalidUsage(e.message, 400)
 
 
 def check_is_authorized(action, publisher, package=None, user_id=None):
@@ -73,6 +72,6 @@ def check_is_authorized(action, publisher, package=None, user_id=None):
         publisher_name = publisher
         instance = Publisher.query.filter_by(name=publisher_name).one()
     else:
-        return handle_error("INVALID_ENTITY", "{e} is not a valid one".format(e=entity_str), 401)
+        raise InvalidUsage("{e} is not a valid one".format(e=entity_str), 401)
 
     return is_authorize(user_id, instance, action)

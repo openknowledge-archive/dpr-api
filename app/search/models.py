@@ -9,7 +9,7 @@ import sqlalchemy
 from sqlalchemy import or_
 from app.package.models import Package, PackageTag, PackageStateEnum
 from app.profile.models import Publisher
-
+from app.utils import InvalidUsage
 
 class DataPackageQuery(object):
 
@@ -29,7 +29,7 @@ class DataPackageQuery(object):
             if filter_class == 'publisher':
                 sa_filters.append(Publisher.name == filter_term)
             else:
-                raise Exception("not supported any other filter right now")
+                raise InvalidUsage("not supported any other filter right now")
         if len(sa_filters) > 0:
             sql_query = sql_query.filter(or_(*sa_filters))
 

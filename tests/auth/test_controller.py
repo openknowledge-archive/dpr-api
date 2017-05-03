@@ -47,7 +47,7 @@ class AuthTokenTestCase(unittest.TestCase):
                               content_type='application/json')
         data = json.loads(rv.data)
         assert rv.status_code == 400
-        assert data['error_code'] == 'INVALID_INPUT'
+        assert data['message'] == 'User name or email both can not be empty'
 
     def test_throw_400_if_secret_is_none(self):
         rv = self.client.post(self.auth_token_url,
@@ -58,7 +58,7 @@ class AuthTokenTestCase(unittest.TestCase):
                               content_type='application/json')
         assert rv.status_code == 400
         data = json.loads(rv.data)
-        assert data['error_code'] == 'INVALID_INPUT'
+        assert data['message'] == 'Secret can not be empty'
 
     def test_throw_404_if_user_id_do_not_exists(self):
         rv = self.client.post(self.auth_token_url,
@@ -70,7 +70,7 @@ class AuthTokenTestCase(unittest.TestCase):
                               content_type='application/json')
         data = json.loads(rv.data)
         self.assertEqual(rv.status_code, 404)
-        self.assertEqual(data['error_code'], 'USER_NOT_FOUND')
+        self.assertEqual(data['message'], 'user does not exists')
 
     def test_throw_404_if_user_email_do_not_exists(self):
         rv = self.client.post(self.auth_token_url,
@@ -82,7 +82,7 @@ class AuthTokenTestCase(unittest.TestCase):
                               content_type='application/json')
         data = json.loads(rv.data)
         self.assertEqual(rv.status_code, 404)
-        self.assertEqual(data['error_code'], 'USER_NOT_FOUND')
+        self.assertEqual(data['message'], 'user does not exists')
 
     def test_throw_403_if_user_name_and_secret_key_does_not_match(self):
         rv = self.client.post(self.auth_token_url,
@@ -94,7 +94,7 @@ class AuthTokenTestCase(unittest.TestCase):
                               content_type='application/json')
         data = json.loads(rv.data)
         self.assertEqual(rv.status_code, 403)
-        self.assertEqual(data['error_code'], 'SECRET_ERROR')
+        self.assertEqual(data['message'], 'Secret key do not match')
 
     def test_throw_403_if_email_and_secret_key_does_not_match(self):
         rv = self.client.post(self.auth_token_url,
@@ -106,15 +106,15 @@ class AuthTokenTestCase(unittest.TestCase):
                               content_type='application/json')
         data = json.loads(rv.data)
         self.assertEqual(rv.status_code, 403)
-        self.assertEqual(data['error_code'], 'SECRET_ERROR')
+        self.assertEqual(data['message'], 'Secret key do not match')
 
-    def test_throw_500_if_exception_occours(self):
+    def test_throw_400_if_bad_request(self):
         rv = self.client.post(self.auth_token_url,
                               data="'username': None,",
                               content_type='application/json')
         data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 500)
-        self.assertEqual(data['error_code'], 'GENERIC_ERROR')
+        self.assertEqual(rv.status_code, 400)
+        self.assertEqual(data['message'], 'Bad Request')
 
     def test_return_200_if_email_and_secret_matches(self):
         rv = self.client.post(self.auth_token_url,
@@ -150,7 +150,9 @@ class CallbackHandlingTestCase(unittest.TestCase):
 
         data = json.loads(response.data)
 
-        self.assertEqual(data['error_code'], 'GENERIC_ERROR')
+        print (data)
+
+        self.assertEqual(data['message'], 'Internal Server Error')
         self.assertEqual(response.status_code, 500)
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
@@ -170,7 +172,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
         }.get(k, 'unhandled request %s'%k)
         response = self.client.get('/api/auth/callback?code=123')
         data = json.loads(response.data)
-        self.assertEqual(data['error_code'], 'Not Found')
+        self.assertEqual(data['message'], 'Email Not Found')
         self.assertEqual(response.status_code, 404)
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
@@ -180,7 +182,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
 
         data = json.loads(response.data)
 
-        self.assertEqual(data['error_code'], 'Access Denied')
+        self.assertEqual(data['message'], 'Access Denied')
         self.assertEqual(response.status_code, 400)
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
