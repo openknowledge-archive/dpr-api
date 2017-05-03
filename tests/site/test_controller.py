@@ -32,6 +32,19 @@ class WebsiteTestCase(unittest.TestCase):
         rv = self.client.get('/')
         self.assertNotEqual(404, rv.status_code)
 
+    def test_home_shows_packages(self):
+        descriptor = json.loads(open('fixtures/datapackage.json').read())
+        with self.app.app_context():
+            publisher = Publisher(name='core')
+            metadata = Package(name='gold-prices')
+            metadata.tags.append(PackageTag(descriptor=descriptor))
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
+            db.session.commit()
+        rv = self.client.get('/')
+        self.assertEqual(rv.status_code, 200)
+        self.assertTrue('DEMO - CBOE Volatility Index' in rv.data)
+
     def test_logout_page(self):
         rv = self.client.get('/logout')
         self.assertNotEqual(404, rv.status_code)

@@ -43,6 +43,18 @@ class BaseConfig(object):
     S3_BUCKET_NAME = "test"
     BITSTORE_URL = 'https://bits.' + DOMAIN
 
+    CORE_PACKAGES = [
+        "s-and-p-500-companies",
+        "house-prices-us",
+        "gold-prices"
+    ]
+
+    EXAMPLE_PACKAGES = [
+        "simple-graph-spec",
+        "vega-views-tutorial-topojson",
+        "geojson-tutorial"
+    ]
+
     def check_required_config(self):
         for conf in self.required_config:
             conf_value = self.__getattribute__(conf)

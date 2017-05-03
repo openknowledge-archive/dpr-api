@@ -23,10 +23,23 @@ def index():
     Renders index.html if no token found in cookie.
     If token found in cookie then it renders dashboard.html
     """
+    core_packages = []
+    example_packages = []
+    for item in app.config['CORE_PACKAGES']:
+        package = get_package('core', item)
+        core_packages.append(package)
+
+    for item in app.config['EXAMPLE_PACKAGES']:
+        package = get_package('examples', item)
+        example_packages.append(package)
+
     if g.current_user:
         return render_template("dashboard.html",
                                title='Dashboard'), 200
-    return render_template("index.html", title='Home'), 200
+    return render_template("index.html",
+                            title='Home',
+                            core_packages=core_packages,
+                            example_packages=example_packages), 200
 
 
 @site_blueprint.route("/logout", methods=["GET"])
