@@ -79,7 +79,11 @@ def tag_data_package(publisher, package):
 
     bitstore = BitStore(publisher, package)
     status_db = Package.create_or_update_tag(publisher, package, data['version'])
-    status_bitstore = bitstore.copy_to_new_version(data['version'])
+    try:
+        status_bitstore = bitstore.copy_to_new_version(data['version'])
+    except Exception as e:
+        ## TODO roll back changes in db
+        raise InvalidUsage(e.message, 500)
 
     return jsonify({"status": "OK"}), 200
 
@@ -122,8 +126,12 @@ def delete_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_acl = bitstore.change_acl('private')
     status_db = Package.change_status(publisher, package, PackageStateEnum.deleted)
+    try:
+        status_acl = bitstore.change_acl('private')
+    except Exception as e:
+        ## TODO roll back changes in db
+        raise InvalidUsage(e.message, 500)
     if status_acl and status_db:
         return jsonify({"status": "OK"}), 200
 
@@ -168,8 +176,12 @@ def undelete_data_package(publisher, package):
 
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_acl = bitstore.change_acl('public-read')
     status_db = Package.change_status(publisher, package, PackageStateEnum.active)
+    try:
+        status_acl = bitstore.change_acl('public-read')
+    except Exception as e:
+        ## TODO roll back changes in db
+        raise InvalidUsage(e.message, 500)
     if status_acl and status_db:
         return jsonify({"status": "OK"}), 200
 
@@ -213,8 +225,12 @@ def purge_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_acl = bitstore.delete_data_package()
     status_db = Package.delete_data_package(publisher, package)
+    try:
+        status_acl = bitstore.delete_data_package()
+    except Exception as e:
+        ## TODO roll back changes in db
+        raise InvalidUsage(e.message, 500)
     if status_acl and status_db:
         return jsonify({"status": "OK"}), 200
 
