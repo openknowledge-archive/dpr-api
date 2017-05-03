@@ -16,6 +16,7 @@ from flaskext.markdown import Markdown
 from flask_gravatar import Gravatar
 from flask_oauthlib.client import OAuth
 from werkzeug.utils import import_string
+from werkzeug.exceptions import NotFound, Unauthorized, MethodNotAllowed, BadRequest
 from .database import db
 from app.auth.controllers import auth_blueprint, bitstore_blueprint
 from app.auth.models import JWT
@@ -24,6 +25,8 @@ from app.site.controllers import site_blueprint
 from app.profile.controllers import profile_blueprint
 from app.profile.models import User
 from app.search.controllers import search_blueprint
+from app.utils import InvalidUsage
+from flask import jsonify
 
 app_config = {
     "base": "app.config.BaseConfig",
@@ -105,6 +108,34 @@ def create_app():
 
     app.config['github'] = github
 
+    @app.errorhandler(NotFound)
+    @app.errorhandler(BadRequest)
+    @app.errorhandler(Unauthorized)
+    @app.errorhandler(MethodNotAllowed)
+    def handle_errors(error):
+        response = dict()
+        response['status_code'] = error.code
+        response['message'] = error.name
+        response = jsonify(response)
+        app.logger.error(error)
+        return response, error.code
+
+    @app.errorhandler(InvalidUsage)
+    def handle_costum_error(error):
+        response = jsonify(error.to_dict())
+        response.status_code = error.status_code
+        app.logger.error(error)
+        return response
+
+    @app.errorhandler(Exception)
+    def handle_internal_error(error):
+        response = dict()
+        response['status_code'] = 500
+        response['message'] = 'Internal Server Error'
+        response = jsonify(response)
+        app.logger.error(error)
+        return response, 500
+
     @app.context_processor
     def populate_context_variable():
         return dict(current_user=g.current_user)
@@ -114,10 +145,6 @@ def create_app():
         token = request.cookies.get('jwt')
         g.current_user = None
         if token:
-            try:
-                payload = JWT(app.config['JWT_SEED']).decode(token)
-                g.current_user = User().get_userinfo_by_id(payload['user'])
-            except Exception as e:
-                app.logger.error(e)
-
+            payload = JWT(app.config['JWT_SEED']).decode(token)
+            g.current_user = User().get_userinfo_by_id(payload['user'])
     return app
