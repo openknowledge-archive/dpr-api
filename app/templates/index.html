@@ -17,16 +17,23 @@ Welcome Home
           </form>
         </div>
         <div class="row narrow">
-          <img src="{{ s3_cdn }}/static/img/two-elephants.png" class="img-responsive" />
+          <img src="{{ s3_cdn }}/static/img/cube-03-elephant.png" class="img-responsive" />
           <hr>
         </div>
         <div class="row">
           <p class="message">Discover, share and explore data</p>
         </div>
         <div class="row">
-          <a href="#next-section" class="btn btn-lg btn-default">
-            Read more
-          </a>
+          <div class="col-xs-3 col-xs-offset-3">
+            <a href="#publish-section" class="btn btn-lg btn-default">
+              Publish
+            </a>
+          </div>
+          <div class="col-xs-3">
+            <a href="#next-section" class="btn btn-lg btn-default">
+              Read more
+            </a>
+          </div>
         </div>
         <div class="row">
           <a href="#next-section">
@@ -46,11 +53,21 @@ Welcome Home
             {% for package in showcase_packages %}
               <div class="row">
                 <div class="col-xs-3">
-                  <img src="{{ s3_cdn }}/static/img/cube05.png" class="img-responsive" />
+                  <img src="{{ s3_cdn }}/static/img/cube15.svg" class="img-responsive" />
                 </div>
                 <div class="col-xs-9">
-                  <h3>{{ package['descriptor']['title'] }}</h3>
-                  <p>{{ package.short_readme|truncate(100) }}</p>
+                  <a href="{{ package['descriptor']['owner'] }}/{{ package['descriptor']['name'] }}">
+                    <h3>{{ package['descriptor']['title'] }}</h3>
+                  </a>
+                  <h6 class="text-left">
+                    <b>{{ package['descriptor']['name'] }}</b> | resources <span class="badge">{{ package.descriptor.resources|length }}</span>
+                  </h6>
+                  <p>
+                    {{ package.short_readme|truncate(150) }}
+                    <a href="{{ package['descriptor']['owner'] }}/{{ package['descriptor']['name'] }}">
+                      explore more <span>&rsaquo;</span>
+                    </a>
+                  </p>
                 </div>
               </div>
             {% endfor %}
@@ -62,18 +79,80 @@ Welcome Home
             {% for package in tutorial_packages %}
               <div class="row">
                 <div class="col-xs-3">
-                  <img src="{{ s3_cdn }}/static/img/cube06.png" class="img-responsive" />
+                  <img src="{{ s3_cdn }}/static/img/cube16.svg" class="img-responsive" />
                 </div>
                 <div class="col-xs-9">
-                  <h3>{{ package['descriptor']['title'] }}</h3>
-                  <p>{{ package.short_readme |truncate(100) }}</p>
+                  <a href="{{ package['descriptor']['owner'] }}/{{ package['descriptor']['name'] }}">
+                    <h3>{{ package['descriptor']['title'] }}</h3>
+                  </a>
+                  <h6 class="text-left">
+                    <b>{{ package['descriptor']['name'] }}</b> | resources <span class="badge">{{ package.descriptor.resources|length }}</span>
+                  </h6>
+                  <p>
+                    {{ package.short_readme|truncate(150) }}
+                    <a href="{{ package['descriptor']['owner'] }}/{{ package['descriptor']['name'] }}">
+                      explore more <span>&rsaquo;</span>
+                    </a>
+                  </p>
                 </div>
               </div>
             {% endfor %}
           </div>
         </div>
-
-
+        <div class="row text-center">
+          <a href="#publish-section" class="btn btn-lg btn-default">
+            Publish
+          </a>
+        </div>
+        <div class="row text-center">
+          <a href="#publish-section">
+            <i class="fa fa-chevron-down fa-2x" aria-hidden="true" style="color:black"></i>
+          </a>
+        </div>
       </div>
     </div><!-- End of section 1 -->
+
+    <!-- Section 2 -->
+    <div class="jumbotron jumbotron-secondary" id="publish-section">
+      <div class="container text-center">
+        <div class="row medium">
+          <img src="{{ s3_cdn }}/static/img/elephants-publish.png" class="img-responsive" />
+          <hr>
+        </div>
+        <div class="row">
+          <p class="message">Publish and store your data</p>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-6">
+            <p class="terminal-heading"><strong>Publish</strong> from the command line</p>
+          </div>
+          <div class="col-sm-6"></div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <img src="{{ s3_cdn }}/static/img/terminal-black.png" class="img-responsive" />
+          </div>
+          <div class="col-sm-6">
+            <img src="{{ s3_cdn }}/static/img/terminal-white.png" class="img-responsive" />
+          </div>
+        </div>
+
+        <div class="row">
+          <p class="message">Publishing is coming soon!</p>
+        </div>
+        <div class="row">
+          <p class="message">Sign up to get first access when we launch!</p>
+        </div>
+
+        <div class="row">
+          <form action="https://formspree.io/anuar.ustayev@datopian.com" method="POST">
+              <input type="text" name="name" placeholder="Name *" class="form-control" />
+              <input type="email" name="_replyto" placeholder="Email *" class="form-control" />
+              <textarea  name="message" placeholder="Message (optional)" class="form-control"></textarea>
+              <input type="submit" value="Send" class="btn btn-default pull-left">
+          </form>
+        </div>
+      </div>
+    </div><!-- End of section 2 -->
 {% endblock %}

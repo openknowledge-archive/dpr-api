@@ -2916,28 +2916,28 @@ a.btn.disabled, fieldset[disabled] a.btn {
 .btn-default {
   color: #333;
   background-color: #fff;
-  border-color: #ccc; }
+  border-color: black; }
   .btn-default:focus, .btn-default.focus {
     color: #333;
     background-color: #e6e6e6;
-    border-color: #8c8c8c; }
+    border-color: black; }
   .btn-default:hover {
     color: #333;
     background-color: #e6e6e6;
-    border-color: #adadad; }
+    border-color: black; }
   .btn-default:active, .btn-default.active, .open > .btn-default.dropdown-toggle {
     color: #333;
     background-color: #e6e6e6;
-    border-color: #adadad; }
+    border-color: black; }
     .btn-default:active:hover, .btn-default:active:focus, .btn-default:active.focus, .btn-default.active:hover, .btn-default.active:focus, .btn-default.active.focus, .open > .btn-default.dropdown-toggle:hover, .open > .btn-default.dropdown-toggle:focus, .open > .btn-default.dropdown-toggle.focus {
       color: #333;
       background-color: #d4d4d4;
-      border-color: #8c8c8c; }
+      border-color: black; }
   .btn-default:active, .btn-default.active, .open > .btn-default.dropdown-toggle {
     background-image: none; }
   .btn-default.disabled:hover, .btn-default.disabled:focus, .btn-default.disabled.focus, .btn-default[disabled]:hover, .btn-default[disabled]:focus, .btn-default[disabled].focus, fieldset[disabled] .btn-default:hover, fieldset[disabled] .btn-default:focus, fieldset[disabled] .btn-default.focus {
     background-color: #fff;
-    border-color: #ccc; }
+    border-color: black; }
   .btn-default .badge {
     color: #fff;
     background-color: #333; }
@@ -5922,16 +5922,33 @@ body {
     transform: translatex(-50%); } }
 /* Jumbotron main
 ====================================*/
-.jumbotron-primary {
+.jumbotron-primary, .jumbotron-secondary {
   background: linear-gradient(90deg, #02bac1 50%, #ecd3ad 50%);
   padding-bottom: 5em; }
+
+.jumbotron-primary a.btn {
+  width: 130px; }
+
+.jumbotron-secondary form {
+  margin-top: 30px; }
+  .jumbotron-secondary form input, .jumbotron-secondary form textarea {
+    margin-bottom: 20px; }
+.jumbotron-secondary .medium {
+  padding: 0 25%; }
+  .jumbotron-secondary .medium hr {
+    margin-bottom: 0;
+    border-top: 4px solid #000; }
+.jumbotron-secondary strong {
+  font-style: bold; }
 
 .jumbotron {
   padding-top: 10px;
   margin-bottom: 0; }
   .jumbotron .terminal-heading {
-    color: #757575;
-    margin-bottom: 0; }
+    font-size: 1.3em;
+    color: black;
+    margin-bottom: 0;
+    margin-top: 40px; }
     .jumbotron .terminal-heading span {
       padding: 3px;
       border: 1px solid; }
@@ -5968,6 +5985,11 @@ body {
     margin-bottom: 30px; }
   .section .row {
     margin-bottom: 40px; }
+  .section a {
+    color: black; }
+  .section p a {
+    text-decoration: underline;
+    color: #333333; }
   .section input {
     width: 50%;
     margin: auto;
