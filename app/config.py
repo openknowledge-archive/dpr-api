@@ -43,16 +43,16 @@ class BaseConfig(object):
     S3_BUCKET_NAME = "test"
     BITSTORE_URL = 'https://bits.' + DOMAIN
 
-    CORE_PACKAGES = [
-        "s-and-p-500-companies",
-        "house-prices-us",
-        "gold-prices"
+    FRONT_PAGE_SHOWCASE_PACKAGES = [
+        {"publisher": "core", "package": "s-and-p-500-companies"},
+        {"publisher": "core", "package": "house-prices-us"},
+        {"publisher": "core", "package": "gold-prices"}
     ]
 
-    EXAMPLE_PACKAGES = [
-        "simple-graph-spec",
-        "vega-views-tutorial-topojson",
-        "geojson-tutorial"
+    TUTORIAL_PACKAGES = [
+        {"publisher": "examples", "package": "simple-graph-spec"},
+        {"publisher": "examples", "package": "vega-views-tutorial-topojson"},
+        {"publisher": "examples", "package": "geojson-tutorial"}
     ]
 
     def check_required_config(self):

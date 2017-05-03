@@ -43,8 +43,7 @@ Welcome Home
             <div class="row">
               <h1>HAVE A LOOK AT OUR BEST DATA</h1>
             </div>
-            {% for package in core_packages %}
-            {% if package %}
+            {% for package in showcase_packages %}
               <div class="row">
                 <div class="col-xs-3">
                   <img src="{{ s3_cdn }}/static/img/cube05.png" class="img-responsive" />
@@ -54,15 +53,13 @@ Welcome Home
                   <p>{{ package.short_readme|truncate(100) }}</p>
                 </div>
               </div>
-            {% endif %}
             {% endfor %}
           </div>
           <div class="col-md-5 col-md-offset-2">
             <div class="row">
               <h1>SHARE & STORE YOUR DATA</h1>
             </div>
-            {% for package in example_packages %}
-            {% if package %}
+            {% for package in tutorial_packages %}
               <div class="row">
                 <div class="col-xs-3">
                   <img src="{{ s3_cdn }}/static/img/cube06.png" class="img-responsive" />
@@ -72,7 +69,6 @@ Welcome Home
                   <p>{{ package.short_readme |truncate(100) }}</p>
                 </div>
               </div>
-            {% endif %}
             {% endfor %}
           </div>
         </div>
