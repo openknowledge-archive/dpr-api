@@ -8,13 +8,11 @@ from flask import Blueprint, render_template, \
     json, request, redirect, g, make_response
 from flask import current_app as app
 from app.auth.models import JWT
-from app.site.models import Packaged
 from app.package.models import BitStore
 from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
-from app.utils.helpers import text_to_markdown, dp_in_readme
-from BeautifulSoup import BeautifulSoup
 from app.utils import InvalidUsage
+from app.site.logic import *
 
 site_blueprint = Blueprint('site', __name__)
 
@@ -48,37 +46,17 @@ def datapackage_show(publisher, package):
     """
     Loads datapackage page for given owner
     """
-
-    response = app.test_client(). \
-        get('/api/package/{publisher}/{package}'. \
-            format(publisher=publisher, package=package))
-
-    if response.status_code == 404:
+    datapackage = get_package(publisher, package)
+    if not datapackage:
         raise InvalidUsage("Page Not Found", 404)
 
-    metadata = json.loads(response.data)
-
-    packaged = Packaged(metadata)
-    dataset = packaged.construct_dataset(request.url_root)
-
-    readme_variables_replaced = dp_in_readme(dataset["readme"], dataset)
-    dataset["readme"] = text_to_markdown(readme_variables_replaced)
-
-    dataViews = packaged.get_views()
-
-    bitstore = BitStore(publisher, package)
-    datapackage_json_url_in_s3 = bitstore.build_s3_object_url('datapackage.json')
-    readme_short_markdown = text_to_markdown(metadata.get('readme', ''))
-    readme_short = ''.join(BeautifulSoup(readme_short_markdown).findAll(text=True)) \
-        .split('\n\n')[0].replace(' \n', '') \
-        .replace('\n', ' ').replace('/^ /', '')
-
     return render_template("dataset.html",
-                           dataset=dataset,
-                           datapackageUrl=datapackage_json_url_in_s3,
-                           showDataApi=True, jsonDataPackage=dataset,
-                           dataViews=dataViews,
-                           readmeShort=readme_short
+                           dataset=datapackage.get('descriptor'),
+                           datapackageUrl=datapackage.get('datapackag_url'),
+                           showDataApi=True,
+                           jsonDataPackage=datapackage.get('descriptor'),
+                           dataViews=datapackage.get('views'),
+                           readmeShort=datapackage.get('short_readme')
                            ), 200
 
 
