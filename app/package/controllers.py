@@ -15,7 +15,7 @@ from flask import Response
 from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
-from app.utils import handle_error
+from app.utils import InvalidUsage
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
@@ -73,21 +73,19 @@ def tag_data_package(publisher, package):
                         description: Status of the operation
                         default: OK
     """
+    data = request.get_json()
+    if 'version' not in data:
+        raise InvalidUsage('version not found', 400)
+
+    bitstore = BitStore(publisher, package)
+    status_db = Package.create_or_update_tag(publisher, package, data['version'])
     try:
-        data = request.get_json()
-        if 'version' not in data:
-            return handle_error('ATTRIBUTE_MISSING', 'version not found', 400)
-
-        bitstore = BitStore(publisher, package)
-        status_db = Package.create_or_update_tag(publisher, package, data['version'])
         status_bitstore = bitstore.copy_to_new_version(data['version'])
-
-        if status_db is False or status_bitstore is False:
-            raise Exception("failed to tag data package")
-        return jsonify({"status": "OK"}), 200
     except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
+        ## TODO roll back changes in db
+        raise InvalidUsage(e.message, 500)
+
+    return jsonify({"status": "OK"}), 200
 
 
 @package_blueprint.route("/<publisher>/<package>", methods=["DELETE"])
@@ -127,19 +125,15 @@ def delete_data_package(publisher, package):
                         type: string
                         default: OK
     """
+    bitstore = BitStore(publisher=publisher, package=package)
+    status_db = Package.change_status(publisher, package, PackageStateEnum.deleted)
     try:
-        bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.change_acl('private')
-        status_db = Package.change_status(publisher, package, PackageStateEnum.deleted)
-        if status_acl and status_db:
-            return jsonify({"status": "OK"}), 200
-        if not status_acl:
-            raise Exception('Failed to change acl')
-        if not status_db:
-            raise Exception('Failed to change status')
     except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
+        ## TODO roll back changes in db
+        raise InvalidUsage(e.message, 500)
+    if status_acl and status_db:
+        return jsonify({"status": "OK"}), 200
 
 
 @package_blueprint.route("/<publisher>/<package>/undelete", methods=["POST"])
@@ -181,19 +175,15 @@ def undelete_data_package(publisher, package):
                         default: OK
 
     """
+    bitstore = BitStore(publisher=publisher, package=package)
+    status_db = Package.change_status(publisher, package, PackageStateEnum.active)
     try:
-        bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.change_acl('public-read')
-        status_db = Package.change_status(publisher, package, PackageStateEnum.active)
-        if status_acl and status_db:
-            return jsonify({"status": "OK"}), 200
-        if not status_acl:
-            raise Exception('Failed to change acl')
-        if not status_db:
-            raise Exception('Failed to change status')
     except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
+        ## TODO roll back changes in db
+        raise InvalidUsage(e.message, 500)
+    if status_acl and status_db:
+        return jsonify({"status": "OK"}), 200
 
 
 @package_blueprint.route("/<publisher>/<package>/purge", methods=["DELETE"])
@@ -234,20 +224,15 @@ def purge_data_package(publisher, package):
                         type: string
                         default: OK
     """
+    bitstore = BitStore(publisher=publisher, package=package)
+    status_db = Package.delete_data_package(publisher, package)
     try:
-        bitstore = BitStore(publisher=publisher, package=package)
         status_acl = bitstore.delete_data_package()
-        status_db = Package.delete_data_package(publisher, package)
-        if status_acl and status_db:
-            return jsonify({"status": "OK"}), 200
-        if not status_acl:
-            raise Exception('Failed to delete from s3')
-        if not status_db:
-            raise Exception('Failed to delete from db')
     except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
-
+        ## TODO roll back changes in db
+        raise InvalidUsage(e.message, 500)
+    if status_acl and status_db:
+        return jsonify({"status": "OK"}), 200
 
 @package_blueprint.route("/upload", methods=["POST"])
 @requires_auth
@@ -280,38 +265,33 @@ def finalize_publish():
         500:
             description: Internal Server Error
     """
-    try:
-        data = request.get_json()
-        datapackage_url = data['datapackage']
-        publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
-        user_id = None
-        jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
-        if jwt_status:
-            user_id = user_info['user']
+    data = request.get_json()
+    datapackage_url = data['datapackage']
+    publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
+    user_id = None
+    jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
+    if jwt_status:
+        user_id = user_info['user']
 
-        if Package.is_package_exists(publisher, package):
-            status = check_is_authorized('Package::Update', publisher, package, user_id)
-        else:
-            status = check_is_authorized('Package::Create', publisher, package, user_id)
+    if Package.is_package_exists(publisher, package):
+        status = check_is_authorized('Package::Update', publisher, package, user_id)
+    else:
+        status = check_is_authorized('Package::Create', publisher, package, user_id)
 
-        if not status:
-            return handle_error('UN-AUTHORIZE', 'not authorized to upload data', 400)
+    if not status:
+        raise InvalidUsage('Not authorized to upload data', 400)
 
-        bit_store = BitStore(publisher, package)
-        b = bit_store.get_metadata_body()
-        body = json.loads(b)
-        if body is not None:
-            bit_store.change_acl('public-read')
-            readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
-            Package.create_or_update(name=package, publisher_name=publisher,
-                                     descriptor=body, readme=readme)
-            return jsonify({"status": "queued"}), 200
+    bit_store = BitStore(publisher, package)
+    b = bit_store.get_metadata_body()
+    body = json.loads(b)
+    if body is not None:
+        bit_store.change_acl('public-read')
+        readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
+        Package.create_or_update(name=package, publisher_name=publisher,
+                                 descriptor=body, readme=readme)
+        return jsonify({"status": "queued"}), 200
 
-        raise Exception("Failed to get data from s3")
-
-    except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
+    raise InvalidUsage("Failed to get data from s3")
 
 
 @package_blueprint.route("/<publisher>/<package>", methods=["GET"])
@@ -348,27 +328,22 @@ def get_metadata(publisher, package):
         404:
             description: No metadata found for the package
     """
-    try:
-        data = Package.query.join(Publisher).\
-            filter(Publisher.name == publisher,
-                   Package.name == package,
-                   Package.status == PackageStateEnum.active).\
-            first()
-        if data is None:
-            return handle_error('DATA_NOT_FOUND',
-                                'No metadata found for the package',
-                                404)
-        tag = filter(lambda t: t.tag == 'latest', data.tags)[0]
-        metadata = {
-            'id': data.id,
-            'name': data.name,
-            'publisher': data.publisher.name,
-            'readme': tag.readme or '',
-            'descriptor': tag.descriptor
-        }
-        return jsonify(metadata), 200
-    except Exception as e:
-        return handle_error('GENERIC_ERROR', e.message, 500)
+    data = Package.query.join(Publisher).\
+        filter(Publisher.name == publisher,
+               Package.name == package,
+               Package.status == PackageStateEnum.active).\
+        first()
+    if data is None:
+        raise InvalidUsage('No metadata found for the package', 404)
+    tag = filter(lambda t: t.tag == 'latest', data.tags)[0]
+    metadata = {
+        'id': data.id,
+        'name': data.name,
+        'publisher': data.publisher.name,
+        'readme': tag.readme or '',
+        'descriptor': tag.descriptor
+    }
+    return jsonify(metadata), 200
 
 
 @package_blueprint.route("/<publisher>", methods=["GET"])
@@ -402,18 +377,12 @@ def get_all_metadata_names_for_publisher(publisher):
         404:
             description: No Data Package Found For The Publisher
     """
-    try:
-        metadata = Package.query.join(Publisher).\
-            with_entities(Package.name).\
-            filter(Publisher.name == publisher).all()
-        if len(metadata) is 0:
-            return handle_error('DATA_NOT_FOUND',
-                                'No Data Package Found For The Publisher',
-                                404)
-        keys = []
-        for d in metadata:
-            keys.append(d[0])
-        return jsonify({'data': metadata}), 200
-    except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
+    metadata = Package.query.join(Publisher).\
+        with_entities(Package.name).\
+        filter(Publisher.name == publisher).all()
+    if len(metadata) is 0:
+        raise InvalidUsage('No Data Package Found For The Publisher', 404)
+    keys = []
+    for d in metadata:
+        keys.append(d[0])
+    return jsonify({'data': metadata}), 200

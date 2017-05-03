@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from flask import Blueprint, jsonify
 from flask import current_app as app
-from app.utils import handle_error
+from app.utils import InvalidUsage
 from app.profile.models import Publisher
 
 profile_blueprint = Blueprint('profile', __name__, url_prefix='/api/profile')
@@ -62,11 +62,7 @@ def get_publisher_profile(name):
                             type: string
                             default: SUCCESS
         """
-    try:
-        info = Publisher.get_publisher_info(name)
-        if info is None:
-            return handle_error("NOT_FOUND", "publisher not found", 404)
-        return jsonify(dict(data=info, status="SUCCESS"))
-    except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
+    info = Publisher.get_publisher_info(name)
+    if info is None:
+        raise InvalidUsage("Publisher not found", 404)
+    return jsonify(dict(data=info, status="SUCCESS"))

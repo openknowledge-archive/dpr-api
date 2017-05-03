@@ -30,7 +30,7 @@ class GetMetaDataTestCase(unittest.TestCase):
             get('/api/package/%s/%s' % (self.publisher, self.package))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(data['error_code'], 'DATA_NOT_FOUND')
+        self.assertEqual(data['message'], 'No metadata found for the package')
 
     def test_return_200_if_meta_data_found(self):
         descriptor = {'name': 'test description'}
@@ -383,10 +383,14 @@ class EndToEndTestCase(unittest.TestCase):
 
 class SoftDeleteTestCase(unittest.TestCase):
     publisher_name = 'test_publisher'
+    unauthorized_name = 'not_allowed_user'
+
     package = 'test_package'
     url = "/api/package/{pub}/{pac}".format(pub=publisher_name,
                                             pac=package)
     user_id = 1
+    user_id_member = 2
+    user_member_name = 'test_user'
     jwt_url = '/api/auth/token'
 
     def setUp(self):
@@ -400,16 +404,27 @@ class SoftDeleteTestCase(unittest.TestCase):
             self.user.email, self.user.name, self.user.secret = \
                 'test@test.com', self.publisher_name, 'super_secret'
 
+            self.user_member = User()
+            self.user_member.id = self.user_id_member
+            self.user_member.email, self.user_member.name, self.user_member.secret = \
+                'test1@test.com', self.user_member_name, 'super_secret'
+
             self.publisher = Publisher(name=self.publisher_name)
+            self.publisher_1 = Publisher(name=self.user_member_name)
 
             association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = self.publisher
 
+            association1 = PublisherUser(role=UserRoleEnum.member)
+            association1.publisher = self.publisher_1
+
             metadata = Package(name=self.package)
             self.publisher.packages.append(metadata)
             self.user.publishers.append(association)
+            self.user_member.publishers.append(association1)
 
             db.session.add(self.user)
+            db.session.add(self.user_member)
             db.session.commit()
         response = self.client.post(self.jwt_url,
                                     data=json.dumps({
@@ -418,8 +433,16 @@ class SoftDeleteTestCase(unittest.TestCase):
                                     }),
                                     content_type='application/json')
         data = json.loads(response.data)
-        self.jwt = data['token']
-        self.auth = "%s" % self.jwt
+        self.auth = data['token']
+
+        response = self.client.post(self.jwt_url,
+                                    data=json.dumps({
+                                       'username': self.user_member_name,
+                                       'secret': 'super_secret'
+                                   }),
+                                   content_type='application/json')
+        data = json.loads(response.data)
+        self.jwt_member = data['token']
 
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
@@ -435,39 +458,46 @@ class SoftDeleteTestCase(unittest.TestCase):
     def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
+        auth = "%s" % self.jwt_member
 
-        response = self.client.delete(self.url)
+        response = self.client.delete(self.url, headers=dict(Authorization=auth))
         self.assertEqual(response.status_code, 403)
 
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
+    def test_return_401_if_not_header(self, change_status, change_acl):
+        change_acl.return_value = True
+        change_status.return_value = True
+
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, 401)
+
+    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.package.models.Package.change_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
-        change_acl.return_value = False
+        change_acl.side_effect = Exception('failed')
         change_status.return_value = True
         response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'Failed to change acl')
 
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
     def test_throw_500_if_change_status_fails(self, change_status, change_acl):
         change_acl.return_value = True
-        change_status.return_value = False
+        change_status.side_effect = Exception('failed')
         response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'Failed to change status')
 
     @patch('app.package.models.BitStore.change_acl')
     @patch('app.package.models.Package.change_status')
     def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
         change_acl.side_effect = Exception('failed')
-        change_status.return_value = False
+        change_status.side_effect = Exception('failed')
         response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'failed')
 
     def tearDown(self):
         with self.app.app_context():
@@ -548,24 +578,22 @@ class HardDeleteTestCase(unittest.TestCase):
     @patch('app.package.models.BitStore.delete_data_package')
     @patch('app.package.models.Package.delete_data_package')
     def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
-        bitstore_delete.return_value = False
+        bitstore_delete.side_effect = Exception('failed')
         db_delete.return_value = True
         auth = "%s" % self.jwt
         response = self.client.delete(self.url, headers={'Auth-Token': auth})
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'Failed to delete from s3')
 
     @patch('app.package.models.BitStore.delete_data_package')
     @patch('app.package.models.Package.delete_data_package')
     def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
-        db_delete.return_value = False
+        db_delete.side_effect = Exception('failed')
         auth = "%s" % self.jwt
         response = self.client.delete(self.url, headers={'Auth-Token': auth})
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'Failed to delete from db')
 
     @patch('app.package.models.BitStore.delete_data_package')
     @patch('app.package.models.Package.delete_data_package')
@@ -576,7 +604,6 @@ class HardDeleteTestCase(unittest.TestCase):
         response = self.client.delete(self.url, headers={'Auth-Token': auth})
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(data['message'], 'failed')
 
     @patch('app.package.models.BitStore.delete_data_package')
     @patch('app.package.models.Package.delete_data_package')
@@ -815,13 +842,13 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     headers=dict(Authorization=self.auth))
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
-        self.assertEqual('ATTRIBUTE_MISSING', data['error_code'])
+        self.assertEqual('version not found', data['message'])
 
     @patch('app.package.models.BitStore.copy_to_new_version')
     @patch('app.package.models.Package.create_or_update_tag')
     def test_throw_500_if_failed_to_tag(self, create_or_update_tag,
                                         copy_to_new_version):
-        copy_to_new_version.return_value = False
+        copy_to_new_version.side_effect = Exception('failed')
         create_or_update_tag.return_value = True
         response = self.client.post(self.url,
                                     data=json.dumps({
@@ -877,7 +904,7 @@ class TagDataPackageTestCase(unittest.TestCase):
     @patch('app.package.models.Package.create_or_update_tag')
     def test_allow_if_member_of_publisher(self, create_or_update_tag,
                                           copy_to_new_version):
-        copy_to_new_version.return_value = False
+        copy_to_new_version.side_effect = Exception('failed')
         create_or_update_tag.return_value = True
         response = self.client.post(self.jwt_url,
                                     data=json.dumps({

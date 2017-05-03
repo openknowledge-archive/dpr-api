@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 from flask import Blueprint, request, jsonify
 from flask import current_app as app
-from app.utils import handle_error
 from app.search.models import DataPackageQuery
 
 search_blueprint = Blueprint('search', __name__, url_prefix='/api/search')
@@ -41,15 +40,11 @@ def search_packages():
                             properties:
                                 type: object
         """
-    try:
-        q = request.args.get('q')
-        if q is None:
-            q = ''
-        limit = request.args.get('limit')
+    q = request.args.get('q')
+    if q is None:
+        q = ''
+    limit = request.args.get('limit')
 
-        result = DataPackageQuery(query_string=q.strip(),
-                                  limit=limit).get_data()
-        return jsonify(dict(items=result, total_count=len(result)))
-    except Exception as e:
-        app.logger.error(e)
-        return handle_error('GENERIC_ERROR', e.message, 500)
+    result = DataPackageQuery(query_string=q.strip(),
+                              limit=limit).get_data()
+    return jsonify(dict(items=result, total_count=len(result)))

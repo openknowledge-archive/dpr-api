@@ -14,6 +14,7 @@ from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
 from app.utils.helpers import text_to_markdown, dp_in_readme
 from BeautifulSoup import BeautifulSoup
+from app.utils import InvalidUsage
 
 site_blueprint = Blueprint('site', __name__)
 
@@ -48,15 +49,15 @@ def datapackage_show(publisher, package):
     Loads datapackage page for given owner
     """
 
-    metadata = json.loads(
-        app.test_client(). \
-            get('/api/package/{publisher}/{package}'. \
-                format(publisher=publisher, package=package)).data)
-    try:
-        if metadata['error_code'] == 'DATA_NOT_FOUND':
-            return "404 Not Found", 404
-    except:
-        pass
+    response = app.test_client(). \
+        get('/api/package/{publisher}/{package}'. \
+            format(publisher=publisher, package=package))
+
+    if response.status_code == 404:
+        raise InvalidUsage("Page Not Found", 404)
+
+    metadata = json.loads(response.data)
+
     packaged = Packaged(metadata)
     dataset = packaged.construct_dataset(request.url_root)
 

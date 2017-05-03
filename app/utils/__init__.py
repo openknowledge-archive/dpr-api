@@ -4,11 +4,17 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import os
-from flask import jsonify
+class InvalidUsage(Exception):
+    status_code = 400
 
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
 
-def handle_error(error_code, error_message, status_code):
-    resp = jsonify(dict(error_code=error_code, message=error_message))
-    resp.status_code = status_code
-    return resp
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv

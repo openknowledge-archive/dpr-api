@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import datetime
 import jwt
 from app.package.models import BitStore
-
+from app.utils import InvalidUsage
 
 class JWT(object):
 
@@ -40,9 +40,9 @@ class JWT(object):
                               algorithm=self.algorithm,
                               issuer=self.issuer)
         except jwt.ExpiredSignature:
-            raise Exception("token is expired")
+            raise InvalidUsage("Token is expired")
         except jwt.DecodeError:
-            raise Exception('token signature is invalid')
+            raise InvalidUsage('Token signature is invalid')
         except Exception:
             raise Exception('Unable to parse authentication token.')
 
