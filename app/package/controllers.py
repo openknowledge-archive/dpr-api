@@ -82,8 +82,6 @@ def tag_data_package(publisher, package):
         status_db = Package.create_or_update_tag(publisher, package, data['version'])
         status_bitstore = bitstore.copy_to_new_version(data['version'])
 
-        if status_db is False or status_bitstore is False:
-            raise Exception("failed to tag data package")
         return jsonify({"status": "OK"}), 200
     except Exception as e:
         app.logger.error(e)
@@ -133,10 +131,6 @@ def delete_data_package(publisher, package):
         status_db = Package.change_status(publisher, package, PackageStateEnum.deleted)
         if status_acl and status_db:
             return jsonify({"status": "OK"}), 200
-        if not status_acl:
-            raise Exception('Failed to change acl')
-        if not status_db:
-            raise Exception('Failed to change status')
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
@@ -187,10 +181,6 @@ def undelete_data_package(publisher, package):
         status_db = Package.change_status(publisher, package, PackageStateEnum.active)
         if status_acl and status_db:
             return jsonify({"status": "OK"}), 200
-        if not status_acl:
-            raise Exception('Failed to change acl')
-        if not status_db:
-            raise Exception('Failed to change status')
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)
@@ -240,10 +230,6 @@ def purge_data_package(publisher, package):
         status_db = Package.delete_data_package(publisher, package)
         if status_acl and status_db:
             return jsonify({"status": "OK"}), 200
-        if not status_acl:
-            raise Exception('Failed to delete from s3')
-        if not status_db:
-            raise Exception('Failed to delete from db')
     except Exception as e:
         app.logger.error(e)
         return handle_error('GENERIC_ERROR', e.message, 500)

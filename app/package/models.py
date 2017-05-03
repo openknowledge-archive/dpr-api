@@ -14,6 +14,7 @@ from flask import current_app as app
 from sqlalchemy.orm import relationship
 from app.profile.models import Publisher
 from app.database import db
+from botocore.exceptions import ClientError
 
 
 class BitStore(object):
@@ -66,7 +67,9 @@ class BitStore(object):
             s3_client = app.config['S3']
             response = s3_client.get_object(Bucket=bucket_name, Key=key)
             return response['Body'].read()
-        except Exception:
+        except ClientError as e:
+            if e.response['Error']['Code'] != 'NoSuchKey':
+                raise e
             return None
 
     def get_readme_object_key(self):
@@ -77,7 +80,7 @@ class BitStore(object):
         :return: Value of the readme key if found else None
         :rtype: None or Str
         """
-        readme_key = None
+        readme_key = 'None'
         prefix = self.build_s3_key('')
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
@@ -159,24 +162,21 @@ class BitStore(object):
         This method is used for Hard delete data packages.
         :return: Status True if able to delete or False if exception
         """
-        try:
-            bucket_name = app.config['S3_BUCKET_NAME']
-            s3_client = app.config['S3']
+        bucket_name = app.config['S3_BUCKET_NAME']
+        s3_client = app.config['S3']
 
-            keys = []
-            list_objects = s3_client.list_objects(Bucket=bucket_name,
-                                                  Prefix=self.build_s3_base_prefix())
-            if list_objects is not None and 'Contents' in list_objects:
-                for ob in s3_client \
-                    .list_objects(Bucket=bucket_name,
-                                  Prefix=self.build_s3_base_prefix())['Contents']:
-                    keys.append(dict(Key=ob['Key']))
+        keys = []
+        list_objects = s3_client.list_objects(Bucket=bucket_name,
+                                              Prefix=self.build_s3_base_prefix())
+        if list_objects is not None and 'Contents' in list_objects:
+            for ob in s3_client \
+                .list_objects(Bucket=bucket_name,
+                              Prefix=self.build_s3_base_prefix())['Contents']:
+                keys.append(dict(Key=ob['Key']))
 
-            s3_client.delete_objects(Bucket=bucket_name, Delete=dict(Objects=keys))
-            return True
-        except Exception as e:
-            app.logger.error(e)
-            return False
+        s3_client.delete_objects(Bucket=bucket_name, Delete=dict(Objects=keys))
+        return True
+
 
     def change_acl(self, acl):
         """
@@ -185,49 +185,41 @@ class BitStore(object):
         This method is used for Soft delete data packages.
         :return: Status True if able to delete or False if exception
         """
-        try:
-            bucket_name = app.config['S3_BUCKET_NAME']
-            s3_client = app.config['S3']
+        bucket_name = app.config['S3_BUCKET_NAME']
+        s3_client = app.config['S3']
 
-            keys = []
-            list_objects = s3_client.list_objects(Bucket=bucket_name,
-                                                  Prefix=self.build_s3_base_prefix())
-            if list_objects is not None and 'Contents' in list_objects:
-                for ob in s3_client \
-                    .list_objects(Bucket=bucket_name,
-                                  Prefix=self.build_s3_base_prefix())['Contents']:
-                    keys.append(ob['Key'])
+        keys = []
+        list_objects = s3_client.list_objects(Bucket=bucket_name,
+                                              Prefix=self.build_s3_base_prefix())
+        if list_objects is not None and 'Contents' in list_objects:
+            for ob in s3_client \
+                .list_objects(Bucket=bucket_name,
+                              Prefix=self.build_s3_base_prefix())['Contents']:
+                keys.append(ob['Key'])
 
-            for key in keys:
-                s3_client.put_object_acl(Bucket=bucket_name, Key=key,
-                                         ACL=acl)
-        except Exception as e:
-            app.logger.error(e)
-            return False
+        for key in keys:
+            s3_client.put_object_acl(Bucket=bucket_name, Key=key,
+                                     ACL=acl)
         return True
 
     def copy_to_new_version(self, version):
-        try:
-            bucket_name = app.config['S3_BUCKET_NAME']
-            s3_client = app.config['S3']
-            latest_keys = []
-            list_objects = s3_client.list_objects(Bucket=bucket_name,
-                                                  Prefix=self.build_s3_versioned_prefix())
-            if list_objects is not None and 'Contents' in list_objects:
-                for ob in s3_client \
-                    .list_objects(Bucket=bucket_name,
-                                  Prefix=self.build_s3_versioned_prefix())['Contents']:
-                    latest_keys.append(ob['Key'])
-            for key in latest_keys:
-                versioned_key = key.replace('/latest/', '/{0}/'.format(version))
-                copy_source = {'Bucket': bucket_name, 'Key': key}
-                s3_client.copy_object(Bucket=bucket_name,
-                                      Key=versioned_key,
-                                      CopySource=copy_source)
-            return True
-        except Exception as e:
-            app.logger.error(e)
-            return False
+        bucket_name = app.config['S3_BUCKET_NAME']
+        s3_client = app.config['S3']
+        latest_keys = []
+        list_objects = s3_client.list_objects(Bucket=bucket_name,
+                                              Prefix=self.build_s3_versioned_prefix())
+        if list_objects is not None and 'Contents' in list_objects:
+            for ob in s3_client \
+                .list_objects(Bucket=bucket_name,
+                              Prefix=self.build_s3_versioned_prefix())['Contents']:
+                latest_keys.append(ob['Key'])
+        for key in latest_keys:
+            versioned_key = key.replace('/latest/', '/{0}/'.format(version))
+            copy_source = {'Bucket': bucket_name, 'Key': key}
+            s3_client.copy_object(Bucket=bucket_name,
+                                  Key=versioned_key,
+                                  CopySource=copy_source)
+        return True
 
     @staticmethod
     def extract_information_from_s3_url(url):
@@ -267,33 +259,29 @@ class Package(db.Model):
 
     @staticmethod
     def create_or_update_tag(publisher_name, package_name, tag):
-        try:
-            package = Package.query.join(Publisher)\
-                .filter(Publisher.name == publisher_name,
-                        Package.name == package_name).one()
+        package = Package.query.join(Publisher)\
+            .filter(Publisher.name == publisher_name,
+                    Package.name == package_name).one()
 
-            data_latest = PackageTag.query.join(Package)\
-                .filter(Package.id == package.id,
-                        PackageTag.tag == 'latest').one()
+        data_latest = PackageTag.query.join(Package)\
+            .filter(Package.id == package.id,
+                    PackageTag.tag == 'latest').one()
 
-            tag_instance = PackageTag.query.join(Package) \
-                .filter(Package.id == package.id,
-                        PackageTag.tag == tag).first()
+        tag_instance = PackageTag.query.join(Package) \
+            .filter(Package.id == package.id,
+                    PackageTag.tag == tag).first()
 
-            update_props = ['descriptor', 'readme', 'package_id']
-            if tag_instance is None:
-                tag_instance = PackageTag()
+        update_props = ['descriptor', 'readme', 'package_id']
+        if tag_instance is None:
+            tag_instance = PackageTag()
 
-            for update_prop in update_props:
-                setattr(tag_instance, update_prop, getattr(data_latest, update_prop))
-            tag_instance.tag = tag
+        for update_prop in update_props:
+            setattr(tag_instance, update_prop, getattr(data_latest, update_prop))
+        tag_instance.tag = tag
 
-            db.session.add(tag_instance)
-            db.session.commit()
-            return True
-        except Exception as e:
-            app.logger.error(e)
-            return False
+        db.session.add(tag_instance)
+        db.session.commit()
+        return True
 
     @staticmethod
     def create_or_update(name, publisher_name, **kwargs):
@@ -335,17 +323,13 @@ class Package(db.Model):
         :param status: status of the package
         :return: If success True else False
         """
-        try:
-            data = Package.query.join(Publisher). \
-                filter(Publisher.name == publisher_name,
-                       Package.name == package_name).one()
-            data.status = status
-            db.session.add(data)
-            db.session.commit()
-            return True
-        except Exception as e:
-            app.logger.error(e)
-            return False
+        data = Package.query.join(Publisher). \
+            filter(Publisher.name == publisher_name,
+                   Package.name == package_name).one()
+        data.status = status
+        db.session.add(data)
+        db.session.commit()
+        return True
 
     @staticmethod
     def delete_data_package(publisher_name, package_name):
@@ -356,18 +340,14 @@ class Package(db.Model):
         :param package_name: package name
         :return: If success True else False
         """
-        try:
-            data = Package.query.join(Publisher). \
-                filter(Publisher.name == publisher_name,
-                       Package.name == package_name).one()
-            package_id = data.id
-            Package.query.filter(Package.id == package_id).delete()
-            # db.session.delete(meta_data)
-            db.session.commit()
-            return True
-        except Exception as e:
-            app.logger.error(e)
-            return False
+        data = Package.query.join(Publisher). \
+            filter(Publisher.name == publisher_name,
+                   Package.name == package_name).one()
+        package_id = data.id
+        Package.query.filter(Package.id == package_id).delete()
+        # db.session.delete(meta_data)
+        db.session.commit()
+        return True
 
     @staticmethod
     def get_package(publisher_name, package_name):
@@ -377,14 +357,10 @@ class Package(db.Model):
         :param package_name: package name
         :return: data package object based on the filter.
         """
-        try:
-            instance = Package.query.join(Publisher) \
-                .filter(Package.name == package_name,
-                        Publisher.name == publisher_name).one()
-            return instance
-        except Exception as e:
-            app.logger.error(e)
-            return None
+        instance = Package.query.join(Publisher) \
+            .filter(Package.name == package_name,
+                    Publisher.name == publisher_name).one_or_none()
+        return instance
 
     @staticmethod
     def is_package_exists(publisher_name, package_name):
