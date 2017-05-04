@@ -1,7 +1,7 @@
 /* Jumbotron main
 ====================================*/
 .jumbotron-primary, .jumbotron-secondary {
-  background: linear-gradient(90deg, #02bac1 50%, #ecd3ad 50%);
+  background: linear-gradient(90deg, $brand-primary 50%, $brand-success 50%);
   padding-bottom: 5em;
 }
 .jumbotron-primary {
@@ -32,7 +32,7 @@
   margin-bottom: 0;
   .terminal-heading {
     font-size: 1.3em;
-    color: black;
+    color: $black;
     margin-bottom: 0;
     margin-top: 40px;
     span {

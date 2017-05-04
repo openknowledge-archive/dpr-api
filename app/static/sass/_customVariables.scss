@@ -10,14 +10,15 @@ $bootstrap-sass-asset-helper: false !default;
 //
 // $gray-base:              #000 !default;
 // $gray-darker:            lighten($gray-base, 13.5%) !default; // #222
-$gray-dark:             #212121 !default;
+// $gray-dark:             # !default;
 $gray:                  #757575 !default;
 $gray-light:            #BDBDBD !default;
 $gray-blue:             #dcedfd !default;
 // $gray-lighter:           lighten($gray-base, 93.5%) !default; // #eee
+$black:                 #000 !default;
 //
 $brand-primary:         #02bac1 !default; //cambridge blue
-// $brand-success:         #5cb85c !default;
+$brand-success:         #ecd3ad !default;
 // $brand-info:            #5bc0de !default;
 $brand-warning:         #ff5500 !default;
 // $brand-danger:          #d9534f !default;
@@ -152,7 +153,7 @@ $btn-font-weight:                lighter !default;
 //
 // $btn-default-color:              #333 !default;
 // $btn-default-bg:                 #fff !default;
-$btn-default-border:             black !default;
+$btn-default-border:             $black !default;
 //
 $btn-primary-color:              #000 !default;
 // $btn-primary-bg:                 $brand-primary !default;
@@ -194,7 +195,7 @@ $btn-primary-color:              #000 !default;
 // //** Text color for `<input>`s
 // $input-color:                    $gray !default;
 //** `<input>` border color
-$input-border:                   black !default;
+$input-border:                   $black !default;
 //
 // // TODO: Rename `$input-border-radius` to `$input-border-radius-base` in v4
 // //** Default `.form-control` border radius
@@ -206,7 +207,7 @@ $input-border:                   black !default;
 // $input-border-radius-small:      $border-radius-small !default;
 //
 //** Border color for inputs on focus
-$input-border-focus:             black !default;
+$input-border-focus:             $black !default;
 //
 // //** Placeholder text color
 // $input-color-placeholder:        #999 !default;

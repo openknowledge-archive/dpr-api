@@ -8,9 +8,18 @@ body {
   position: relative;
   min-height: 100%;
   padding-bottom: 82px;
-  background-color: #f9ead2;
+  background-color: $brand-success;
 }
-
+a {
+  color: $black;
+  &:hover {
+    color: $black;
+  }
+}
+a.explore {
+  text-decoration: underline;
+  color: lighten($black, 20%);
+}
 .container {
   padding-left: 5%;
   padding-right: 5%;
