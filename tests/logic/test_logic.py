@@ -3,7 +3,7 @@ import json
 
 from app import create_app
 from app.database import db
-from app.site.logic import *
+from app.logic import *
 from app.package.models import Package, PackageTag
 from app.profile.models import Publisher, User, PublisherUser, UserRoleEnum
 

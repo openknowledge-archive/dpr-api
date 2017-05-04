@@ -10,6 +10,8 @@ from BeautifulSoup import BeautifulSoup
 from flask import current_app as app
 from app.utils.helpers import text_to_markdown, dp_in_readme
 from app.package.models import BitStore
+from app.profile.models import Publisher
+from app.search.models import DataPackageQuery
 
 # TODO: authz
 def get_package(publisher, package):

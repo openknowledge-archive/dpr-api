@@ -12,7 +12,7 @@ from app.package.models import BitStore
 from app.profile.models import User, Publisher
 from app.search.models import DataPackageQuery
 from app.utils import InvalidUsage
-from app.site.logic import *
+from app.logic import *
 
 site_blueprint = Blueprint('site', __name__)
 
@@ -73,6 +73,7 @@ def publisher_dashboard(publisher):
     datapackage_list = DataPackageQuery(query_string="* publisher:{publisher}"
                                         .format(publisher=publisher)).get_data()
     publisher = Publisher.get_publisher_info(publisher)
+    print (publisher)
 
     return render_template("publisher.html",
                            publisher=publisher,
