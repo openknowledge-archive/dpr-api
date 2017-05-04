@@ -60,7 +60,7 @@ Welcome Home
                     <h3>{{ package['descriptor']['title'] }}</h3>
                   </a>
                   <h6 class="text-left">
-                    <b>{{ package['descriptor']['name'] }}</b> | resources <span class="badge">{{ package.descriptor.resources|length }}</span>
+                    <b>{{ package['descriptor']['name'] }}</b> | files {{ package.descriptor.resources|length }}
                   </h6>
                   <p>
                     {{ package.short_readme|truncate(150) }}
@@ -86,7 +86,7 @@ Welcome Home
                     <h3>{{ package['descriptor']['title'] }}</h3>
                   </a>
                   <h6 class="text-left">
-                    <b>{{ package['descriptor']['name'] }}</b> | resources <span class="badge">{{ package.descriptor.resources|length }}</span>
+                    <b>{{ package['descriptor']['name'] }}</b> | files {{ package.descriptor.resources|length }}
                   </h6>
                   <p>
                     {{ package.short_readme|truncate(150) }}
