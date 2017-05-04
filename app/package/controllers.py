@@ -15,8 +15,9 @@ from flask import Response
 from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
-from app.utils import InvalidUsage
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
+from app.logic import *
+from app.utils import InvalidUsage
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
 
@@ -328,21 +329,9 @@ def get_metadata(publisher, package):
         404:
             description: No metadata found for the package
     """
-    data = Package.query.join(Publisher).\
-        filter(Publisher.name == publisher,
-               Package.name == package,
-               Package.status == PackageStateEnum.active).\
-        first()
-    if data is None:
+    metadata = get_metadata_for_package(publisher, package)
+    if metadata is None:
         raise InvalidUsage('No metadata found for the package', 404)
-    tag = filter(lambda t: t.tag == 'latest', data.tags)[0]
-    metadata = {
-        'id': data.id,
-        'name': data.name,
-        'publisher': data.publisher.name,
-        'readme': tag.readme or '',
-        'descriptor': tag.descriptor
-    }
     return jsonify(metadata), 200
 
 
