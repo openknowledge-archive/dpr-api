@@ -3,7 +3,7 @@ import json
 
 from app import create_app
 from app.database import db
-from app.site.logic import *
+from app.logic import *
 from app.package.models import Package, PackageTag
 from app.profile.models import Publisher, User, PublisherUser, UserRoleEnum
 
@@ -53,6 +53,44 @@ class DataPackageShowTest(unittest.TestCase):
         package = get_package('unknown', self.package)
         self.assertIsNone(package)
         package = get_package('unknown', 'unknown')
+        self.assertIsNone(package)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+
+class PackageTest(unittest.TestCase):
+
+    def setUp(self):
+        self.publisher = 'demo'
+        self.package = 'demo-package'
+        self.app = create_app()
+        self.app.app_context().push()
+        self.descriptor = json.loads(open('fixtures/datapackage.json').read())
+
+        with self.app.test_request_context():
+            db.drop_all()
+            db.create_all()
+            create_test_package(self.publisher, self.package, self.descriptor)
+
+
+    def test_get_metadata(self):
+        metadata = get_metadata_for_package(self.publisher, self.package)
+        self.assertEqual(metadata['descriptor'], self.descriptor)
+        self.assertEqual(metadata['publisher'], self.publisher)
+        self.assertEqual(metadata['name'], self.package)
+        self.assertEqual(metadata['readme'], '')
+        self.assertEqual(metadata['id'], 1)
+
+    def test_returns_none_if_package_not_found(self):
+        package = get_metadata_for_package(self.publisher, 'unknown')
+        self.assertIsNone(package)
+        package = get_metadata_for_package('unknown', self.package)
+        self.assertIsNone(package)
+        package = get_metadata_for_package('unknown', 'unknown')
         self.assertIsNone(package)
 
     def tearDown(self):

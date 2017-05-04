@@ -9,18 +9,19 @@ import json
 from BeautifulSoup import BeautifulSoup
 from flask import current_app as app
 from app.utils.helpers import text_to_markdown, dp_in_readme
-from app.package.models import BitStore
+from app.package.models import BitStore, Package, PackageStateEnum
+from app.profile.models import Publisher
+from app.search.models import DataPackageQuery
 
 # TODO: authz
 def get_package(publisher, package):
-
-    url = '/api/package/%s/%s' % (publisher, package)
-    resp = app.test_client().get(url)
-
-    if resp.status_code == 404:
+    '''
+    Returns info for package - modified descriptor, bitstore URL for descriptor,
+    views and short README
+    '''
+    metadata = get_metadata_for_package(publisher, package)
+    if not metadata:
         return None
-
-    metadata = json.loads(resp.data)
 
     descriptor = metadata.get('descriptor')
     readme = metadata.get('readme')
@@ -45,3 +46,24 @@ def get_package(publisher, package):
     )
 
     return datapackage
+
+def get_metadata_for_package(publisher, package):
+    '''
+    Returns metadata for given package owned by publisher
+    '''
+    data = Package.query.join(Publisher).\
+        filter(Publisher.name == publisher,
+               Package.name == package,
+               Package.status == PackageStateEnum.active).\
+        first()
+    if not data:
+        return None
+    tag = filter(lambda t: t.tag == 'latest', data.tags)[0]
+    metadata = dict(
+        id = data.id,
+        name = data.name,
+        publisher = data.publisher.name,
+        readme = tag.readme or '',
+        descriptor = tag.descriptor
+    )
+    return metadata
