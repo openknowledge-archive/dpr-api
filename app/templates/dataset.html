@@ -6,14 +6,34 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="row">
-    <h1 class="text-center">
-      {{ dataset.title }}
-    </h1>
-    <h2 class="text-center publisher">
-      -by {{ dataset.owner }}-
-    </h2>
+<div class="showcase">
+  <div class="row row-eq-height">
+    <div class="col-sm-3 side-bar side-img">
+      <img src="{{ s3_cdn }}/static/img/elephant-push-cube.png" class="img-responsive">
+    </div>
+    <div class="col-sm-9 header">
+      <div class="row">
+        <h1 class="text-center">
+          {{ dataset.title }}
+        </h1>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-3">
+          <h2 class="text-center publisher">
+            <div class="col-sm-2 left-cube">
+              <img src="{{ s3_cdn }}/static/img/cube17.svg" class="img-responsive">
+            </div>
+            <div class="col-sm-8 text-cube">
+              by {{ dataset.owner }}
+            </div>
+            <div class="col-sm-2 right-cube">
+              <img src="{{ s3_cdn }}/static/img/cube17.svg" class="img-responsive">
+            </div>
+          </h2>
+        </div>
+
+      </div>
+    </div>
   </div>
   {{snippets.dataset_show(dataset, jsonDataPackage, dataViews, showDataApi, datapackageUrl, readmeShort)}}
   <link rel="stylesheet" media="screen" href="{{ s3_cdn }}/static/dpr-js/dist/main.css">
