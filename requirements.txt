@@ -5,7 +5,7 @@ Flask-SQLAlchemy==2.1
 Flask-Markdown==0.3
 Flask-Gravatar==0.4.2
 Flask-OAuthlib==0.9.3
-flask-marshmallow==0.7.0
+flask-marshmallow
 boto3==1.4.3
 flasgger==0.5.13
 python-dotenv==0.6.0
