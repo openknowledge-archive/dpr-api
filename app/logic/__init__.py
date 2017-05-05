@@ -12,6 +12,7 @@ from app.utils.helpers import text_to_markdown, dp_in_readme
 from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher
 from app.search.models import DataPackageQuery
+import app.schemas as schema
 
 # TODO: authz
 def get_package(publisher, package):
@@ -58,12 +59,8 @@ def get_metadata_for_package(publisher, package):
         first()
     if not data:
         return None
-    tag = filter(lambda t: t.tag == 'latest', data.tags)[0]
-    metadata = dict(
-        id = data.id,
-        name = data.name,
-        publisher = data.publisher.name,
-        readme = tag.readme or '',
-        descriptor = tag.descriptor
-    )
+
+    metadata_schema = schema.PackageMetadataSchema()
+    metadata = metadata_schema.dump(data).data
+
     return metadata
