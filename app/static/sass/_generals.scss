@@ -8,7 +8,10 @@ body {
   position: relative;
   min-height: 100%;
   padding-bottom: 82px;
+}
+.biege-wrapper {
   background-color: $brand-success;
+  min-height: calc(100vh - 52px - 82px);
 }
 a {
   color: $black;
@@ -18,7 +21,7 @@ a {
 }
 a.explore {
   text-decoration: underline;
-  color: lighten($black, 20%);
+  color: $brand-info;
 }
 .container {
   padding-left: 5%;

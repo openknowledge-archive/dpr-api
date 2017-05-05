@@ -1,3 +1,26 @@
+.showcase {
+  max-width: 100vw;
+}
+.side-bar {
+  background-color: $brand-success;
+}
+.side-img {
+  padding: 3% 2% 0 7%;
+}
+.side-section {
+  margin-left: 70px;
+  margin-top: 50px;
+  overflow-wrap: break-word;
+}
+.header {
+  padding-top: 3%;
+}
+.row-eq-height {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display:         flex;
+}
 h2.publisher {
   font-style: italic;
   font-size: 1.8em;
@@ -28,4 +51,15 @@ h2.publisher {
   .btn-group {
     margin-bottom: 10px;
   }
+}
+
+.text-cube {
+  margin: 0;
+  padding: 5% 0;
+}
+.left-cube {
+  padding-right: 0;
+}
+.right-cube {
+  padding-left: 0;
 }

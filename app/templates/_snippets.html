@@ -29,20 +29,23 @@
 {%- endmacro %}
 
 {% macro dataset_show(dataset, jsonDataPackage, dataViews, showDataApi, datapackageUrl, readmeShort) -%}
-<div class="dataset show">
-  <div class="row part">
-    <div class="col-md-4 info">
+<div class="dataset row row-eq-height">
+  <div class="col-sm-3 side-bar">
+    <div class="side-section">
       <h3>KEY INFORMATION</h3>
-      <p>Format:
+      <p>Format(s):</p>
+      <ol>
       {% for resource in dataset.resources %}
-      {{ resource.format }},
+        <li>
+        {{ resource.format }}
+        </li>
       {% endfor %}
-      </p>
+      </ol>
 
-      <p>More datasets from <a href="/{{ dataset.owner }} ">{{ dataset.owner }}</a></p>
+      <p>More datasets from <a href="/{{ dataset.owner }}" class="explore">{{ dataset.owner }}</a></p>
       <br>
       <div class="btn-group">
-        <a href="{{ datapackageUrl }}" class="btn btn-small btn-default" target="_blank">Metadata</a>
+        <a href="{{ datapackageUrl }}" class="btn btn-small btn-default" target="_blank">Descriptor</a>
 
         {% if dataset.bugs and dataset.bugs.url %}
         <a href="{{dataset.bugs.url}}" class="btn btn-small" target="_blank">Report an Issue</a>
@@ -62,117 +65,85 @@
       <div class="source">
         <p>Sources: {{listify(dataset.sources)}}</p>
       </div>
-
-
     </div>
-    <div class="col-md-4 text-center">
-      <img src="{{ s3_cdn }}/static/img/cube15.svg"
-        alt="{{dataset.title}}" class="img-responsive main-img" />
 
-      <div class="actions">
-        <div class="row">
-          <a href="#data" class="btn btn-lg btn-primary">Download</a>
-        </div>
-        <div class="row">
-          <a href="#next-section">
-            <i class="fa fa-chevron-down fa-2x" aria-hidden="true" style="color:black"></i>
-          </a>
-        </div>
-      </div>
+    <div class="side-section">
+      <a href="#data" class="btn btn-lg btn-primary">Download</a>
     </div>
-    <div class="col-md-4 info">
+    <div class="side-section">
       <h3>ABOUT</h3>
       <div class="description">{{readmeShort|truncate}} <a href="#readme">Read more</a></div>
-      <!-- <div class="btn-group">
-        <a href="{{ datapackageUrl }}" class="btn btn-small btn-default"><i class="icon-download-alt"></i> Metadata</a></a>
-        {% if dataset.bugs and dataset.bugs.url %}
-        <a href="{{dataset.bugs.url}}" class="btn btn-small" target="_blank"><i class="icon-exclamation-sign icon-white"></i> Report an Issue</a>
-        {% endif %}
-      </div>
-      <div class="homepage truncate"><i class="icon-home"></i> <a href="{{dataset.homepage}}" title="Home Page">{{dataset.homepage}}</a></div>
-      {% if dataset.licenses %}
-      <div class="license">
-        <i class="icon-legal"></i> <a href="{{dataset.licenses[0].url}}" title="Available under the following License">{{dataset.licenses[0].name or dataset.licenses[0].id}}</a>
-        <br />
-        <a href="https://opendefinition.org" title="This data is open data as per the Open Definition"><img src="https://assets.okfn.org/images/buttons/od_80x15_blue.png" /></a>
-      </div>
-      {% endif %}
-      <div class="source">
-        <h5>Sources</h5>
-        {{listify(dataset.sources)}}
-      </div> -->
     </div>
   </div>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  {% if dataset.views %}
-  <h2>VIEWS</h2>
-  {% endif %}
-  <div class="react-me part" data-type="data-views" id="next-section"></div>
-  <div class="resources part" id="data">
-    <h2>DATA FILES</h2>
-    <div class="resource-listing part">
-      <table class="table resource-listing" style="border-radius:3px; padding:3px;margin-bottom:0">
-        <thead></thead>
-        <tbody>
-        {% for resource in dataset.resources %}
-          <tr>
-            <td><i class="icon-file-text-alt"></i><a href="#resource-{{resource.name}}">{{resource.name}}</a></td>
-            <td></td>
-            <td>{{ resource.format }}</td>
-            <td class="download truncate">
-                <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}">
-                    <i class="icon-download-alt"></i> Download
-                </a>
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% for resource in dataset.resources %}
-    <div class="resource-info part">
-      <h2 id="resource-{{resource.name}}">{{resource.name}}</h2>
-      <div id="resource-{{loop.index - 1}}" class="react-me part"
-           data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
-      {% if resource.format == "csv" %}
-       <h2>FIELD INFORMATION</h2>
-       <table class="table table-bordered table-striped resource-summary">
-         <thead>
-           <tr>
-             <th>Field Name</th>
-             <th>Order</th>
-             <th>Type (Format)</th>
-             <th>Description</th>
-           </tr>
-         </thead>
-         <tbody>
-           {% for field in resource.schema.fields %}
-           <tr>
-             <th>{{field.name}}</th>
-             <td>{{loop.index}}</td>
-             <td class="type type-{{field.type}}">{{field.type}} {% if field.format %}({{field.format}}) {% endif %}</td>
-             <td>{{field.description}}</td>
-           </tr>
-           {% endfor %}
-         </tbody>
-       </table>
-     {% endif %}
-    </div>
-    {% endfor %}
-  </div> <!-- / resoures -->
+  <div class="col-sm-9">
+    <div class="react-me part" data-type="data-views" id="next-section"></div>
+    <div class="resources part" id="data">
+      <h2>DATA FILES</h2>
+      <div class="resource-listing part">
+        <table class="table resource-listing" style="border-radius:3px; padding:3px;margin-bottom:0">
+          <thead></thead>
+          <tbody>
+          {% for resource in dataset.resources %}
+            <tr>
+              <td><i class="icon-file-text-alt"></i><a href="#resource-{{resource.name}}">{{resource.name}}</a></td>
+              <td></td>
+              <td>{{ resource.format }}</td>
+              <td class="download truncate">
+                  <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}">
+                      <i class="icon-download-alt"></i> Download
+                  </a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% for resource in dataset.resources %}
+      <div class="resource-info part">
+        <h2 id="resource-{{resource.name}}">PREVIEW({{resource.name}})</h2>
+        <div id="resource-{{loop.index - 1}}" class="react-me part"
+             data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
+        {% if resource.format == "csv" %}
+         <h2>FIELD INFORMATION</h2>
+         <table class="table table-bordered table-striped resource-summary">
+           <thead>
+             <tr>
+               <th>Field Name</th>
+               <th>Order</th>
+               <th>Type (Format)</th>
+               <th>Description</th>
+             </tr>
+           </thead>
+           <tbody>
+             {% for field in resource.schema.fields %}
+             <tr>
+               <th>{{field.name}}</th>
+               <td>{{loop.index}}</td>
+               <td class="type type-{{field.type}}">{{field.type}} {% if field.format %}({{field.format}}) {% endif %}</td>
+               <td>{{field.description}}</td>
+             </tr>
+             {% endfor %}
+           </tbody>
+         </table>
+       {% endif %}
+      </div>
+      {% endfor %}
+    </div> <!-- / resoures -->
 
-  <div class="row moreinfo">
-    <div class="col-md-8">
-      <h2 id="readme">README</h2>
-      <div class="readme">{{dataset.readme|safe}}</div>
+    <div class="row moreinfo">
+      <div class="col-md-8">
+        <h2 id="readme">README</h2>
+        <div class="readme">{{dataset.readme|safe}}</div>
+      </div>
+      <div class="col-md-4"></div>
     </div>
-    <div class="col-md-4"></div>
+
+    <script type="text/javascript">
+      var DATA_PACKAGE_URL = "https://bits.datapackaged.com/metadata/core/finance-vix/_v/latest/datapackage.json";
+    </script>
   </div>
-
-  <script type="text/javascript">
-    var DATA_PACKAGE_URL = "{{ datapackageUrl }}";
-  </script>
 </div><!-- / dataset show -->
 {%- endmacro %}
 
