@@ -3,9 +3,9 @@ import json
 
 from app import create_app
 from app.database import db
-from app.package.schemas import *
+from app.package.schemas import PackageSchema, PackageTagSchema, PackageMetadataSchema
 from app.package.models import *
-from app.profile.schemas import *
+from app.profile.schemas import PublisherSchema, UserSchema, PublisherUserSchema
 from app.profile.models import *
 from app.logic import *
 
@@ -189,6 +189,38 @@ class SchemaTest(unittest.TestCase):
         self.assertEqual(package_schema.dump(metadata).data['publisher'], 3)
         self.assertEqual(publisher_schema.dump(publisher).data['name'], self.publisher)
 
+    def test_nested_relationships(self):
+
+        publisher = Publisher(name=self.publisher, id=3)
+        user = User(name='user', id=2)
+        association = PublisherUser(role=UserRoleEnum.owner, user=user, publisher=publisher)
+        user.publishers.append(association)
+
+        metadata = Package(name=self.package, status=PackageStateEnum.active)
+        tag = PackageTag(descriptor={})
+        metadata.tags.append(tag)
+        publisher.packages.append(metadata)
+
+        db.session.add(user)
+        db.session.add(publisher)
+        db.session.add(association)
+        db.session.commit()
+
+        data = Package.query.join(Publisher).\
+            filter(Publisher.name == self.publisher,
+                   Package.name == self.package,
+                   Package.status == PackageStateEnum.active).\
+            first()
+        metadata_schema = PackageMetadataSchema()
+        result = metadata_schema.dump(data)
+        expected = {
+            'readme': '',
+            'publisher': 'demo',
+            'id': 1,
+            'descriptor': {},
+            'name': 'demo-package'
+        }
+        self.assertEqual(result.data, expected)
 
     def tearDown(self):
         with self.app.app_context():
