@@ -6,19 +6,34 @@ from __future__ import unicode_literals
 
 from flask_marshmallow import Marshmallow
 from app.package.models import *
-from app.profile.schemas import *
-from app import create_app
+from app.profile.models import *
 
-app = create_app()
-ma = Marshmallow(app)
+ma = Marshmallow()
+
+class PublisherSchema(ma.ModelSchema):
+    class Meta:
+        model = Publisher
+
+
+class UserSchema(ma.ModelSchema):
+    class Meta:
+        model = User
+
+
+class PublisherUserSchema(ma.ModelSchema):
+    class Meta:
+        model = PublisherUser
+
 
 class PackageSchema(ma.ModelSchema):
     class Meta:
         model = Package
 
+
 class PackageTagSchema(ma.ModelSchema):
     class Meta:
         model = PackageTag
+
 
 class PackageMetadataSchema(ma.Schema):
     class Meta:
@@ -37,4 +52,4 @@ class PackageMetadataSchema(ma.Schema):
 
     def get_descriptor(self, data):
         version = filter(lambda t: t.tag == 'latest', data.tags)[0]
-        return version.descriptor 
+        return version.descriptor

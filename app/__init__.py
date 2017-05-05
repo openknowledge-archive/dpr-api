@@ -18,6 +18,7 @@ from flask_oauthlib.client import OAuth
 from werkzeug.utils import import_string
 from werkzeug.exceptions import NotFound, Unauthorized, MethodNotAllowed, BadRequest
 from .database import db
+from .schemas import ma
 from app.auth.controllers import auth_blueprint, bitstore_blueprint
 from app.auth.models import JWT
 from app.package.controllers import package_blueprint
@@ -67,6 +68,7 @@ def create_app():
     app.secret_key = app.config['JWT_SEED']
 
     db.init_app(app)
+    ma.init_app(app)
 
     try:
         # Check connection using database url from config.
