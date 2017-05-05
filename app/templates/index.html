@@ -62,12 +62,14 @@ Welcome Home
                   <h6 class="text-left">
                     <b>{{ package['descriptor']['name'] }}</b> | files {{ package.descriptor.resources|length }}
                   </h6>
+                  {% if package.short_readme %}
                   <p>
                     {{ package.short_readme|truncate(150) }}
                     <a href="{{ package['descriptor']['owner'] }}/{{ package['descriptor']['name'] }}" class="explore">
                       explore more <span>&rsaquo;</span>
                     </a>
                   </p>
+                  {% endif %}
                 </div>
               </div>
             {% endfor %}

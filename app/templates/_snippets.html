@@ -178,7 +178,7 @@
 
 {% macro package_list_show(publisher, packages) -%}
   {%- for package in packages  %}
-  <div class="row">
+  <div class="row package-summary">
     <div class="col-xs-3">
       <img src="{{ s3_cdn }}/static/img/cube16.svg" class="img-responsive cube" />
     </div>
@@ -197,12 +197,14 @@
       <h6 class="text-left">
         <b>{{ package.name }}</b> | files {{ package.descriptor.resources|length }}
       </h6>
+      {% if package.readme %}
       <p>
         {{ package.readme|truncate }}
         <a href="/{{ package.publisher_name }}/{{ package.name }}" class="explore">
           explore more <span>&rsaquo;</span>
         </a>
       </p>
+      {% endif %}
     </div>
   </div>
   {%- endfor %}
@@ -210,7 +212,7 @@
 
 {% macro search_package_list(packages) -%}
   {%- for package in packages %}
-    <div class="row">
+    <div class="row package-summary">
       <div class="col-xs-3">
         <img src="{{ s3_cdn }}/static/img/cube16.svg" class="img-responsive cube" />
       </div>
@@ -229,12 +231,14 @@
         <h6 class="text-left">
           <b>{{ package.name }}</b> | files {{ package.descriptor.resources|length }}
         </h6>
+        {% if package.readme %}
         <p>
           {{ package.readme|truncate }}
           <a href="/{{ package.publisher_name }}/{{ package.name }}" class="explore">
             explore more <span>&rsaquo;</span>
           </a>
         </p>
+        {% endif %}
       </div>
     </div>
   {%- endfor %}
