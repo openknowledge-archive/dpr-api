@@ -178,35 +178,33 @@
 
 {% macro package_list_show(publisher, packages) -%}
   {%- for package in packages  %}
-  <div class="panel panel-default">
-    <div class="panel-body" >
-      <div class="col-xs-3">
-        <img src="{{ s3_cdn }}/static/img/cube16.svg" class="img-responsive">
-      </div>
-      <div class="col-xs-9">
-        <a href="/{{ package.publisher_name }}/{{ package.name }}">
-          <h3>
-            {{ package.descriptor.title }}
-          </h3>
-        </a>
-        <h6><b>{{ package.name }}</b> | resources <span class="badge">{{ package.descriptor.resources|length }}</span></h6>
-        {% if package.readme %}
-          <p class="panel-text">
-          {{ package.readme|truncate }}
-          </p>
-        {% endif %}
-        <div class="row show-grid clearfix">
-          <div class="col-sm-1 col-xs-2 icon">
-            <img src="https://avatars3.githubusercontent.com/u/22451011?v=3&s=200" class="img-responsive img-circle" />
-          </div>
-          <div class="col-sm-5 col-xs-4 publisher">
-              <small><a href="/{{ package.publisher_name }} ">by {{ package.publisher_name }}</a></small>
-          </div>
-          <div class="col-sm-offset-3 col-sm-2">
-              <a class="btn btn-primary-outline" href="/{{ package.publisher_name }}/{{ package.name }}">Explore <span>&rsaquo;</span></a>
-          </div>
+  <div class="row package-summary">
+    <div class="col-xs-3">
+      <img src="{{ s3_cdn }}/static/img/cube16.svg" class="img-responsive cube" />
+    </div>
+    <div class="col-xs-9">
+      <a href="/{{ package.publisher_name }}/{{ package.name }}">
+        <h3>{{ package.descriptor.title }}</h3>
+      </a>
+      <div class="row show-grid clearfix">
+        <div class="col-sm-1 col-xs-2 icon">
+          <img src="https://avatars3.githubusercontent.com/u/22451011?v=3&s=200" class="img-responsive img-circle" />
+        </div>
+        <div class="col-sm-5 col-xs-4 publisher">
+            <small><a href="/{{ package.publisher_name }} " class="explore">by {{ package.publisher_name }}</a></small>
         </div>
       </div>
+      <h6 class="text-left">
+        <b>{{ package.name }}</b> | files {{ package.descriptor.resources|length }}
+      </h6>
+      {% if package.readme %}
+      <p>
+        {{ package.readme|truncate }}
+        <a href="/{{ package.publisher_name }}/{{ package.name }}" class="explore">
+          explore more <span>&rsaquo;</span>
+        </a>
+      </p>
+      {% endif %}
     </div>
   </div>
   {%- endfor %}
@@ -214,35 +212,33 @@
 
 {% macro search_package_list(packages) -%}
   {%- for package in packages %}
-    <div class="panel panel-default">
-      <div class="panel-body" >
-        <div class="col-xs-3">
-          <img src="{{ s3_cdn }}/static/img/cube16.svg" class="img-responsive">
-        </div>
-        <div class="col-xs-9">
-          <a href="/{{ package.publisher_name }}/{{ package.name }}">
-            <h3>
-              {{ package.descriptor.title }}
-            </h3>
-          </a>
-          <h6><b>{{ package.name }}</b> | resources <span class="badge">{{ package.descriptor.resources|length }}</span></h6>
-          {% if package.readme %}
-            <p class="panel-text">
-            {{ package.readme|truncate }}
-            </p>
-          {% endif %}
-          <div class="row show-grid clearfix">
-            <div class="col-sm-1 col-xs-2 icon">
-              <img src="https://avatars3.githubusercontent.com/u/22451011?v=3&s=200" class="img-responsive img-circle" />
-            </div>
-            <div class="col-sm-5 col-xs-4 publisher">
-                <small><a href="/{{ package.publisher_name }} ">by {{ package.publisher_name }}</a></small>
-            </div>
-            <div class="col-sm-offset-3 col-sm-2">
-                <a class="btn btn-primary-outline" href="/{{ package.publisher_name }}/{{ package.name }}">Explore <span>&rsaquo;</span></a>
-            </div>
+    <div class="row package-summary">
+      <div class="col-xs-3">
+        <img src="{{ s3_cdn }}/static/img/cube16.svg" class="img-responsive cube" />
+      </div>
+      <div class="col-xs-9">
+        <a href="/{{ package.publisher_name }}/{{ package.name }}">
+          <h3>{{ package.descriptor.title }}</h3>
+        </a>
+        <div class="row show-grid clearfix">
+          <div class="col-sm-1 col-xs-2 icon">
+            <img src="https://avatars3.githubusercontent.com/u/22451011?v=3&s=200" class="img-responsive img-circle" />
+          </div>
+          <div class="col-sm-5 col-xs-4 publisher">
+              <small><a href="/{{ package.publisher_name }} " class="explore">by {{ package.publisher_name }}</a></small>
           </div>
         </div>
+        <h6 class="text-left">
+          <b>{{ package.name }}</b> | files {{ package.descriptor.resources|length }}
+        </h6>
+        {% if package.readme %}
+        <p>
+          {{ package.readme|truncate }}
+          <a href="/{{ package.publisher_name }}/{{ package.name }}" class="explore">
+            explore more <span>&rsaquo;</span>
+          </a>
+        </p>
+        {% endif %}
       </div>
     </div>
   {%- endfor %}

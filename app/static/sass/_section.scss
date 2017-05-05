@@ -21,11 +21,7 @@
     margin-bottom: 40px;
   }
   a {
-    color: black;
-  }
-  p a {
-    text-decoration: underline;
-    color: lighten(black, 20%);
+    color: $black;
   }
   input {
     width: 50%;
