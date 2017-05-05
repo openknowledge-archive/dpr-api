@@ -3,9 +3,9 @@ import json
 
 from app import create_app
 from app.database import db
+from app.package.models import *
+from app.profile.models import *
 from app.logic import *
-from app.package.models import Package, PackageTag
-from app.profile.models import Publisher, User, PublisherUser, UserRoleEnum
 
 def create_test_package(publisher='demo', package='demo-package', descriptor={}):
 
