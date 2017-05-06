@@ -1,6 +1,6 @@
 Short description of bug or feature need. [Can have user story if an epic]
 
-## Acceptance Criteria (for epics or "big" issues)
+## Acceptance Criteria
 
 * [ ] ...
 * [ ] ...
@@ -12,8 +12,7 @@ Short description of bug or feature need. [Can have user story if an epic]
 * [ ] ...
 * [ ] ...
 
-*For Epic: this task list should be a list of subissues
-(occassionally allow some non sub-issue items)*
+*For Epic: this task list should be a list of subissues (occassionally allow some non sub-issue items)*
 
 * [ ] Create Search API #{link to subissue}
 * [ ] Tidy up CSS <-- no subissue for this one because it is so simple
