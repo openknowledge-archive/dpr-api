@@ -37,7 +37,11 @@
       <ol>
       {% for resource in dataset.resources %}
         <li>
-        {{ resource.format }}
+        {% if resource.format %}
+          {{ resource.format }}
+        {% else %}
+          not provided
+        {% endif %}
         </li>
       {% endfor %}
       </ol>
@@ -72,7 +76,7 @@
     </div>
     <div class="side-section">
       <h3>ABOUT</h3>
-      <div class="description">{{readmeShort|truncate}} <a href="#readme">Read more</a></div>
+      <div class="description">{{readmeShort|truncate}} <a href="#readme" class="explore">read more</a></div>
     </div>
   </div>
 
@@ -82,16 +86,19 @@
     <div class="resources part" id="data">
       <h2>DATA FILES</h2>
       <div class="resource-listing part">
-        <table class="table resource-listing" style="border-radius:3px; padding:3px;margin-bottom:0">
-          <thead></thead>
+        <table class="table table-bordered table-striped resource-listing">
+          <thead>
+            <th>Name</th>
+            <th>Format</th>
+            <th>Link</th>
+          </thead>
           <tbody>
           {% for resource in dataset.resources %}
             <tr>
-              <td><i class="icon-file-text-alt"></i><a href="#resource-{{resource.name}}">{{resource.name}}</a></td>
-              <td></td>
+              <td><i class="icon-file-text-alt"></i><a href="#resource-{{resource.name}}" class="explore">{{resource.name}}</a></td>
               <td>{{ resource.format }}</td>
               <td class="download truncate">
-                  <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}">
+                  <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="explore">
                       <i class="icon-download-alt"></i> Download
                   </a>
               </td>
@@ -141,7 +148,7 @@
     </div>
 
     <script type="text/javascript">
-      var DATA_PACKAGE_URL = "https://bits.datapackaged.com/metadata/core/finance-vix/_v/latest/datapackage.json";
+      var DATA_PACKAGE_URL = "{{ datapackageUrl }}";
     </script>
   </div>
 </div><!-- / dataset show -->
