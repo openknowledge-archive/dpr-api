@@ -81,7 +81,7 @@
   </div>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <div class="col-sm-9">
+  <div class="col-sm-9 main-section">
     <div class="react-me part" data-type="data-views" id="next-section"></div>
     <div class="resources part" id="data">
       <h2>DATA FILES</h2>
@@ -109,7 +109,7 @@
       </div>
       {% for resource in dataset.resources %}
       <div class="resource-info part">
-        <h2 id="resource-{{resource.name}}">PREVIEW({{resource.name}})</h2>
+        <h2 id="resource-{{resource.name}}">PREVIEW ({{resource.name}})</h2>
         <div id="resource-{{loop.index - 1}}" class="react-me part"
              data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
         {% if resource.format == "csv" %}
