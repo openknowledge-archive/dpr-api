@@ -22,8 +22,8 @@
 {% macro listify(list_) -%}
   {% for item in list_ or [] %}
   <a href="{{item.web}}" title="Uses data from {{item.name}}" target="_blank">
+    <i class="fa fa-external-link-square"></i>
     {{item.name}}
-    <i class="icon-external-link"></i>
   </a>
   {% endfor %}
 {%- endmacro %}
@@ -51,19 +51,18 @@
       <div class="homepage truncate">
         <p class="small">
           <i class="fa fa-home"></i> <a href="{{dataset.homepage}}" title="Home Page">Home page</a>
-          <i class="fa fa-external-link-square"></i> {{listify(dataset.sources)}}
+        </p>
+        <p class="small">
+          {{listify(dataset.sources)}}
         </p>
       </div>
       {% if dataset.licenses %}
       <div class="license">
-        <i class="icon-legal"></i> <a href="{{dataset.licenses[0].url}}" title="Available under the following License">{{dataset.licenses[0].name or dataset.licenses[0].id}}</a>
+        <i class="fa fa-gavel"></i> <a href="{{dataset.licenses[0].url}}" title="Available under the following License">{{dataset.licenses[0].name or dataset.licenses[0].id}}</a>
         <br />
         <a href="https://opendefinition.org" title="This data is open data as per the Open Definition"><img src="https://assets.okfn.org/images/buttons/od_80x15_blue.png" /></a>
       </div>
       {% endif %}
-      <!-- <div class="source">
-        <p>Sources: {{listify(dataset.sources)}}</p>
-      </div> -->
     </div>
 
     <div class="side-section">
@@ -96,11 +95,11 @@
           <tbody>
           {% for resource in dataset.resources %}
             <tr>
-              <td><i class="icon-file-text-alt"></i><a href="#resource-{{resource.name}}" class="explore">{{resource.name}}</a></td>
+              <td><i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore">{{resource.name}}</a></td>
               <td>{{ resource.format }}</td>
               <td class="download truncate">
                   <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="explore">
-                      <i class="icon-download-alt"></i> Download
+                      Download
                   </a>
               </td>
             </tr>
@@ -111,8 +110,13 @@
       {% for resource in dataset.resources %}
       <div class="resource-info part">
         <h2 id="resource-{{resource.name}}">PREVIEW ({{resource.name}})</h2>
-        <div id="resource-{{loop.index - 1}}" class="react-me part"
+        <div id="resource-{{loop.index - 1}}" class="react-me tables"
              data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
+        <div class="row download">
+          <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="btn btn-sm btn-primary pull-right">
+            Download
+          </a>
+        </div>
         {% if resource.format == "csv" %}
          <h2>FIELD INFORMATION</h2>
          <table class="table table-bordered table-striped resource-summary">

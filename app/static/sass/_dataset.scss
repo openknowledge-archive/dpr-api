@@ -72,6 +72,13 @@ h2.publisher {
   height: 432px;
   overflow: hidden;
 }
+.tables {
+  border-bottom: 1px solid #ccc;
+}
 .main-section {
   padding-left: calc(2vw + 15px);
+}
+.download {
+  margin: 20px 0 4em 0;
+  padding-right: 0;
 }
