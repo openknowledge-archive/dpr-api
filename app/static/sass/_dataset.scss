@@ -82,3 +82,12 @@ h2.publisher {
   margin: 20px 0 4em 0;
   padding-right: 0;
 }
+.nav li.active a {
+  color: $black;
+  &:hover, &:focus {
+    color: $black;
+  }
+}
+.tab-content {
+  margin-top: 20px;
+}

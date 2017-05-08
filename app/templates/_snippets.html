@@ -80,33 +80,115 @@
     </div>
   </div>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <div class="col-sm-9 main-section">
     <div class="react-me part" data-type="data-views" id="next-section"></div>
     <div class="resources part" id="data">
-      <h2>DATA FILES</h2>
-      <div class="resource-listing part">
-        <table class="table table-bordered table-striped resource-listing">
-          <thead>
-            <th>Name</th>
-            <th>Format</th>
-            <th>Link</th>
-          </thead>
-          <tbody>
-          {% for resource in dataset.resources %}
-            <tr>
-              <td><i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore">{{resource.name}}</a></td>
-              <td>{{ resource.format }}</td>
-              <td class="download truncate">
-                  <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="explore">
-                      Download
-                  </a>
-              </td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
+      <ul class="nav nav-pills">
+        <li class="active"><a data-toggle="pill" href="#download">Get data</a></li>
+        <li><a data-toggle="pill" href="#r">R</a></li>
+        <li><a data-toggle="pill" href="#pandas">Pandas</a></li>
+      </ul>
+
+      <div class="tab-content">
+        <div id="download" class="tab-pane fade in active">
+          <h2>DATA FILES</h2>
+          <div class="resource-listing part">
+            <table class="table table-bordered table-striped resource-listing">
+              <thead>
+                <th>Name</th>
+                <th>Format</th>
+                <th>Link</th>
+              </thead>
+              <tbody>
+              {% for resource in dataset.resources %}
+                <tr>
+                  <td><i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore">{{resource.name}}</a></td>
+                  <td>{{ resource.format }}</td>
+                  <td class="download truncate">
+                      <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="explore">
+                          Download
+                      </a>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="r" class="tab-pane fade">
+          <h2>Using in R</h2>
+          <div class="part">
+            <p>In order to use Data Package in R follow instructions below:</p>
+            <pre>
+              <code>
+install.packages("devtools")
+
+library(devtools)
+install_github("hadley/readr")
+install_github("ropenscilabs/jsonvalidate")
+install_github("ropenscilabs/datapkg")
+
+#Load client
+library(datapkg)
+
+#Get Data Package
+datapackage &lt;- datapkg_read("https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest")
+
+#Package info
+print(datapackage)
+
+#Open actual data in RStudio Viewer
+{% for resource in dataset.resources %}
+View(datapackage$data$"{{ resource.name }}")
+{% endfor %}
+              </code>
+            </pre>
+          </div>
+        </div>
+
+        <div id="pandas" class="tab-pane fade">
+          <h2>Using in Pandas</h2>
+          <div class="part">
+            <p>Tested with Python 3.5.2</p>
+            <p>In order to work with Data Packages in Pandas you need to install our packages:</p>
+            <pre>
+              <code>
+$ pip install datapackage
+$ pip install jsontableschema-pandas
+              </code>
+            </pre>
+            <p>To get Data Package run following code:</p>
+            <pre>
+              <code>
+import datapackage
+
+data_url = "https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest/datapackage.json"
+
+# to load Data Package into storage
+storage = datapackage.push_datapackage(data_url, 'pandas')
+# to see datasets in this package
+storage.buckets
+# you can access datasets inside storage, e.g. the first one:
+storage[storage.buckets[0]]
+              </code>
+            </pre>
+          </div>
+        </div>
       </div>
+      <script>
+        // this is for tabs to work as anchors
+        jQuery("ul.nav-pills > li > a").on("shown.bs.tab", function (e) {
+           scrollposition = jQuery(document).scrollTop();
+           var id = jQuery(e.target).attr("href").substr(1);
+           window.location.hash = id;
+           jQuery(document).scrollTop(scrollposition);
+        });
+        var hash = window.location.hash;
+        jQuery('.nav.nav-pills a[href="' + hash + '"]').tab('show', function() {
+            jQuery(document).scrollTop();
+        });
+      </script>
       {% for resource in dataset.resources %}
       <div class="resource-info part">
         <h2 id="resource-{{resource.name}}">PREVIEW ({{resource.name}})</h2>

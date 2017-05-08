@@ -6424,4 +6424,12 @@ h2.publisher {
   margin: 20px 0 4em 0;
   padding-right: 0; }
 
+.nav li.active a {
+  color: #000; }
+  .nav li.active a:hover, .nav li.active a:focus {
+    color: #000; }
+
+.tab-content {
+  margin-top: 20px; }
+
 /*# sourceMappingURL=app.css.map */
