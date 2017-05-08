@@ -23,10 +23,12 @@
             <h2>Data Packages <span class="badge">{{datapackage_list|length}}</span></h2>
           </div>
           <div class="col-sm-6">
+            {% if datapackage_list|length > 0 %}
             <div class="input-group pull-right col-xs-12">
               <input id="publisher-package-input" type="text" class="form-control"
                      onkeyup="dpFilterFunction()" placeholder="Search for data package" />
             </div>
+            {% endif %}
           </div>
         </div>
 
