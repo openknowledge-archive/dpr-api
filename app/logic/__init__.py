@@ -15,7 +15,7 @@ from app.auth.annotations import check_is_authorized, get_user_from_jwt
 from app.auth.models import JWT, FileData
 from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
-from app.search.models import DataPackageQuery
+from app.logic.search import DataPackageQuery
 from app.utils import InvalidUsage
 from app.utils.helpers import text_to_markdown, dp_in_readme
 import app.schemas as schema

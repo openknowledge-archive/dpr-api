@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from flask import Blueprint, request, jsonify
 from flask import current_app as app
-from app.search.models import DataPackageQuery
+from app.logic.search import DataPackageQuery
 
 search_blueprint = Blueprint('search', __name__, url_prefix='/api/search')
 

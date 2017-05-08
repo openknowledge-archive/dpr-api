@@ -10,7 +10,7 @@ from flask import current_app as app
 from app.auth.models import JWT
 from app.package.models import BitStore
 from app.profile.models import User, Publisher
-from app.search.models import DataPackageQuery
+from app.logic.search import DataPackageQuery
 from app.utils import InvalidUsage
 from app.logic import *
 
