@@ -72,6 +72,41 @@ def get_metadata_for_package(publisher, package):
     return metadata
 
 
+def finalize_package_publish(user_id, datapackage_url):
+    '''
+    Gets the datapackage.json and README from S3 and imports into database.
+    Returns status "queued" if ok, else - None
+    '''
+    publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
+    if Package.is_package_exists(publisher, package):
+        status = check_is_authorized('Package::Update', publisher, package, user_id)
+    else:
+        status = check_is_authorized('Package::Create', publisher, package, user_id)
+
+    if not status:
+        raise InvalidUsage('Not authorized to upload data', 400)
+
+    bit_store = BitStore(publisher, package)
+    b = bit_store.get_metadata_body()
+    body = json.loads(b)
+    bit_store.change_acl('public-read')
+    readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
+    Package.create_or_update(name=package, publisher_name=publisher,
+                             descriptor=body, readme=readme)
+    return "queued"
+
+
+def get_package_names_for_publisher(publisher):
+    metadata = Package.query.join(Publisher).\
+        with_entities(Package.name).\
+        filter(Publisher.name == publisher).all()
+    if len(metadata) is 0:
+        raise InvalidUsage('No Data Package Found For The Publisher', 404)
+    keys = []
+    for d in metadata:
+        keys.append(d[0])
+    return keys
+
 def get_authorized_user_info():
     '''
     Return user info (with guaranteed Email) if authorized

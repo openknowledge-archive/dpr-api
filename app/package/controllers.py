@@ -16,7 +16,8 @@ from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
-from app.logic import *
+from app.logic import get_package, get_metadata_for_package, \
+        finalize_package_publish, get_package_names_for_publisher
 from app.utils import InvalidUsage
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
@@ -268,30 +269,14 @@ def finalize_publish():
     """
     data = request.get_json()
     datapackage_url = data['datapackage']
-    publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
-    user_id = None
     jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
+    user_id = None
     if jwt_status:
         user_id = user_info['user']
 
-    if Package.is_package_exists(publisher, package):
-        status = check_is_authorized('Package::Update', publisher, package, user_id)
-    else:
-        status = check_is_authorized('Package::Create', publisher, package, user_id)
-
-    if not status:
-        raise InvalidUsage('Not authorized to upload data', 400)
-
-    bit_store = BitStore(publisher, package)
-    b = bit_store.get_metadata_body()
-    body = json.loads(b)
-    if body is not None:
-        bit_store.change_acl('public-read')
-        readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
-        Package.create_or_update(name=package, publisher_name=publisher,
-                                 descriptor=body, readme=readme)
-        return jsonify({"status": "queued"}), 200
-
+    status = finalize_package_publish(user_id, datapackage_url)
+    if status:
+        return jsonify({"status": status}), 200
     raise InvalidUsage("Failed to get data from s3")
 
 
@@ -366,12 +351,5 @@ def get_all_metadata_names_for_publisher(publisher):
         404:
             description: No Data Package Found For The Publisher
     """
-    metadata = Package.query.join(Publisher).\
-        with_entities(Package.name).\
-        filter(Publisher.name == publisher).all()
-    if len(metadata) is 0:
-        raise InvalidUsage('No Data Package Found For The Publisher', 404)
-    keys = []
-    for d in metadata:
-        keys.append(d[0])
-    return jsonify({'data': metadata}), 200
+    packages = get_package_names_for_publisher(publisher)
+    return jsonify({'data': packages}), 200
