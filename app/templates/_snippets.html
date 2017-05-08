@@ -150,6 +150,7 @@ View(datapackage$data$"{{ resource.name }}")
         <div id="pandas" class="tab-pane fade">
           <h2>Using in Pandas</h2>
           <div class="part">
+            <p>Tested with Python 3.5.2</p>
             <p>In order to work with Data Packages in Pandas you need to install our packages:</p>
             <pre>
               <code>
@@ -162,7 +163,7 @@ $ pip install jsontableschema-pandas
               <code>
 import datapackage
 
-data_url = "https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest"
+data_url = "https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest/datapackage.json"
 
 # to load Data Package into storage
 storage = datapackage.push_datapackage(data_url, 'pandas')
