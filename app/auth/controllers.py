@@ -4,16 +4,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from flask import Blueprint, request, render_template, \
-    jsonify, session, make_response, g
+from flask import Blueprint, jsonify, session, g, make_response, render_template
 from flask import current_app as app
-from sqlalchemy.orm.exc import NoResultFound
-
+from app.auth.models import JWT
+from app.logic import get_authorized_user_info, get_jwt_token, generate_signed_url
 from app.profile.models import User
-from app.auth.models import JWT, FileData
-from app.package.models import Package
-from app.utils import InvalidUsage
-from app.auth.annotations import check_is_authorized, get_user_from_jwt
 
 auth_blueprint = Blueprint('auth', __name__, url_prefix='/api/auth')
 bitstore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore')
@@ -22,7 +17,7 @@ bitstore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore'
 @auth_blueprint.route("/callback")
 def callback_handling():
     """
-    Callback API for redirecting to Auth0 or any external auth provider.
+    Callback API for redirecting to external auth provider.
     ---
     tags:
         - auth
@@ -49,25 +44,12 @@ def callback_handling():
                         description: Returns back email, nickname,
                                      picture, name
     """
-    github = app.config['github']
-    resp = github.authorized_response()
-    if resp is None or resp.get('access_token') is None:
-        raise InvalidUsage('Access Denied', 400)
-    session['github_token'] = (resp['access_token'], '')
-    user_info = github.get('user')
-    user_info = user_info.data
-    # in case user Email is not public
-    if not user_info.get('email'):
-        emails = github.get('user/emails').data
-        if not len(emails):
-            raise InvalidUsage('Email Not Found', 404)
-        for email in emails:
-            if email.get('primary'):
-                user_info['email'] = email.get('email')
+    user_info = get_authorized_user_info()
     user = User().create_or_update_user_from_callback(user_info)
     jwt_helper = JWT(app.config['JWT_SEED'], user.id)
     session.pop('github_token', None)
     g.current_user = user
+
     resp = make_response(render_template("dashboard.html",
                          title='Dashboard'), 200)
     resp.set_cookie('jwt', jwt_helper.encode())
@@ -115,40 +97,8 @@ def get_jwt():
             description: Secret key do not match
 
     """
-    data = request.get_json()
-    user_name = data.get('username', None)
-    email = data.get('email', None)
-    secret = data.get('secret', None)
-    verify = False
-    user_id = None
-    if user_name is None and email is None:
-        raise InvalidUsage('User name or email both can not be empty', 400)
-
-    if secret is None:
-        raise InvalidUsage('Secret can not be empty', 400)
-    elif user_name is not None:
-        try:
-            user = User.query.filter_by(name=user_name).one()
-        except NoResultFound as e:
-            app.logger.error(e)
-            raise InvalidUsage('user does not exists', 404)
-        if secret == user.secret:
-            verify = True
-            user_id = user.id
-    elif email is not None:
-        try:
-            user = User.query.filter_by(email=email).one()
-        except NoResultFound as e:
-            app.logger.error(e)
-            raise InvalidUsage('user does not exists', 404)
-        if secret == user.secret:
-            verify = True
-            user_id = user.id
-    if verify:
-        return jsonify({'token': JWT(app.config['JWT_SEED'],
-                                     user_id).encode()}), 200
-    else:
-        raise InvalidUsage('Secret key do not match', 403)
+    token = get_jwt_token()
+    return jsonify({'token': token}), 200
 
 
 @auth_blueprint.route("/login", methods=['GET'])
@@ -190,29 +140,5 @@ def authorize_upload():
         500:
             description: Internal Server Error
     """
-    user_id = None
-    jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
-    if jwt_status:
-        user_id = user_info['user']
-
-    data = request.get_json()
-    metadata, filedata = data['metadata'], data['filedata']
-    publisher, package_name = metadata['owner'], metadata['name']
-    res_payload = {'filedata': {}}
-
-    if Package.is_package_exists(publisher, package_name):
-        status = check_is_authorized('Package::Update', publisher, package_name, user_id)
-    else:
-        status = check_is_authorized('Package::Create', publisher, package_name, user_id)
-
-    if not status:
-        raise InvalidUsage('Not authorized to upload data', 400)
-
-    for relative_path in filedata.keys():
-        response = FileData(package_name=package_name,
-                            publisher=publisher,
-                            relative_path=relative_path,
-                            props=filedata[relative_path])
-        res_payload['filedata'][relative_path] = response.build_file_information()
-
-    return jsonify(res_payload), 200
+    payload = generate_signed_url()
+    return jsonify(payload), 200

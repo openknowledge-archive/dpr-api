@@ -1,11 +1,13 @@
 import unittest
 import json
 
+from mock import patch
 from app import create_app
 from app.database import db
 from app.package.models import *
 from app.profile.models import *
 from app.logic import *
+from app.utils import InvalidUsage
 
 def create_test_package(publisher='demo', package='demo-package', descriptor={}):
 
@@ -70,6 +72,9 @@ class PackageTest(unittest.TestCase):
         self.app = create_app()
         self.app.app_context().push()
         self.descriptor = json.loads(open('fixtures/datapackage.json').read())
+        self.datapackage_url = 'https://bits.datapackaged.com/metadata/' \
+                          '{pub}/{pack}/_v/latest/datapackage.com'.\
+            format(pub=self.publisher, pack=self.package)
 
         with self.app.test_request_context():
             db.drop_all()
@@ -92,6 +97,55 @@ class PackageTest(unittest.TestCase):
         self.assertIsNone(package)
         package = get_metadata_for_package('unknown', 'unknown')
         self.assertIsNone(package)
+
+
+    @patch('app.package.models.Package.create_or_update')
+    @patch('app.package.models.BitStore.get_metadata_body')
+    @patch('app.package.models.BitStore.get_readme_object_key')
+    @patch('app.package.models.BitStore.get_s3_object')
+    @patch('app.package.models.BitStore.change_acl')
+    def test_finalize_package_publish_returns_queued_if_fine(
+                                    self, change_acl, get_s3_object,
+                                    get_readme_object_key,
+                                    get_metadata_body, create_or_update):
+        get_metadata_body.return_value = json.dumps(dict(name='package'))
+        create_or_update.return_value = None
+        get_readme_object_key.return_value = ''
+        get_s3_object.return_value = ''
+        change_acl.return_value = None
+        status = finalize_package_publish(1, self.datapackage_url)
+        self.assertEqual(status, 'queued')
+
+
+    @patch('app.package.models.Package.create_or_update')
+    @patch('app.package.models.BitStore.get_metadata_body')
+    @patch('app.package.models.BitStore.get_readme_object_key')
+    @patch('app.package.models.BitStore.get_s3_object')
+    @patch('app.package.models.BitStore.change_acl')
+    def test_finalize_package_publish_throws_400_if_publisher_does_not_exist(
+                                    self, change_acl, get_s3_object,
+                                    get_readme_object_key,
+                                    get_metadata_body, create_or_update):
+        get_metadata_body.return_value = json.dumps(dict(name='package'))
+        create_or_update.return_value = None
+        get_readme_object_key.return_value = ''
+        get_s3_object.return_value = ''
+        change_acl.return_value = None
+        with self.assertRaises(InvalidUsage) as context:
+            finalize_package_publish(2, self.datapackage_url)
+        self.assertEqual(context.exception.status_code, 400)
+
+
+    def test_get_package_names_for_publisher(self):
+        packages = get_package_names_for_publisher(self.publisher)
+        self.assertEqual(packages, ['demo-package'])
+
+
+    def test_get_package_names_for_publisher_throws_404_if_no_package_found(self):
+        with self.assertRaises(InvalidUsage) as context:
+            get_package_names_for_publisher('not_a_publisher')
+        self.assertEqual(context.exception.status_code, 404)
+
 
     def tearDown(self):
         with self.app.app_context():

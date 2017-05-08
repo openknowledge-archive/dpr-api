@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import unittest
 from app import create_app
 from app.database import db
-from app.search.models import DataPackageQuery
+from app.logic.search import DataPackageQuery
 from app.profile.models import Publisher
 from app.package.models import Package, PackageTag
 
