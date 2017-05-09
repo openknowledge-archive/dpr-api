@@ -38,7 +38,7 @@
         <div>
           <ul class="nav navbar-nav navbar-right">
             <li>
-              <a href="/#publish">Publish</a>
+              <a href="/#publish" onclick="scrollDown(this)">Publish</a>
             </li>
             <li>
               <a href="/search">Discover</a>
@@ -90,6 +90,20 @@
       ga('create', 'UA-80458846-3', 'auto');
       ga('send', 'pageview');
 
+    </script>
+    <script type="text/javascript" src="{{ s3_cdn }}/static/js/smoothscroll.js"></script>
+    <script>
+      function scrollDown(el) {
+        if(el.attributes.href.value === "/#publish") {
+          document.querySelector("#publish").scrollIntoView({
+            behavior: 'smooth'
+          });
+        } else {
+          document.querySelector(el.attributes.href.value).scrollIntoView({
+            behavior: 'smooth'
+          });
+        }
+      }
     </script>
   </body>
 
