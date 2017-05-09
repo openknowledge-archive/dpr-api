@@ -47,12 +47,18 @@
       </ol>
 
       <p>More datasets from <a href="/{{ dataset.owner }}" class="explore">{{ dataset.owner }}</a></p>
-
+      <div class="btn-group">
+        <a href="{{ datapackageUrl }}" class="btn btn-xs btn-default" target="_blank"><small>Data Package Descriptor (JSON)</small></a>
+        {% if dataset.bugs and dataset.bugs.url %}
+        <a href="{{dataset.bugs.url}}" class="btn btn-xs btn-default" target="_blank">Report an Issue</a>
+        {% endif %}
+      </div>
       <div class="homepage truncate">
-        <p class="small">
+        <!-- <p class="small">
           <i class="fa fa-home"></i> <a href="{{dataset.homepage}}" title="Home Page">Home page</a>
-        </p>
+        </p> -->
         <p class="small">
+          Sources:<br>
           {{listify(dataset.sources)}}
         </p>
       </div>
@@ -66,17 +72,11 @@
     </div>
 
     <div class="side-section">
-      <div class="btn-group">
-        <a href="{{ datapackageUrl }}" class="btn btn-sm btn-default" target="_blank">Descriptor</a>
-        <a href="#data" class="btn btn-sm btn-primary">Download</a>
-        {% if dataset.bugs and dataset.bugs.url %}
-        <a href="{{dataset.bugs.url}}" class="btn btn-sm btn-default" target="_blank">Report an Issue</a>
-        {% endif %}
-      </div>
+      <a href="#data" class="btn btn-sm btn-primary" onclick="scrollDown(this)">Download</a>
     </div>
     <div class="side-section">
       <h3>ABOUT</h3>
-      <div class="description">{{readmeShort|truncate}} <a href="#readme" class="explore">read more</a></div>
+      <div class="description">{{readmeShort|truncate}} <a href="#readme" class="explore" onclick="scrollDown(this)">read more</a></div>
     </div>
   </div>
 
@@ -102,11 +102,11 @@
               <tbody>
               {% for resource in dataset.resources %}
                 <tr>
-                  <td><i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore">{{resource.name}}</a></td>
+                  <td><i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore" onclick="scrollDown(this)">{{resource.name}}</a></td>
                   <td>{{ resource.format }}</td>
                   <td class="download truncate">
-                      <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="explore">
-                          Download
+                      <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="btn btn-xs btn-primary">
+                          <i class="fa fa-arrow-circle-down" aria-hidden="true"></i> Download
                       </a>
                   </td>
                 </tr>
