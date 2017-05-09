@@ -54,6 +54,21 @@ def get_package(publisher, package):
 
     return datapackage
 
+
+def get_publisher(publisher):
+    '''
+    Returns publisher info from DB
+    '''
+
+    publisher_info = Publisher.query.filter_by(name=publisher).first()
+    if publisher_info is None:
+        raise InvalidUsage("Publisher not found", 404)
+    publisher_schema = schema.PublisherSchema()
+    info = publisher_schema.dump(publisher_info)
+
+    return info.data
+
+
 def get_metadata_for_package(publisher, package):
     '''
     Returns metadata for given package owned by publisher

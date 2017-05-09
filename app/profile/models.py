@@ -34,23 +34,6 @@ class Publisher(db.Model):
     users = relationship("PublisherUser", back_populates="publisher",
                          cascade='save-update, merge, delete, delete-orphan')
 
-    @staticmethod
-    def get_publisher_info(name):
-        publisher = Publisher.query.filter_by(name=name).first()
-        if publisher is None:
-            return None
-        publisher_info = dict()
-        if publisher.contact_public:
-            contact = dict(phone=publisher.phone,
-                           email=publisher.email,
-                           country=publisher.country)
-            publisher_info['contact'] = contact
-        publisher_info['description'] = publisher.description
-        publisher_info['title'] = publisher.title
-        publisher_info['name'] = publisher.name
-        publisher_info['joined'] = publisher.created_at.strftime("%B %Y")
-        return publisher_info
-
 
 class User(db.Model):
     """
