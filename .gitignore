@@ -30,7 +30,7 @@ docs/_build/
 # PyBuilder
 target/
 # dotenv
-.env
+.env*
 
 # virtualenv
 env/
@@ -38,6 +38,7 @@ ENV/
 
 # IDEA
 .idea/
+TODO*
 
 # temp files
 *~
@@ -48,3 +49,5 @@ ENV/
 .cache/
 .backup/
 
+# floobits
+.floo*
