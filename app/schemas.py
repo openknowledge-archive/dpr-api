@@ -5,8 +5,11 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from flask_marshmallow import Marshmallow
+from marshmallow import pre_load
+
 from app.package.models import *
 from app.profile.models import *
+from app.utils import InvalidUsage
 
 ma = Marshmallow()
 
@@ -18,6 +21,27 @@ class PublisherSchema(ma.ModelSchema):
 class UserSchema(ma.ModelSchema):
     class Meta:
         model = User
+
+
+class UserInfoSchema(ma.Schema):
+    class Meta:
+        fields = ('email', 'login', 'name')
+
+    @pre_load
+    def load_user(self, data):
+        email = data.get('email')
+        emails = data.get('emails')
+
+        if email:
+            return data
+
+        if not emails or not len(emails):
+            raise InvalidUsage('Email Not Found', 404)
+
+        for email in emails:
+            if email.get('primary') == 'true':
+                data['email'] = email.get('email')
+                return data
 
 
 class PublisherUserSchema(ma.ModelSchema):

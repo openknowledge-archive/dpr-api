@@ -115,17 +115,16 @@ def get_authorized_user_info():
     resp = github.authorized_response()
     if resp is None or resp.get('access_token') is None:
         raise InvalidUsage('Access Denied', 400)
+
     session['github_token'] = (resp['access_token'], '')
-    user_info = github.get('user')
-    user_info = user_info.data
-    # in case user Email is not public
-    if not user_info.get('email'):
-        emails = github.get('user/emails').data
-        if not len(emails):
-            raise InvalidUsage('Email Not Found', 404)
-        for email in emails:
-            if email.get('primary'):
-                user_info['email'] = email.get('email')
+
+    user_info = github.get('user').data
+    emails = github.get('user/emails').data
+    user_info['emails'] = emails
+
+    user_info_schema = schema.UserInfoSchema()
+    user_info = user_info_schema.load(user_info).data
+
     return user_info
 
 

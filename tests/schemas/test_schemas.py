@@ -138,3 +138,36 @@ class SchemaTest(unittest.TestCase):
             db.session.remove()
             db.drop_all()
             db.engine.dispose()
+
+
+class CustomSchemaTest(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app()
+        self.app.app_context().push()
+
+
+    def test_user_info_schema_works_fine_if_response_has_email(self):
+        response = {'email': 'test@email.com', 'name': 'test', 'login': 'test'}
+        user_info_schema = UserInfoSchema()
+        user_info = user_info_schema.load(response).data
+        expected = response
+        self.assertEqual(expected, user_info)
+
+
+    def test_user_info_schema_works_fine_if_response_has_no_email(self):
+        response = {'name': 'test', 'login': 'test'}
+        response['emails'] = [
+            {'email': 'test@email.com', 'primary': 'true'},
+            {'email': 'other@email.com', 'primary': 'false'}]
+        user_info_schema = UserInfoSchema()
+        user_info = user_info_schema.load(response).data
+        expected = {'name': 'test', 'login': 'test', 'email': 'test@email.com'}
+        self.assertEqual(expected, user_info)
+
+
+    def test_user_info_schema_thrwos_404_if_no_email_provided(self):
+        response = {'name': 'test', 'login': 'test'}
+        user_info_schema = UserInfoSchema()
+        with self.assertRaises(InvalidUsage) as context:
+            user_info_schema.load(response).data
+        self.assertEqual(context.exception.status_code, 404)
