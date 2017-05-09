@@ -159,6 +159,17 @@ class PackageTest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 404)
 
 
+    def test_get_user_info(self):
+        publisher = get_user_by_id(1)
+        self.assertEqual(publisher['name'], self.publisher)
+
+
+    def test_get_user_info_throws_404_if_no_publisher_found(self):
+        with self.assertRaises(InvalidUsage) as context:
+            get_user_by_id(2)
+        self.assertEqual(context.exception.status_code, 404)
+
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()

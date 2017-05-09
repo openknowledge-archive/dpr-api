@@ -69,6 +69,19 @@ def get_publisher(publisher):
     return info.data
 
 
+def get_user_by_id(user_id):
+    '''
+    Returns user info by given id from DB
+    '''
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        raise InvalidUsage("User not found", 404)
+    user_schema = schema.UserSchema()
+    user_info = user_schema.dump(user)
+
+    return user_info.data
+
+
 def get_metadata_for_package(publisher, package):
     '''
     Returns metadata for given package owned by publisher
