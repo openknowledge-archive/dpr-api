@@ -65,6 +65,13 @@ class SchemaTest(unittest.TestCase):
         self.assertEqual(publisher_schema.dump(publisher).data['name'], self.publisher)
 
 
+    def test_schema_for_publisher_with_pubic_contact(self):
+        publisher = Publisher(name=self.publisher, contact_public=True)
+        publisher_schema = PublisherSchema()
+        expected = {'country': None, 'email': None, 'phone': None}
+        self.assertEqual(publisher_schema.dump(publisher).data['contact'], expected)
+
+
     def test_nested_relationships(self):
 
         publisher = Publisher(name=self.publisher, id=3)

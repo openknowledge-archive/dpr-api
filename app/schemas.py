@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from flask_marshmallow import Marshmallow
-from marshmallow import pre_load
+from marshmallow import pre_load, pre_dump
 
 from app.package.models import *
 from app.profile.models import *
@@ -16,7 +16,26 @@ ma = Marshmallow()
 class PublisherSchema(ma.ModelSchema):
     class Meta:
         model = Publisher
+        dateformat = ("%B %Y")
 
+    id = ma.Field(load_only=True)
+    created_at = ma.Field(load_only=True)
+    phone = ma.Field(load_only=True)
+    private = ma.Field(load_only=True)
+    country = ma.Field(load_only=True)
+    email = ma.Field(load_only=True)
+    contact_public = ma.Field(load_only=True)
+    users = ma.Field(load_only=True)
+    packages = ma.Field(load_only=True)
+    contact = ma.Method('add_public_contact')
+    joined = ma.DateTime(attribute = 'created_at')
+
+    def add_public_contact(self, data):
+        if data.contact_public:
+            contact = dict(phone=data.phone,
+                           email=data.email,
+                           country=data.country)
+            return contact
 
 class UserSchema(ma.ModelSchema):
     class Meta:
