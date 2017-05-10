@@ -225,8 +225,7 @@ def generate_signed_url():
 
 def validate_for_template(descriptor):
     '''
-    Cheks if descriptor fields have expected type for template Eg:
-    licenses should be list
+    Validates field types in the descriptor for template, e.g. licenses property should be a list.
     '''
     licenses = descriptor.get('licenses')
 
