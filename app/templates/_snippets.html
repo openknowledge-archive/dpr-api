@@ -69,6 +69,12 @@
         <br />
         <a href="https://opendefinition.org" title="This data is open data as per the Open Definition"><img src="https://assets.okfn.org/images/buttons/od_80x15_blue.png" /></a>
       </div>
+      {% elif dataset.license %}
+      <div class="license">
+        <i class="fa fa-gavel"></i> {{ dataset.license }}
+        <br />
+        <a href="https://opendefinition.org" title="This data is open data as per the Open Definition"><img src="https://assets.okfn.org/images/buttons/od_80x15_blue.png" /></a>
+      </div>
       {% endif %}
     </div>
 
