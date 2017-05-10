@@ -49,6 +49,22 @@ class WebsiteTestCase(unittest.TestCase):
         rv = self.client.get('/logout')
         self.assertNotEqual(404, rv.status_code)
 
+    def test_publisher_page_loads_fine(self):
+        with self.app.app_context():
+            publisher = Publisher(name=self.publisher)
+            db.session.add(publisher)
+            db.session.commit()
+        rv = self.client.get('/%s' % self.publisher)
+        self.assertEqual(200, rv.status_code)
+
+    def test_publisher_page_results_404_for_non_existing_publisher(self):
+        with self.app.app_context():
+            publisher = Publisher(name=self.publisher)
+            db.session.add(publisher)
+            db.session.commit()
+        rv = self.client.get('/unknown' )
+        self.assertEqual(404, rv.status_code)
+
     def test_data_package_page(self):
         descriptor = json.loads(open('fixtures/datapackage.json').read())
         with self.app.app_context():
