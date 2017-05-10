@@ -1,3 +1,4 @@
+{% import '_instructions.html' as instructions %}
 {% macro dataset_summary(dataset) -%}
   <div class="dataset summary">
     <img src="https://assets.okfn.org/p/data/img/icon-128.png"
@@ -87,6 +88,9 @@
         <li class="active"><a data-toggle="pill" href="#download">Get data</a></li>
         <li><a data-toggle="pill" href="#r">R</a></li>
         <li><a data-toggle="pill" href="#pandas">Pandas</a></li>
+        <li><a data-toggle="pill" href="#python">Python</a></li>
+        <li><a data-toggle="pill" href="#javascript">JavaScript</a></li>
+        <li><a data-toggle="pill" href="#sql">SQL</a></li>
       </ul>
 
       <div class="tab-content">
@@ -119,60 +123,35 @@
         <div id="r" class="tab-pane fade">
           <h2>Using in R</h2>
           <div class="part">
-            <p>In order to use Data Package in R follow instructions below:</p>
-            <pre>
-              <code>
-install.packages("devtools")
-
-library(devtools)
-install_github("hadley/readr")
-install_github("ropenscilabs/jsonvalidate")
-install_github("ropenscilabs/datapkg")
-
-#Load client
-library(datapkg)
-
-#Get Data Package
-datapackage &lt;- datapkg_read("https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest")
-
-#Package info
-print(datapackage)
-
-#Open actual data in RStudio Viewer
-{% for resource in dataset.resources %}
-View(datapackage$data$"{{ resource.name }}")
-{% endfor %}
-              </code>
-            </pre>
+            {{instructions.r(dataset)}}
           </div>
         </div>
 
         <div id="pandas" class="tab-pane fade">
           <h2>Using in Pandas</h2>
           <div class="part">
-            <p>Tested with Python 3.5.2</p>
-            <p>In order to work with Data Packages in Pandas you need to install our packages:</p>
-            <pre>
-              <code>
-$ pip install datapackage
-$ pip install jsontableschema-pandas
-              </code>
-            </pre>
-            <p>To get Data Package run following code:</p>
-            <pre>
-              <code>
-import datapackage
+            {{instructions.pandas(dataset)}}
+          </div>
+        </div>
 
-data_url = "https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest/datapackage.json"
+        <div id="python" class="tab-pane fade">
+          <h2>Using in Python</h2>
+          <div class="part">
+            {{instructions.python(dataset)}}
+          </div>
+        </div>
 
-# to load Data Package into storage
-storage = datapackage.push_datapackage(data_url, 'pandas')
-# to see datasets in this package
-storage.buckets
-# you can access datasets inside storage, e.g. the first one:
-storage[storage.buckets[0]]
-              </code>
-            </pre>
+        <div id="javascript" class="tab-pane fade">
+          <h2>Using in JavaScript</h2>
+          <div class="part">
+            {{instructions.javascript(dataset)}}
+          </div>
+        </div>
+
+        <div id="sql" class="tab-pane fade">
+          <h2>Using in SQL</h2>
+          <div class="part">
+            {{instructions.sql(dataset)}}
           </div>
         </div>
       </div>
