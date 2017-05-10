@@ -54,6 +54,34 @@ def get_package(publisher, package):
 
     return datapackage
 
+
+def get_publisher(publisher):
+    '''
+    Returns publisher info from DB
+    '''
+
+    publisher_info = Publisher.query.filter_by(name=publisher).first()
+    if publisher_info is None:
+        raise InvalidUsage("Publisher not found", 404)
+    publisher_schema = schema.PublisherSchema()
+    info = publisher_schema.dump(publisher_info)
+
+    return info.data
+
+
+def get_user_by_id(user_id):
+    '''
+    Returns user info by given id from DB
+    '''
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        raise InvalidUsage("User not found", 404)
+    user_schema = schema.UserSchema()
+    user_info = user_schema.dump(user)
+
+    return user_info.data
+
+
 def get_metadata_for_package(publisher, package):
     '''
     Returns metadata for given package owned by publisher
@@ -115,17 +143,16 @@ def get_authorized_user_info():
     resp = github.authorized_response()
     if resp is None or resp.get('access_token') is None:
         raise InvalidUsage('Access Denied', 400)
+
     session['github_token'] = (resp['access_token'], '')
-    user_info = github.get('user')
-    user_info = user_info.data
-    # in case user Email is not public
-    if not user_info.get('email'):
-        emails = github.get('user/emails').data
-        if not len(emails):
-            raise InvalidUsage('Email Not Found', 404)
-        for email in emails:
-            if email.get('primary'):
-                user_info['email'] = email.get('email')
+
+    user_info = github.get('user').data
+    emails = github.get('user/emails').data
+    user_info['emails'] = emails
+
+    user_info_schema = schema.UserInfoSchema()
+    user_info = user_info_schema.load(user_info).data
+
     return user_info
 
 

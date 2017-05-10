@@ -31,54 +31,6 @@ class PublisherUserTestCase(unittest.TestCase):
             db.drop_all()
 
 
-class PublisherTestCase(unittest.TestCase):
-    publisher_one = 'test_publisher1'
-    publisher_two = 'test_publisher2'
-
-    def setUp(self):
-        self.app = create_app()
-        self.app.app_context().push()
-        with self.app.test_request_context():
-            db.drop_all()
-            db.create_all()
-            publisher1 = Publisher(name=self.publisher_one,
-                                   title="publisher one",
-                                   description="This is publisher one",
-                                   country="country one",
-                                   email="one@publisher.com",
-                                   phone="123",
-                                   contact_public=True)
-            publisher2 = Publisher(name=self.publisher_two,
-                                   title="publisher two",
-                                   description="This is publisher two",
-                                   country="country two",
-                                   email="two@publisher.com",
-                                   phone="321",
-                                   contact_public=False)
-            db.session.add(publisher1)
-            db.session.add(publisher2)
-            db.session.commit()
-
-    def test_should_not_return_contact_info_if_public(self):
-        info = Publisher.get_publisher_info(self.publisher_two)
-        self.assertNotIn("contact", info)
-        self.assertEqual(self.publisher_two, info['name'])
-
-    def test_should_return_contact_info_if_public(self):
-        info = Publisher.get_publisher_info(self.publisher_one)
-        self.assertIn("contact", info)
-        self.assertEqual(self.publisher_one, info['name'])
-
-    def test_should_return_None_if_publisher_not_found(self):
-        info = Publisher.get_publisher_info("not_found")
-        self.assertIsNone(info)
-
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-
-
 class UserTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
@@ -121,10 +73,6 @@ class UserTestCase(unittest.TestCase):
                          name="The Test")
         user = User.create_or_update_user_from_callback(user_info)
         self.assertNotEqual('supersecret', user.secret)
-
-    def test_get_user_info_by_id(self):
-        self.assertEqual(User.get_userinfo_by_id(11).name, 'test_user_id')
-        self.assertIsNone(User.get_userinfo_by_id(2))
 
     def test_create_user_should_handle_null_email(self):
         user_info = dict(login="test_null_email")

@@ -39,23 +39,12 @@ class PublisherProfileTestCase(unittest.TestCase):
             db.session.add(publisher2)
             db.session.commit()
 
-    @patch('app.profile.models.Publisher.get_publisher_info')
-    def test_throw_500_if_failed_to_get_data_for_publisher(self, info_mock):
-        info_mock.side_effect = Exception
-        url = "/api/profile/publisher/{name}".format(name=self.publisher_one)
-        response = self.client.get(url)
-        self.assertEqual(500, response.status_code)
-
-    @patch('app.profile.models.Publisher.get_publisher_info')
-    def test_throw_404_if_publisher_not_found(self, info_mock):
-        info_mock.return_value = None
+    def test_throw_404_if_publisher_not_found(self):
         url = "/api/profile/publisher/{name}".format(name='unknown')
         response = self.client.get(url)
         self.assertEqual(404, response.status_code)
 
-    @patch('app.profile.models.Publisher.get_publisher_info')
-    def test_should_return_200_if_every_thing_went_well(self, info_mock):
-        info_mock.return_value = {}
+    def test_should_return_200_if_every_thing_went_well(self):
         url = "/api/profile/publisher/{name}".format(name=self.publisher_one)
         response = self.client.get(url)
         self.assertEqual(200, response.status_code)
