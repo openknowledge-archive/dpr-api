@@ -20,7 +20,8 @@ def text_to_markdown(text):
         'strong', 'em', 'a', 'pre', 'code', 'img', 'tt', 'div', 'ins', 'del',
         'sup', 'sub', 'p', 'ol', 'ul', 'table', 'thead', 'tbody', 'tfoot',
         'blockquote', 'dl', 'dt', 'dd', 'kbd', 'q', 'samp', 'var', 'hr', 'ruby',
-        'rt', 'rp', 'li', 'tr', 'td', 'th', 's', 'strike', 'summary', 'details'
+        'rt', 'rp', 'li', 'tr', 'td', 'th', 's', 'strike', 'summary', 'details',
+        'input'
     ]
     ALLOWED_ATTRIBUTES = {
         '*': [
@@ -35,7 +36,7 @@ def text_to_markdown(text):
                 'rowspan', 'rules', 'scope', 'selected', 'shape', 'size',
                 'span', 'start', 'summary', 'tabindex', 'target', 'title',
                 'type', 'usemap', 'valign', 'value', 'vspace', 'width',
-                'itemprop', 'class'
+                'itemprop', 'class', 'checkbox'
             ],
         'a': ['href'],
         'img': ['src', 'longdesc'],
@@ -46,7 +47,8 @@ def text_to_markdown(text):
         'q': ['cite']
     }
     markdown_to_html = markdown(text,
-                                extensions=[GithubFlavoredMarkdownExtension()])
+                                extensions=[GithubFlavoredMarkdownExtension(),
+                                            'codehilite'])
     sanitized_html = bleach.clean(markdown_to_html,
                                 tags=ALLOWED_TAGS,
                                 attributes=ALLOWED_ATTRIBUTES)
