@@ -12,16 +12,13 @@ install_github<span class="p">(</span><span class="s">"ropenscilabs/datapkg"</sp
 <span class="kn">library</span><span class="p">(</span>datapkg<span class="p">)</span>
 
 <span class="c1">#Get Data Package</span>
-datapackage <span class="o">&amp;</span>lt<span class="p">;</span>
-<span class="o">-</span> datapkg_read<span class="p">(</span>
-<span class="s">"https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest"</span><span class="p">)</span>
+datapackage <span class="o">&lt;-</span> datapkg_read<span class="p">(</span><span class="s">"https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest"</span><span class="p">)</span>
 
 <span class="c1">#Package info</span>
 <span class="kp">print</span><span class="p">(</span>datapackage<span class="p">)</span>
 
 <span class="c1">#Open actual data in RStudio Viewer</span>
-{% for resource in dataset.resources %}
-View<span class="p">(</span>datapackage<span class="o">$</span>data<span class="o">$</span><span class="s">"{{resource.name}}"</span><span class="p">)</span>
+{% for resource in dataset.resources %}View<span class="p">(</span>datapackage<span class="o">$</span>data<span class="o">$</span><span class="s">"{{resource.name}}"</span><span class="p">)</span>
 {% endfor %}
 </pre>
 </div>
@@ -31,8 +28,7 @@ View<span class="p">(</span>datapackage<span class="o">$</span>data<span class="
 <p>Tested with Python 3.5.2</p>
 
 <p>To generate Pandas data frames based on JSON Table Schema descriptors we have to install <code>jsontableschema-pandas</code> plugin.
-To load resources from a data package as Pandas data frames use <code>datapackage.push_datapackage</code> function.
-*Storage* works as a container for Pandas data frames.</p>
+To load resources from a data package as Pandas data frames use <code>datapackage.push_datapackage</code> function. <i>Storage</i> works as a container for Pandas data frames.</p>
 
 <p>In order to work with Data Packages in Pandas you need to install our packages:</p>
 
@@ -52,8 +48,10 @@ $ pip install jsontableschema-pandas
 
 <span class="c1"># to load Data Package into storage</span>
 <span class="n">storage</span> <span class="o">=</span> <span class="n">datapackage</span><span class="o">.</span><span class="n">push_datapackage</span><span class="p">(</span><span class="n">data_url</span><span class="p">,</span> <span class="s1">'pandas'</span><span class="p">)</span>
+
 <span class="c1"># to see datasets in this package</span>
 <span class="n">storage</span><span class="o">.</span><span class="n">buckets</span>
+
 <span class="c1"># you can access datasets inside storage, e.g. the first one:</span>
 <span class="n">storage</span><span class="p">[</span><span class="n">storage</span><span class="o">.</span><span class="n">buckets</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
 </pre>
@@ -161,12 +159,16 @@ $ pip install sqlalchemy
 
 <span class="n">data_url</span> <span class="o">=</span> <span class="s1">'https://bits.datapackaged.com/metadata/{{ dataset.owner }}/{{ dataset.name }}/_v/latest/datapackage.json'</span>
 <span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">'sqlite:///:memory:'</span><span class="p">)</span>
+
 <span class="c1"># to load Data Package into storage</span>
 <span class="n">storage</span> <span class="o">=</span> <span class="n">datapackage</span><span class="o">.</span><span class="n">push_datapackage</span><span class="p">(</span><span class="n">data_url</span><span class="p">,</span> <span class="s1">'sql'</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">engine</span><span class="p">)</span>
+
 <span class="c1"># to see datasets in this package</span>
 <span class="n">storage</span><span class="o">.</span><span class="n">buckets</span>
+
 <span class="c1"># to execute sql command (assuming data is in "data" folder, name of resource is data and file name is data.csv)</span>
 <span class="n">storage</span><span class="o">.</span><span class="n">_Storage__connection</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">'select * from data__data___data limit 1;'</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
 <span class="c1"># description of the table columns</span>
 <span class="n">storage</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="s1">'data__data___data'</span><span class="p">)</span>
 </pre>
