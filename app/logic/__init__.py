@@ -31,6 +31,7 @@ def get_package(publisher, package):
         return None
 
     descriptor = metadata.get('descriptor')
+    descriptor = validate_for_template(descriptor)
     readme = metadata.get('readme')
     descriptor['owner'] = publisher
     readme_variables_replaced = dp_in_readme(readme, descriptor)

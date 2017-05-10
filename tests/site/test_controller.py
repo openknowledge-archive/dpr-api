@@ -83,6 +83,21 @@ class WebsiteTestCase(unittest.TestCase):
         rv = self.client.get('/non-existing/demo-package')
         self.assertEqual(404, rv.status_code)
 
+
+    def test_data_package_page_loads_if_descriptor_has_bad_licenses(self):
+        descriptor = json.loads(open('fixtures/datapackage.json').read())
+        descriptor['licenses'] = {'url': 'test/url', 'type': 'Test'}
+        with self.app.app_context():
+            publisher = Publisher(name=self.publisher)
+            metadata = Package(name=self.package)
+            metadata.tags.append(PackageTag(descriptor=descriptor))
+            publisher.packages.append(metadata)
+            db.session.add(publisher)
+            db.session.commit()
+        rv = self.client.get('/%s/%s' %(self.publisher,self.package))
+        self.assertEqual(200, rv.status_code)
+
+
     def test_data_package_page_load_without_views(self):
         descriptor = {"data": [], "resources": []}
         with self.app.app_context():
