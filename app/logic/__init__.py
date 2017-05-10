@@ -218,3 +218,26 @@ def generate_signed_url():
                             props=filedata[relative_path])
         res_payload['filedata'][relative_path] = response.build_file_information()
     return res_payload
+
+
+#### helpers
+
+def validate_for_template(descriptor):
+    '''
+    Cheks if descriptor fields have expected type for template Eg:
+    licenses should be list
+    '''
+    licenses = descriptor.get('licenses')
+
+    if licenses is None or type(licenses) is list:
+        return descriptor
+
+    if type(licenses) is dict:
+        license = descriptor.pop('licenses')
+        license = license.get('type')
+        descriptor['license'] = license
+        return descriptor
+
+    descriptor.pop('licenses')
+
+    return descriptor
