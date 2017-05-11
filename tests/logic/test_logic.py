@@ -175,3 +175,34 @@ class PackageTest(unittest.TestCase):
             db.session.remove()
             db.drop_all()
             db.engine.dispose()
+
+class HelpersTest(unittest.TestCase):
+
+
+    def setUp(self):
+        self.descriptor = json.loads(open('fixtures/datapackage.json').read())
+
+
+    def test_validate_for_jinja_returns_descriptor_if_no_licenses(self):
+        descriptor = validate_for_template(self.descriptor)
+        self.assertEqual(self.descriptor, descriptor)
+
+    def test_validate_for_jinja_returns_descriptor_if_licenses_is_list(self):
+        self.descriptor['licenses'] = []
+        descriptor = validate_for_template(self.descriptor)
+        self.assertEqual(self.descriptor, descriptor)
+
+    def test_validate_for_jinja_modifies_descriptor_if_licenses_is_dict(self):
+        self.descriptor['licenses'] = {'url': 'test/url', 'type': 'Test'}
+        descriptor = validate_for_template(self.descriptor)
+        self.assertEqual(descriptor['license'], 'Test')
+
+    def test_validate_for_not_errors_if_licenses_is_dict_and_has_no_type_key(self):
+        self.descriptor['licenses'] = {'url': 'test/url'}
+        descriptor = validate_for_template(self.descriptor)
+        self.assertEqual(descriptor['license'], None)
+
+    def test_validate_for_jinja_removes_licenses_if_invalid_type(self):
+        self.descriptor['licenses'] = 1
+        descriptor = validate_for_template(self.descriptor)
+        self.assertEqual(descriptor.get('licenses'), None)
