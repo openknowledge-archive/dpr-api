@@ -37,13 +37,7 @@
       <p>Format(s):
       {% for resource in dataset.resources %}
         {% if resource.format %}
-          {% if resource.format == 'csv' %}
-          <span class="label label-info">{{ resource.format }}</span>
-          {% elif resource.format == 'json' %}
-          <span class="label label-warning">{{ resource.format }}</span>
-          {% elif resource.format == 'geojson' or resource.format == 'topojson' %}
-          <span class="label label-danger">{{ resource.format }}</span>
-          {% endif %}
+          {{ resource.format }}
         {% endif %}
       {% endfor %}
       </p>
@@ -79,7 +73,30 @@
     </div>
 
     <div class="side-section">
-      <a href="#data" class="btn btn-sm btn-primary" onclick="scrollDown(this)">Download</a>
+      <h3>DATA FILES</h3>
+      <!-- <a href="#data" class="btn btn-sm btn-primary" onclick="scrollDown(this)">Download</a> -->
+      <div class="resource-listing part">
+        <table class="table table-condensed table-bordered resource-listing">
+          <thead>
+            <th>File</th>
+            <th>Link</th>
+          </thead>
+          <tbody>
+          {% for resource in dataset.resources %}
+            <tr>
+              <td>
+                <i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore" onclick="scrollDown(this)">{{resource.name}}</a> [{{resource.format}}]
+              </td>
+              <td class="download truncate text-center">
+                  <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}">
+                      <i class="fa fa-download" aria-hidden="true"></i>
+                  </a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
     <div class="side-section">
       <h3>ABOUT</h3>
@@ -90,9 +107,9 @@
   <div class="col-sm-9 main-section">
     <div class="react-me part" data-type="data-views" id="next-section"></div>
     <div class="resources part" id="data">
+      <h2 class="section-title">USE WITH YOUR FAVOURITE LANGUAGE</h2>
       <ul class="nav nav-pills">
-        <li class="active"><a data-toggle="pill" href="#download">Get data</a></li>
-        <li><a data-toggle="pill" href="#r">R</a></li>
+        <li class="active"><a data-toggle="pill" href="#r">R</a></li>
         <li><a data-toggle="pill" href="#pandas">Pandas</a></li>
         <li><a data-toggle="pill" href="#python">Python</a></li>
         <li><a data-toggle="pill" href="#javascript">JavaScript</a></li>
@@ -100,62 +117,32 @@
       </ul>
 
       <div class="tab-content">
-        <div id="download" class="tab-pane fade in active">
-          <h2>DATA FILES</h2>
-          <div class="resource-listing part">
-            <table class="table table-bordered table-striped resource-listing">
-              <thead>
-                <th>Name</th>
-                <th>Format</th>
-                <th>Link</th>
-              </thead>
-              <tbody>
-              {% for resource in dataset.resources %}
-                <tr>
-                  <td><i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore" onclick="scrollDown(this)">{{resource.name}}</a></td>
-                  <td>{{ resource.format }}</td>
-                  <td class="download truncate">
-                      <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="btn btn-xs btn-primary">
-                          <i class="fa fa-arrow-circle-down" aria-hidden="true"></i> Download
-                      </a>
-                  </td>
-                </tr>
-              {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        <div id="r" class="tab-pane fade">
-          <h2>Using in R</h2>
+        <div id="r" class="tab-pane fade in active">
           <div class="part">
             {{instructions.r(dataset)}}
           </div>
         </div>
 
         <div id="pandas" class="tab-pane fade">
-          <h2>Using in Pandas</h2>
           <div class="part">
             {{instructions.pandas(dataset)}}
           </div>
         </div>
 
         <div id="python" class="tab-pane fade">
-          <h2>Using in Python</h2>
           <div class="part">
             {{instructions.python(dataset)}}
           </div>
         </div>
 
         <div id="javascript" class="tab-pane fade">
-          <h2>Using in JavaScript</h2>
           <div class="part">
             {{instructions.javascript(dataset)}}
           </div>
         </div>
 
         <div id="sql" class="tab-pane fade">
-          <h2>Using in SQL</h2>
           <div class="part">
             {{instructions.sql(dataset)}}
           </div>
@@ -176,7 +163,7 @@
       </script>
       {% for resource in dataset.resources %}
       <div class="resource-info part">
-        <h2 id="resource-{{resource.name}}">PREVIEW ({{resource.name}})</h2>
+        <h2 id="resource-{{resource.name}}" class="section-title">PREVIEW ({{resource.name}})</h2>
         <div id="resource-{{loop.index - 1}}" class="react-me tables"
              data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
         <div class="row download">
@@ -185,7 +172,7 @@
           </a>
         </div>
         {% if resource.format == "csv" %}
-         <h2>FIELD INFORMATION</h2>
+         <h2 class="section-title">FIELD INFORMATION</h2>
          <table class="table table-bordered table-striped resource-summary">
            <thead>
              <tr>
@@ -213,7 +200,7 @@
 
     <div class="row moreinfo">
       <div class="col-md-8">
-        <h2 id="readme">README</h2>
+        <h2 id="readme" class="section-title">README</h2>
         <div class="readme">{{dataset.readme|safe}}</div>
       </div>
       <div class="col-md-4"></div>

@@ -6388,10 +6388,18 @@ h2.publisher {
 .dataset .info {
   padding-top: 5%; }
 .dataset h2 {
-  font-size: 1.9em; }
+  font-size: 1.5em;
+  color: #484d99; }
+.dataset h2.section-title {
+  font-size: 1.9em;
+  color: #02bac1; }
 .dataset h3 {
+  font-size: 1.3em;
+  color: #484d99; }
+.dataset .side-section h3 {
   font-size: 1.7em;
-  margin-bottom: 0.8em; }
+  margin-bottom: 0.8em;
+  color: #000; }
 .dataset .actions .row {
   margin-bottom: 2em; }
 .dataset .react-me {
@@ -6400,6 +6408,10 @@ h2.publisher {
   margin-bottom: 4em; }
 .dataset .btn-group {
   margin-bottom: 10px; }
+.dataset .side-section .table-bordered {
+  border-color: #424242; }
+  .dataset .side-section .table-bordered th, .dataset .side-section .table-bordered td {
+    border-color: #424242; }
 
 .text-cube {
   margin: 0;
@@ -6429,6 +6441,9 @@ h2.publisher {
   color: #000; }
   .nav li.active a:hover, .nav li.active a:focus {
     color: #000; }
+
+.nav-pills li a {
+  border: 1px solid #eee; }
 
 .tab-content {
   margin-top: 20px; }
