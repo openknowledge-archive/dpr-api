@@ -99,6 +99,7 @@ class StageConfig(DevelopmentConfig):
                        'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET',
                        'SQLALCHEMY_DATABASE_URI']
     API_DOCS = 'https://docs.datapackaged.com/developers/api/'
+    BITSTORE_URL = os.environ.get('BITSTORE_URL')
     DEBUG = False
     TESTING = False
 
