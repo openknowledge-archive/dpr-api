@@ -34,19 +34,19 @@
   <div class="col-sm-3 side-bar">
     <div class="side-section">
       <h3>KEY INFO</h3>
-      <p>Format(s):</p>
-      <ol>
+      <p>Format(s):
       {% for resource in dataset.resources %}
-        <li>
         {% if resource.format %}
-          {{ resource.format }}
-        {% else %}
-          not provided
+          {% if resource.format == 'csv' %}
+          <span class="label label-info">{{ resource.format }}</span>
+          {% elif resource.format == 'json' %}
+          <span class="label label-warning">{{ resource.format }}</span>
+          {% elif resource.format == 'geojson' or resource.format == 'topojson' %}
+          <span class="label label-danger">{{ resource.format }}</span>
+          {% endif %}
         {% endif %}
-        </li>
       {% endfor %}
-      </ol>
-
+      </p>
       <p>More datasets from <a href="/{{ dataset.owner }}" class="explore">{{ dataset.owner }}</a></p>
       <div class="btn-group">
         <a href="{{ datapackageUrl }}" class="btn btn-xs btn-default" target="_blank"><small>Data Package Descriptor (JSON)</small></a>
