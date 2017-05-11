@@ -37,11 +37,21 @@ h2.publisher {
     padding-top: 5%;
   }
   h2 {
+    font-size: 1.5em;
+    color: $brand-info;
+  }
+  h2.section-title {
     font-size: 1.9em;
+    color: $brand-primary;
   }
   h3 {
+    font-size: 1.3em;
+    color: $brand-info;
+  }
+  .side-section h3 {
     font-size: 1.7em;
     margin-bottom: 0.8em;
+    color: $black;
   }
   .actions .row {
     margin-bottom: 2em;
@@ -87,6 +97,9 @@ h2.publisher {
   &:hover, &:focus {
     color: $black;
   }
+}
+.nav-pills li a {
+  border: 1px solid #eee;
 }
 .tab-content {
   margin-top: 20px;

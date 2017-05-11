@@ -37,13 +37,7 @@
       <p>Format(s):
       {% for resource in dataset.resources %}
         {% if resource.format %}
-          {% if resource.format == 'csv' %}
-          <span class="label label-info">{{ resource.format }}</span>
-          {% elif resource.format == 'json' %}
-          <span class="label label-warning">{{ resource.format }}</span>
-          {% elif resource.format == 'geojson' or resource.format == 'topojson' %}
-          <span class="label label-danger">{{ resource.format }}</span>
-          {% endif %}
+          {{ resource.format }} 
         {% endif %}
       {% endfor %}
       </p>
@@ -91,7 +85,7 @@
     <div class="react-me part" data-type="data-views" id="next-section"></div>
     <div class="resources part" id="data">
       <ul class="nav nav-pills">
-        <li class="active"><a data-toggle="pill" href="#download">Get data</a></li>
+        <li class="active"><a data-toggle="pill" href="#download">Data files</a></li>
         <li><a data-toggle="pill" href="#r">R</a></li>
         <li><a data-toggle="pill" href="#pandas">Pandas</a></li>
         <li><a data-toggle="pill" href="#python">Python</a></li>
@@ -101,7 +95,6 @@
 
       <div class="tab-content">
         <div id="download" class="tab-pane fade in active">
-          <h2>DATA FILES</h2>
           <div class="resource-listing part">
             <table class="table table-bordered table-striped resource-listing">
               <thead>
@@ -127,35 +120,30 @@
         </div>
 
         <div id="r" class="tab-pane fade">
-          <h2>Using in R</h2>
           <div class="part">
             {{instructions.r(dataset)}}
           </div>
         </div>
 
         <div id="pandas" class="tab-pane fade">
-          <h2>Using in Pandas</h2>
           <div class="part">
             {{instructions.pandas(dataset)}}
           </div>
         </div>
 
         <div id="python" class="tab-pane fade">
-          <h2>Using in Python</h2>
           <div class="part">
             {{instructions.python(dataset)}}
           </div>
         </div>
 
         <div id="javascript" class="tab-pane fade">
-          <h2>Using in JavaScript</h2>
           <div class="part">
             {{instructions.javascript(dataset)}}
           </div>
         </div>
 
         <div id="sql" class="tab-pane fade">
-          <h2>Using in SQL</h2>
           <div class="part">
             {{instructions.sql(dataset)}}
           </div>
@@ -176,7 +164,7 @@
       </script>
       {% for resource in dataset.resources %}
       <div class="resource-info part">
-        <h2 id="resource-{{resource.name}}">PREVIEW ({{resource.name}})</h2>
+        <h2 id="resource-{{resource.name}}" class="section-title">PREVIEW ({{resource.name}})</h2>
         <div id="resource-{{loop.index - 1}}" class="react-me tables"
              data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
         <div class="row download">
@@ -185,7 +173,7 @@
           </a>
         </div>
         {% if resource.format == "csv" %}
-         <h2>FIELD INFORMATION</h2>
+         <h2 class="section-title">FIELD INFORMATION</h2>
          <table class="table table-bordered table-striped resource-summary">
            <thead>
              <tr>
@@ -213,7 +201,7 @@
 
     <div class="row moreinfo">
       <div class="col-md-8">
-        <h2 id="readme">README</h2>
+        <h2 id="readme" class="section-title">README</h2>
         <div class="readme">{{dataset.readme|safe}}</div>
       </div>
       <div class="col-md-4"></div>

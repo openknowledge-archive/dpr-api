@@ -78,7 +78,7 @@ class WebsiteTestCase(unittest.TestCase):
                              format(publisher=self.publisher,
                                     package=self.package))
         self.assertNotEqual(404, rv.status_code)
-        self.assertIn('DATA FILES', rv.data.decode("utf8"))
+        self.assertIn('Data files', rv.data.decode("utf8"))
 
         rv = self.client.get('/non-existing/demo-package')
         self.assertEqual(404, rv.status_code)
@@ -111,7 +111,7 @@ class WebsiteTestCase(unittest.TestCase):
                              format(publisher=self.publisher,
                                     package=self.package))
         self.assertNotEqual(404, rv.status_code)
-        self.assertIn('DATA FILES', rv.data.decode("utf8"))
+        self.assertIn('Data files', rv.data.decode("utf8"))
 
         rv = self.client.get('/non-existing/demo-package')
         self.assertEqual(404, rv.status_code)
