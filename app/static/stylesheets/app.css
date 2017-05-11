@@ -6408,6 +6408,10 @@ h2.publisher {
   margin-bottom: 4em; }
 .dataset .btn-group {
   margin-bottom: 10px; }
+.dataset .side-section .table-bordered {
+  border-color: #424242; }
+  .dataset .side-section .table-bordered th, .dataset .side-section .table-bordered td {
+    border-color: #424242; }
 
 .text-cube {
   margin: 0;

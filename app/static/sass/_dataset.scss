@@ -65,6 +65,14 @@ h2.publisher {
   .btn-group {
     margin-bottom: 10px;
   }
+  .side-section {
+    .table-bordered {
+      border-color: darken($gray, 20%);
+      th, td {
+        border-color: darken($gray, 20%);
+      }
+    }
+  }
 }
 
 .text-cube {

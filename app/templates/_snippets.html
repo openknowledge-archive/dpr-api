@@ -37,7 +37,7 @@
       <p>Format(s):
       {% for resource in dataset.resources %}
         {% if resource.format %}
-          {{ resource.format }} 
+          {{ resource.format }}
         {% endif %}
       {% endfor %}
       </p>
@@ -73,7 +73,30 @@
     </div>
 
     <div class="side-section">
-      <a href="#data" class="btn btn-sm btn-primary" onclick="scrollDown(this)">Download</a>
+      <h3>DATA FILES</h3>
+      <!-- <a href="#data" class="btn btn-sm btn-primary" onclick="scrollDown(this)">Download</a> -->
+      <div class="resource-listing part">
+        <table class="table table-condensed table-bordered resource-listing">
+          <thead>
+            <th>File</th>
+            <th>Link</th>
+          </thead>
+          <tbody>
+          {% for resource in dataset.resources %}
+            <tr>
+              <td>
+                <i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore" onclick="scrollDown(this)">{{resource.name}}</a> [{{resource.format}}]
+              </td>
+              <td class="download truncate text-center">
+                  <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}">
+                      <i class="fa fa-download" aria-hidden="true"></i>
+                  </a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
     <div class="side-section">
       <h3>ABOUT</h3>
@@ -84,9 +107,9 @@
   <div class="col-sm-9 main-section">
     <div class="react-me part" data-type="data-views" id="next-section"></div>
     <div class="resources part" id="data">
+      <h2 class="section-title">USE WITH YOUR FAVOURITE LANGUAGE</h2>
       <ul class="nav nav-pills">
-        <li class="active"><a data-toggle="pill" href="#download">Data files</a></li>
-        <li><a data-toggle="pill" href="#r">R</a></li>
+        <li class="active"><a data-toggle="pill" href="#r">R</a></li>
         <li><a data-toggle="pill" href="#pandas">Pandas</a></li>
         <li><a data-toggle="pill" href="#python">Python</a></li>
         <li><a data-toggle="pill" href="#javascript">JavaScript</a></li>
@@ -94,32 +117,8 @@
       </ul>
 
       <div class="tab-content">
-        <div id="download" class="tab-pane fade in active">
-          <div class="resource-listing part">
-            <table class="table table-bordered table-striped resource-listing">
-              <thead>
-                <th>Name</th>
-                <th>Format</th>
-                <th>Link</th>
-              </thead>
-              <tbody>
-              {% for resource in dataset.resources %}
-                <tr>
-                  <td><i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore" onclick="scrollDown(this)">{{resource.name}}</a></td>
-                  <td>{{ resource.format }}</td>
-                  <td class="download truncate">
-                      <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="btn btn-xs btn-primary">
-                          <i class="fa fa-arrow-circle-down" aria-hidden="true"></i> Download
-                      </a>
-                  </td>
-                </tr>
-              {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        <div id="r" class="tab-pane fade">
+        <div id="r" class="tab-pane fade in active">
           <div class="part">
             {{instructions.r(dataset)}}
           </div>
