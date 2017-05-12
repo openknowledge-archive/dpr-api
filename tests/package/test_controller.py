@@ -445,7 +445,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.jwt_member = data['token']
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.Package.change_status')
+    @patch('app.logic.db_logic.change_package_status')
     def test_return_200_if_all_goes_well(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
@@ -454,7 +454,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.Package.change_status')
+    @patch('app.logic.db_logic.change_package_status')
     def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
@@ -464,7 +464,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.Package.change_status')
+    @patch('app.logic.db_logic.change_package_status')
     def test_return_401_if_not_header(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.return_value = True
@@ -473,7 +473,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.Package.change_status')
+    @patch('app.logic.db_logic.change_package_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
         change_acl.side_effect = Exception('failed')
         change_status.return_value = True
@@ -482,7 +482,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.Package.change_status')
+    @patch('app.logic.db_logic.change_package_status')
     def test_throw_500_if_change_status_fails(self, change_status, change_acl):
         change_acl.return_value = True
         change_status.side_effect = Exception('failed')
@@ -491,7 +491,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.Package.change_status')
+    @patch('app.logic.db_logic.change_package_status')
     def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
         change_acl.side_effect = Exception('failed')
         change_status.side_effect = Exception('failed')
@@ -702,7 +702,7 @@ class UndeleteTestCase(unittest.TestCase):
         self.jwt_non_member = data['token']
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.Package.change_status')
+    @patch('app.logic.db_logic.change_package_status')
     def test_should_return_200_if_all_goes_well(self, change_status,
                                                 change_acl):
         change_acl.return_value = True
@@ -712,7 +712,7 @@ class UndeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.Package.change_status')
+    @patch('app.logic.db_logic.change_package_status')
     def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
         auth = "%s" % self.jwt_non_member
         response = self.client.post(self.url, headers={'Auth-Token': auth})

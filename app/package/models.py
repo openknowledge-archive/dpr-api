@@ -257,25 +257,6 @@ class Package(db.Model):
         UniqueConstraint("name", "publisher_id"),
     )
 
-
-    @staticmethod
-    def change_status(publisher_name, package_name, status=PackageStateEnum.active):
-        """
-        This method changes status of the data package. This method used
-        for soft delete the data package
-        :param publisher_name: publisher name
-        :param package_name: package name
-        :param status: status of the package
-        :return: If success True else False
-        """
-        data = Package.query.join(Publisher). \
-            filter(Publisher.name == publisher_name,
-                   Package.name == package_name).one()
-        data.status = status
-        db.session.add(data)
-        db.session.commit()
-        return True
-
     @staticmethod
     def delete_data_package(publisher_name, package_name):
         """

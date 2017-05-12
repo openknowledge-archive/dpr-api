@@ -214,6 +214,28 @@ class PackageTestCase(unittest.TestCase):
 
         self.assertEqual(latest_data.readme, tagged_data.readme)
 
+    def test_change_status(self):
+        data = Package.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   Package.name == self.package_one).one()
+        self.assertEqual(PackageStateEnum.active, data.status)
+
+        db_logic.change_package_status(self.publisher_one, self.package_one,
+                                                        PackageStateEnum.deleted)
+
+        data = Package.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   Package.name == self.package_one).one()
+        self.assertEqual(PackageStateEnum.deleted, data.status)
+
+        db_logic.change_package_status(self.publisher_one, self.package_one,
+                              status=PackageStateEnum.active)
+
+        data = Package.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   Package.name == self.package_one).one()
+        self.assertEqual(PackageStateEnum.active, data.status)
+
     def test_update_status_with_tag(self):
         db_logic.create_or_update_package_tag(self.publisher_two,
                                      self.package_three,
@@ -221,7 +243,7 @@ class PackageTestCase(unittest.TestCase):
         db_logic.create_or_update_package_tag(self.publisher_two,
                                      self.package_three,
                                      '1.1')
-        status = Package.change_status(self.publisher_two,
+        status = db_logic.change_package_status(self.publisher_two,
                                        self.package_three,
                                        PackageStateEnum.deleted)
         self.assertTrue(status)

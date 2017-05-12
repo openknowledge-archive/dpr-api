@@ -350,27 +350,6 @@ class PackageTestCase(unittest.TestCase):
                                                    self.publisher_one).all()
         self.assertEqual(2, len(res))
 
-    def test_change_status(self):
-        data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_one).one()
-        self.assertEqual(PackageStateEnum.active, data.status)
-
-        Package.change_status(self.publisher_one, self.package_one, PackageStateEnum.deleted)
-
-        data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_one).one()
-        self.assertEqual(PackageStateEnum.deleted, data.status)
-
-        Package.change_status(self.publisher_one, self.package_one,
-                              status=PackageStateEnum.active)
-
-        data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_one).one()
-        self.assertEqual(PackageStateEnum.active, data.status)
-
     def test_return_true_if_delete_data_package_success(self):
         status = Package.delete_data_package(self.publisher_one,
                                              self.package_one)

@@ -90,3 +90,21 @@ def create_or_update_package(name, publisher_name, **kwargs):
             setattr(tag_instance, key, value)
     db.session.add(instance)
     db.session.commit()
+
+
+def change_package_status(publisher_name, package_name, status=PackageStateEnum.active):
+    """
+    This method changes status of the data package. This method used
+    for soft delete the data package
+    :param publisher_name: publisher name
+    :param package_name: package name
+    :param status: status of the package
+    :return: If success True else False
+    """
+    data = Package.query.join(Publisher). \
+        filter(Publisher.name == publisher_name,
+               Package.name == package_name).one()
+    data.status = status
+    db.session.add(data)
+    db.session.commit()
+    return True

@@ -129,7 +129,7 @@ def delete_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = Package.change_status(publisher, package, PackageStateEnum.deleted)
+    status_db = db_logic.change_package_status(publisher, package, PackageStateEnum.deleted)
     try:
         status_acl = bitstore.change_acl('private')
     except Exception as e:
@@ -179,7 +179,7 @@ def undelete_data_package(publisher, package):
 
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = Package.change_status(publisher, package, PackageStateEnum.active)
+    status_db = db_logic.change_package_status(publisher, package, PackageStateEnum.active)
     try:
         status_acl = bitstore.change_acl('public-read')
     except Exception as e:
