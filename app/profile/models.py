@@ -54,16 +54,7 @@ class User(db.Model):
     publishers = relationship("PublisherUser", back_populates="user",
                               cascade='save-update, merge, delete, delete-orphan')
 
-    @property
-    def serialize(self):
-        """Return object data in easily serializeable format"""
-        return {
-            'full_name': self.full_name,
-            'email': self.email,
-            'name': self.name,
-            'secret': self.secret
-        }
-
+    
     @staticmethod
     def create_or_update_user_from_callback(user_info, oauth_source='github'):
         """

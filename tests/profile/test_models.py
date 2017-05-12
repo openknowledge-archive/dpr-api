@@ -50,11 +50,6 @@ class UserTestCase(unittest.TestCase):
             db.session.add(user)
             db.session.commit()
 
-    def test_serialize(self):
-        user = User.query.filter_by(name='test_user_id').one() \
-            .serialize
-        self.assertEqual('test_user_id', user['name'])
-
     def test_user_role_on_publisher(self):
         user = User.query.filter_by(name='test_user_id').one()
         self.assertEqual(len(user.publishers), 1)
