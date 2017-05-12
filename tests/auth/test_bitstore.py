@@ -8,7 +8,7 @@ import boto3
 import unittest
 
 from app import create_app
-from app.logic.bitstore import BitStore
+from app.package.models import BitStore
 from moto import mock_s3
 from urlparse import urlparse
 
