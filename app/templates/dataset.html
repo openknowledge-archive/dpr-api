@@ -8,25 +8,25 @@
 {% block content %}
 <div class="showcase">
   <div class="row row-eq-height">
-    <div class="col-sm-3 side-bar side-img">
+    <div class="col-sm-3 side-bar side-img hidden-xs">
       <img src="{{ s3_cdn }}/static/img/elephant-push-cube.png" class="img-responsive">
     </div>
-    <div class="col-sm-9 header main-section">
+    <div class="col-sm-9 header main-section col-xs-12">
       <div class="row">
         <h1 class="text-center">
           {{ dataset.title }}
         </h1>
       </div>
       <div class="row">
-        <div class="col-sm-6 col-sm-offset-3">
+        <div class="col-sm-6 col-sm-offset-3 col-xs-12">
           <h2 class="text-center publisher">
-            <div class="col-sm-2 left-cube">
+            <div class="col-xs-2 left-cube">
               <img src="{{ s3_cdn }}/static/img/cube17.svg" class="img-responsive">
             </div>
-            <div class="col-sm-8 text-cube">
+            <div class="col-xs-8 text-cube">
               by <a href="/{{ dataset.owner }}">{{ dataset.owner }}</a>
             </div>
-            <div class="col-sm-2 right-cube">
+            <div class="col-xs-2 right-cube">
               <img src="{{ s3_cdn }}/static/img/cube17.svg" class="img-responsive">
             </div>
           </h2>

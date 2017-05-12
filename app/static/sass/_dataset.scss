@@ -49,15 +49,23 @@ h2.publisher {
     color: $brand-info;
   }
   .side-section h3 {
-    font-size: 1.7em;
+    font-size: 1.3em;
     margin-bottom: 0.8em;
     color: $black;
+    @media (min-width: $screen-sm-min) {
+      font-size: 1.3em;
+    }
+
+    @media (min-width: $screen-md-min) {
+      font-size: 1.7em;
+    }
   }
   .actions .row {
     margin-bottom: 2em;
   }
   .react-me {
     text-align: center;
+    max-width: 100%;
   }
   .part {
     margin-bottom: 4em;

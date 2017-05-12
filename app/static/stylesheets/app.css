@@ -5874,6 +5874,10 @@ body {
   position: relative;
   min-height: 100%;
   padding-bottom: 82px; }
+  @media (max-width: 480px) {
+    body .row {
+      margin-left: 0;
+      margin-right: 0; } }
 
 .biege-wrapper {
   background-color: #ecd3ad;
@@ -6420,13 +6424,20 @@ h2.publisher {
   font-size: 1.3em;
   color: #484d99; }
 .dataset .side-section h3 {
-  font-size: 1.7em;
+  font-size: 1.3em;
   margin-bottom: 0.8em;
   color: #000; }
+  @media (min-width: 768px) {
+    .dataset .side-section h3 {
+      font-size: 1.3em; } }
+  @media (min-width: 992px) {
+    .dataset .side-section h3 {
+      font-size: 1.7em; } }
 .dataset .actions .row {
   margin-bottom: 2em; }
 .dataset .react-me {
-  text-align: center; }
+  text-align: center;
+  max-width: 100%; }
 .dataset .part {
   margin-bottom: 4em; }
 .dataset .btn-group {
