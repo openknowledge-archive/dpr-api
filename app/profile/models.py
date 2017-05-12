@@ -54,33 +54,6 @@ class User(db.Model):
     publishers = relationship("PublisherUser", back_populates="user",
                               cascade='save-update, merge, delete, delete-orphan')
 
-    
-    @staticmethod
-    def create_or_update_user_from_callback(user_info, oauth_source='github'):
-        """
-        This method populates db when user sign up or login through external auth system
-        :param user_info: User data from external auth system
-        :param oauth_source: From which oauth source the user coming from e.g. github
-        :return: User data from Database
-        """
-        user = User.query.filter_by(name=user_info['login']).first()
-        if user is None:
-            user = User()
-            user.email = user_info.get('email', None)
-            user.secret = os.urandom(24).encode('hex')
-            user.name = user_info['login']
-            user.full_name = user_info.get('name', None)
-            user.oauth_source = oauth_source
-
-            publisher = Publisher(name=user.name)
-            association = PublisherUser(role=UserRoleEnum.owner)
-            association.publisher = publisher
-            user.publishers.append(association)
-
-            db.session.add(user)
-            db.session.commit()
-        return user
-
 
 class UserRoleEnum(enum.Enum):
     owner = "OWNER"

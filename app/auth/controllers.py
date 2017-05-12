@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 from flask import Blueprint, jsonify, session, g, make_response, render_template
 from flask import current_app as app
 from app.auth.models import JWT
+from app.logic import db_logic
 from app.logic import get_authorized_user_info, get_jwt_token, generate_signed_url
 from app.profile.models import User
 
@@ -45,7 +46,7 @@ def callback_handling():
                                      picture, name
     """
     user_info = get_authorized_user_info()
-    user = User().create_or_update_user_from_callback(user_info)
+    user = db_logic.find_or_create_user(user_info)
     jwt_helper = JWT(app.config['JWT_SEED'], user.id)
     session.pop('github_token', None)
     g.current_user = user
