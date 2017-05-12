@@ -350,12 +350,6 @@ class PackageTestCase(unittest.TestCase):
                                                    self.publisher_one).all()
         self.assertEqual(2, len(res))
 
-    def test_is_package_exists(self):
-        status = Package.is_package_exists(self.publisher_one, self.package_one)
-        self.assertTrue(status)
-        status = Package.is_package_exists(self.publisher_one, 'non-exists-package')
-        self.assertFalse(status)
-
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()

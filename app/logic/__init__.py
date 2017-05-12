@@ -108,7 +108,7 @@ def finalize_package_publish(user_id, datapackage_url):
     Returns status "queued" if ok, else - None
     '''
     publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
-    if Package.is_package_exists(publisher, package):
+    if db_logic.package_exists(publisher, package):
         status = check_is_authorized('Package::Update', publisher, package, user_id)
     else:
         status = check_is_authorized('Package::Create', publisher, package, user_id)
@@ -205,7 +205,7 @@ def generate_signed_url():
     publisher, package_name = metadata['owner'], metadata['name']
     res_payload = {'filedata': {}}
 
-    if Package.is_package_exists(publisher, package_name):
+    if db_logic.package_exists(publisher, package_name):
         status = check_is_authorized('Package::Update', publisher, package_name, user_id)
     else:
         status = check_is_authorized('Package::Create', publisher, package_name, user_id)

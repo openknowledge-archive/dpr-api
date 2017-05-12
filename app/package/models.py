@@ -256,20 +256,6 @@ class Package(db.Model):
     __table_args__ = (
         UniqueConstraint("name", "publisher_id"),
     )
-    
-
-    @staticmethod
-    def is_package_exists(publisher_name, package_name):
-        """
-        This method will check package with the name already exists or not
-        :param publisher_name: publisher name
-        :param package_name: package name
-        :return: True is data already exists else false
-        """
-        instance = Package.query.join(Publisher)\
-            .filter(Package.name == package_name,
-                    Publisher.name == publisher_name).all()
-        return len(instance) > 0
 
 
 class PackageTag(db.Model):
