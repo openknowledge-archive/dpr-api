@@ -350,40 +350,6 @@ class PackageTestCase(unittest.TestCase):
                                                    self.publisher_one).all()
         self.assertEqual(2, len(res))
 
-    def test_update_fields_if_instance_present(self):
-        metadata = Package.query.join(Publisher) \
-            .filter(Publisher.name == self.publisher_one,
-                    Package.name == self.package_one).one()
-
-        descriptor = metadata.tags[0].descriptor
-
-        self.assertEqual(descriptor['name'], "test_one")
-        Package.create_or_update(self.package_one, self.publisher_one,
-                                 descriptor=json.dumps(dict(name='sub')),
-                                 private=True)
-        metadata = Package.query.join(Publisher) \
-            .filter(Publisher.name == self.publisher_one,
-                    Package.name == self.package_one).one()
-        descriptor = metadata.tags[0].descriptor
-        self.assertEqual(json.loads(descriptor)['name'], "sub")
-        self.assertEqual(metadata.private, True)
-
-    def test_insert_if_not_present(self):
-        pub = self.publisher_two
-        name = "custom_name"
-
-        metadata = Package.query.join(Publisher) \
-            .filter(Publisher.name == pub,
-                    Package.name == name).all()
-        self.assertEqual(len(metadata), 0)
-        Package.create_or_update(name, pub,
-                                 descriptor=json.dumps(dict(name='sub')),
-                                 private=True)
-        metadata = Package.query.join(Publisher) \
-            .filter(Publisher.name == pub,
-                    Package.name == name).all()
-        self.assertEqual(len(metadata), 1)
-
     def test_change_status(self):
         data = Package.query.join(Publisher). \
             filter(Publisher.name == self.publisher_one,

@@ -204,7 +204,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.jwt1 = data['token']
 
-    @patch('app.package.models.Package.create_or_update')
+    @patch('app.logic.db_logic.create_or_update_package')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_readme_object_key')
     @patch('app.package.models.BitStore.get_s3_object')
@@ -295,7 +295,7 @@ class EndToEndTestCase(unittest.TestCase):
 
     @patch('app.package.models.BitStore.copy_to_new_version')
     @patch('app.logic.db_logic.create_or_update_package_tag')
-    @patch('app.package.models.Package.create_or_update')
+    @patch('app.logic.db_logic.create_or_update_package')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_readme_object_key')
     @patch('app.package.models.BitStore.get_s3_object')

@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import unittest
+import json
 
 from app import create_app
 from app.database import db
@@ -126,7 +127,39 @@ class PackageTestCase(unittest.TestCase):
 
             db.session.commit()
 
+    def test_update_fields_if_instance_present(self):
+        metadata = Package.query.join(Publisher) \
+            .filter(Publisher.name == self.publisher_one,
+                    Package.name == self.package_one).one()
 
+        descriptor = metadata.tags[0].descriptor
+
+        self.assertEqual(descriptor['name'], "test_one")
+        db_logic.create_or_update_package(self.package_one, self.publisher_one,
+                                 descriptor=json.dumps(dict(name='sub')),
+                                 private=True)
+        metadata = Package.query.join(Publisher) \
+            .filter(Publisher.name == self.publisher_one,
+                    Package.name == self.package_one).one()
+        descriptor = metadata.tags[0].descriptor
+        self.assertEqual(json.loads(descriptor)['name'], "sub")
+        self.assertEqual(metadata.private, True)
+
+    def test_insert_if_not_present(self):
+        pub = self.publisher_two
+        name = "custom_name"
+
+        metadata = Package.query.join(Publisher) \
+            .filter(Publisher.name == pub,
+                    Package.name == name).all()
+        self.assertEqual(len(metadata), 0)
+        db_logic.create_or_update_package(name, pub,
+                                 descriptor=json.dumps(dict(name='sub')),
+                                 private=True)
+        metadata = Package.query.join(Publisher) \
+            .filter(Publisher.name == pub,
+                    Package.name == name).all()
+        self.assertEqual(len(metadata), 1)
 
     def test_should_populate_new_versioned_data_package(self):
         db_logic.create_or_update_package_tag(self.publisher_one,

@@ -60,3 +60,33 @@ def create_or_update_package_tag(publisher_name, package_name, tag):
     db.session.add(tag_instance)
     db.session.commit()
     return True
+
+
+def create_or_update_package(name, publisher_name, **kwargs):
+    """
+    This method creates data package or updates data package attributes
+    :param name: package name
+    :param publisher_name: publisher name
+    :param kwargs: package attribute names
+    """
+    pub_id = Publisher.query.filter_by(name=publisher_name).one().id
+    instance = Package.query.join(Publisher)\
+        .filter(Package.name == name,
+                Publisher.name == publisher_name).first()
+
+    if not instance:
+        instance = Package(name=name)
+        instance.publisher_id = pub_id
+        tag_instance = PackageTag()
+        instance.tags.append(tag_instance)
+    else:
+        tag_instance = PackageTag.query.join(Package) \
+            .filter(Package.id == instance.id,
+                    PackageTag.tag == 'latest').one()
+    for key, value in kwargs.items():
+        if key not in ['descriptor', 'readme']:
+            setattr(instance, key, value)
+        else:
+            setattr(tag_instance, key, value)
+    db.session.add(instance)
+    db.session.commit()

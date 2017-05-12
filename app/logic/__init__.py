@@ -15,6 +15,7 @@ from app.auth.annotations import check_is_authorized, get_user_from_jwt
 from app.auth.models import JWT, FileData
 from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
+from app.logic import db_logic
 from app.logic.search import DataPackageQuery
 from app.utils import InvalidUsage
 from app.utils.helpers import text_to_markdown, dp_in_readme
@@ -120,7 +121,7 @@ def finalize_package_publish(user_id, datapackage_url):
     body = json.loads(b)
     bit_store.change_acl('public-read')
     readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
-    Package.create_or_update(name=package, publisher_name=publisher,
+    db_logic.create_or_update_package(name=package, publisher_name=publisher,
                              descriptor=body, readme=readme)
     return "queued"
 
