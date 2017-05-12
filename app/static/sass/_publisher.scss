@@ -15,3 +15,9 @@ h2 {
   color: #212121;
   background-color: lighten($gray, 40%);
 }
+
+.profile {
+  @media (max-width: $screen-xs-min) {
+    margin: 2em 0;
+  }
+}

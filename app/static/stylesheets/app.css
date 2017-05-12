@@ -5835,8 +5835,10 @@ img.flip {
   transform: scale(-1, 1); }
 
 img.cube {
-  margin-top: 20px;
-  padding-left: 40%; }
+  margin-top: 20px; }
+  @media (min-width: 768px) {
+    img.cube {
+      padding-left: 40%; } }
 
 .icon {
   padding-right: 7px; }
@@ -5862,6 +5864,10 @@ h2 {
   color: #212121;
   background-color: #dbdbdb; }
 
+@media (max-width: 480px) {
+  .profile {
+    margin: 2em 0; } }
+
 /* General stylings
 =====================================*/
 html {
@@ -5872,10 +5878,20 @@ body {
   position: relative;
   min-height: 100%;
   padding-bottom: 82px; }
+  @media (max-width: 480px) {
+    body .row {
+      margin-left: 0;
+      margin-right: 0; } }
 
 .biege-wrapper {
   background-color: #ecd3ad;
   min-height: calc(100vh - 52px - 82px); }
+  @media (max-width: 480px) {
+    .biege-wrapper {
+      margin-bottom: 3em; } }
+
+p {
+  overflow-wrap: break-word; }
 
 a {
   color: #000; }
@@ -5964,7 +5980,13 @@ a.explore {
   .jumbotron-secondary form input, .jumbotron-secondary form textarea {
     margin-bottom: 20px; }
 .jumbotron-secondary .medium {
-  padding: 0 25%; }
+  padding: 0 5%; }
+  @media (min-width: 768px) {
+    .jumbotron-secondary .medium {
+      padding: 0 15%; } }
+  @media (min-width: 992px) {
+    .jumbotron-secondary .medium {
+      padding: 0 25%; } }
   .jumbotron-secondary .medium hr {
     margin-bottom: 0;
     border-top: 4px solid #000; }
@@ -5987,9 +6009,21 @@ a.explore {
     margin-bottom: 30px; }
   .jumbotron form {
     margin-bottom: 30px;
-    padding: 0 25%; }
+    padding: 0 10%; }
+    @media (min-width: 768px) {
+      .jumbotron form {
+        padding: 0 15%; } }
+    @media (min-width: 992px) {
+      .jumbotron form {
+        padding: 0 25%; } }
   .jumbotron .narrow {
-    padding: 0 35%; }
+    padding: 0 5%; }
+    @media (min-width: 768px) {
+      .jumbotron .narrow {
+        padding: 0 15%; } }
+    @media (min-width: 992px) {
+      .jumbotron .narrow {
+        padding: 0 35%; } }
     .jumbotron .narrow hr {
       margin-bottom: 0;
       border-top: 2px solid #000; }
@@ -6355,6 +6389,9 @@ div.logout {
 
 .showcase {
   max-width: 100%; }
+  @media (max-width: 480px) {
+    .showcase {
+      margin-bottom: 3em; } }
 
 .side-bar {
   background-color: #ecd3ad; }
@@ -6397,13 +6434,20 @@ h2.publisher {
   font-size: 1.3em;
   color: #484d99; }
 .dataset .side-section h3 {
-  font-size: 1.7em;
+  font-size: 1.3em;
   margin-bottom: 0.8em;
   color: #000; }
+  @media (min-width: 768px) {
+    .dataset .side-section h3 {
+      font-size: 1.3em; } }
+  @media (min-width: 992px) {
+    .dataset .side-section h3 {
+      font-size: 1.7em; } }
 .dataset .actions .row {
   margin-bottom: 2em; }
 .dataset .react-me {
-  text-align: center; }
+  text-align: center;
+  max-width: 100%; }
 .dataset .part {
   margin-bottom: 4em; }
 .dataset .btn-group {

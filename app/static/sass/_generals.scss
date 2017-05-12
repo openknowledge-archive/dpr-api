@@ -8,10 +8,22 @@ body {
   position: relative;
   min-height: 100%;
   padding-bottom: 82px;
+  @media (max-width: $screen-xs-min) {
+    .row {
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
 }
 .biege-wrapper {
   background-color: $brand-success;
   min-height: calc(100vh - 52px - 82px);
+  @media (max-width: $screen-xs-min) {
+    margin-bottom: 3em;
+  }
+}
+p {
+  overflow-wrap: break-word;
 }
 a {
   color: $black;

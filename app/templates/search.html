@@ -9,18 +9,18 @@ Search
 <div class="biege-wrapper">
   <div class="container">
     <div class="row">
-      <div class="col-sm-1 col-sm-offset-2 hidden-xs">
+      <div class="col-md-1 col-md-offset-2 hidden-xs hidden-sm">
         <img src="{{ s3_cdn }}/static/img/cube-04-elephant.png" class="img-responsive flip elephant">
       </div>
-      <div class="col-sm-6">
+      <div class="col-md-6 col-sm-12">
         <h1 class="text-center">Discover Data</h1>
         <div id="custom-search-input">
-          <form id="search-page-search-form" class="input-group col-md-12" action="/search" method="GET">
+          <form id="search-page-search-form" class="input-group col-xs-12" action="/search" method="GET">
             <input id="search-page-search" type="text" class="form-control input-lg" placeholder="Search ..." name="q" value="{{ query_term }}" required/>
           </form>
         </div>
       </div>
-      <div class="col-sm-1 hidden-xs">
+      <div class="col-md-1 hidden-xs hidden-sm">
         <img src="{{ s3_cdn }}/static/img/cube-04-elephant.png" class="img-responsive elephant">
       </div>
     </div>

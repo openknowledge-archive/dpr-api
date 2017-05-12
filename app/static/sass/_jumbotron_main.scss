@@ -17,7 +17,13 @@
     }
   }
   .medium {
-    padding: 0 25%;
+    padding: 0 5%;
+    @media (min-width: $screen-sm-min) {
+      padding: 0 15%;
+    }
+    @media (min-width: $screen-md-min) {
+      padding: 0 25%;
+    }
     hr {
       margin-bottom: 0;
       border-top: 4px solid #000;
@@ -46,10 +52,22 @@
   }
   form {
     margin-bottom: 30px;
-    padding: 0 25%;
+    padding: 0 10%;
+    @media (min-width: $screen-sm-min) {
+      padding: 0 15%;
+    }
+    @media (min-width: $screen-md-min) {
+      padding: 0 25%;
+    }
   }
   .narrow {
-    padding: 0 35%;
+    padding: 0 5%;
+    @media (min-width: $screen-sm-min) {
+      padding: 0 15%;
+    }
+    @media (min-width: $screen-md-min) {
+      padding: 0 35%;
+    }
     hr {
       margin-bottom: 0;
       border-top: 2px solid #000;
