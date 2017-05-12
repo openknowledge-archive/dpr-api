@@ -228,7 +228,7 @@ def purge_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = Package.delete_data_package(publisher, package)
+    status_db = db_logic.delete_data_package(publisher, package)
     try:
         status_acl = bitstore.delete_data_package()
     except Exception as e:

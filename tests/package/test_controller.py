@@ -11,6 +11,7 @@ from mock import patch
 from moto import mock_s3
 from app import create_app
 from app.database import db
+from app.logic import db_logic
 from app.package.models import Package, BitStore, PackageStateEnum, PackageTag
 from app.profile.models import User, Publisher, UserRoleEnum, PublisherUser
 
@@ -93,7 +94,7 @@ class GetMetaDataTestCase(unittest.TestCase):
             publisher.packages.append(metadata)
             db.session.add(publisher)
             db.session.commit()
-            Package.delete_data_package(self.publisher, self.package)
+            db_logic.delete_data_package(self.publisher, self.package)
         response = self.client. \
             get('/api/package/%s/%s' % (self.publisher, self.package))
         self.assertEqual(response.status_code, 404)
@@ -567,7 +568,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.jwt_member = data['token']
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.Package.delete_data_package')
+    @patch('app.logic.db_logic.delete_data_package')
     def test_return_200_if_all_goes_well(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.return_value = True
@@ -576,7 +577,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.Package.delete_data_package')
+    @patch('app.logic.db_logic.delete_data_package')
     def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
         bitstore_delete.side_effect = Exception('failed')
         db_delete.return_value = True
@@ -586,7 +587,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.Package.delete_data_package')
+    @patch('app.logic.db_logic.delete_data_package')
     def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
         db_delete.side_effect = Exception('failed')
@@ -596,7 +597,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.Package.delete_data_package')
+    @patch('app.logic.db_logic.delete_data_package')
     def test_throw_generic_error_if_internal_error(self, db_delete, bitstore_delete):
         bitstore_delete.side_effect = Exception('failed')
         db_delete.return_value = False
@@ -606,7 +607,7 @@ class HardDeleteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
 
     @patch('app.package.models.BitStore.delete_data_package')
-    @patch('app.package.models.Package.delete_data_package')
+    @patch('app.logic.db_logic.delete_data_package')
     def test_should_throw_403_if_user_is_not_owner_of_the_package(self,
                                                                   db_delete,
                                                                   bitstore_delete):

@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import unittest
 from app import create_app
 from app.database import db
+from app.logic import db_logic
 from app.logic.search import DataPackageQuery
 from app.profile.models import Publisher
 from app.package.models import Package, PackageTag
@@ -158,7 +159,7 @@ class DataPackageQueryTestCase(unittest.TestCase):
         self.assertEqual(1000, dpq.limit)
 
     def test_should_not_visible_after_soft_delete(self):
-        Package.delete_data_package(self.pub1_name, 'pack1')
+        db_logic.delete_data_package(self.pub1_name, 'pack1')
         query_string = "details publisher:pub1"
         dpq = DataPackageQuery(query_string, limit=3)
         self.assertEqual(2, len(dpq.get_data()))

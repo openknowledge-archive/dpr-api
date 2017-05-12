@@ -255,8 +255,19 @@ class PackageTestCase(unittest.TestCase):
         db_logic.create_or_update_package_tag(self.publisher_two,
                                      self.package_three,
                                      '1.1')
-        status = Package.delete_data_package(self.publisher_two, self.package_three)
+        status = db_logic.delete_data_package(self.publisher_two, self.package_three)
         self.assertTrue(status)
+
+    def test_return_true_if_delete_data_package_success(self):
+        status = db_logic.delete_data_package(self.publisher_one,
+                                             self.package_one)
+        self.assertTrue(status)
+        data = Package.query.join(Publisher). \
+            filter(Publisher.name == self.publisher_one,
+                   Package.name == self.package_one).all()
+        self.assertEqual(0, len(data))
+        data = Publisher.query.all()
+        self.assertEqual(2, len(data))
 
     def tearDown(self):
         with self.app.app_context():

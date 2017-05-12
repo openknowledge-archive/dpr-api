@@ -350,17 +350,6 @@ class PackageTestCase(unittest.TestCase):
                                                    self.publisher_one).all()
         self.assertEqual(2, len(res))
 
-    def test_return_true_if_delete_data_package_success(self):
-        status = Package.delete_data_package(self.publisher_one,
-                                             self.package_one)
-        self.assertTrue(status)
-        data = Package.query.join(Publisher). \
-            filter(Publisher.name == self.publisher_one,
-                   Package.name == self.package_one).all()
-        self.assertEqual(0, len(data))
-        data = Publisher.query.all()
-        self.assertEqual(2, len(data))
-
     def test_is_package_exists(self):
         status = Package.is_package_exists(self.publisher_one, self.package_one)
         self.assertTrue(status)

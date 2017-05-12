@@ -257,23 +257,6 @@ class Package(db.Model):
         UniqueConstraint("name", "publisher_id"),
     )
 
-    @staticmethod
-    def delete_data_package(publisher_name, package_name):
-        """
-        This method deletes the data package. This method used
-        for hard delete the data package
-        :param publisher_name: publisher name
-        :param package_name: package name
-        :return: If success True else False
-        """
-        data = Package.query.join(Publisher). \
-            filter(Publisher.name == publisher_name,
-                   Package.name == package_name).one()
-        package_id = data.id
-        Package.query.filter(Package.id == package_id).delete()
-        # db.session.delete(meta_data)
-        db.session.commit()
-        return True
 
     @staticmethod
     def get_package(publisher_name, package_name):
