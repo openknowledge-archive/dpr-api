@@ -125,3 +125,16 @@ def delete_data_package(publisher_name, package_name):
     Package.query.filter(Package.id == package_id).delete()
     db.session.commit()
     return True
+
+
+def get_package(publisher_name, package_name):
+    """
+    This method returns certain data package belonging to a publisher
+    :param publisher_name: publisher name
+    :param package_name: package name
+    :return: data package object based on the filter.
+    """
+    instance = Package.query.join(Publisher) \
+        .filter(Package.name == package_name,
+                Publisher.name == publisher_name).one_or_none()
+    return instance

@@ -256,20 +256,7 @@ class Package(db.Model):
     __table_args__ = (
         UniqueConstraint("name", "publisher_id"),
     )
-
-
-    @staticmethod
-    def get_package(publisher_name, package_name):
-        """
-        This method returns certain data packages belongs to a publisher
-        :param publisher_name: publisher name
-        :param package_name: package name
-        :return: data package object based on the filter.
-        """
-        instance = Package.query.join(Publisher) \
-            .filter(Package.name == package_name,
-                    Publisher.name == publisher_name).one_or_none()
-        return instance
+    
 
     @staticmethod
     def is_package_exists(publisher_name, package_name):

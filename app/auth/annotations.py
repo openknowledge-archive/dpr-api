@@ -12,6 +12,7 @@ from flask import request, _request_ctx_stack
 from app.utils import InvalidUsage
 from app.auth.models import JWT
 from app.auth.authorization import is_authorize
+from app.logic import db_logic
 from app.package.models import Package
 from app.profile.models import Publisher
 
@@ -66,7 +67,7 @@ def check_is_authorized(action, publisher, package=None, user_id=None):
 
     if entity_str == 'Package':
         publisher_name, package_name = publisher, package
-        instance = Package.get_package(publisher_name, package_name)
+        instance = db_logic.get_package(publisher_name, package_name)
 
     elif entity_str == 'Publisher':
         publisher_name = publisher
