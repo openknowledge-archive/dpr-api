@@ -5835,8 +5835,10 @@ img.flip {
   transform: scale(-1, 1); }
 
 img.cube {
-  margin-top: 20px;
-  padding-left: 40%; }
+  margin-top: 20px; }
+  @media (min-width: 768px) {
+    img.cube {
+      padding-left: 40%; } }
 
 .icon {
   padding-right: 7px; }
@@ -5876,6 +5878,9 @@ body {
 .biege-wrapper {
   background-color: #ecd3ad;
   min-height: calc(100vh - 52px - 82px); }
+
+p {
+  overflow-wrap: break-word; }
 
 a {
   color: #000; }

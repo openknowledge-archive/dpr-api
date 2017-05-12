@@ -13,6 +13,9 @@ body {
   background-color: $brand-success;
   min-height: calc(100vh - 52px - 82px);
 }
+p {
+  overflow-wrap: break-word;
+}
 a {
   color: $black;
   &:hover {

@@ -29,7 +29,9 @@ img.flip {
 }
 img.cube {
   margin-top: 20px;
-  padding-left: 40%;
+  @media (min-width: $screen-sm-min) {
+    padding-left: 40%;
+  }
 }
 
 .icon {
