@@ -18,6 +18,7 @@ from app.auth.annotations import requires_auth, is_allowed
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
 from app.logic import get_package, get_metadata_for_package, \
         finalize_package_publish, get_package_names_for_publisher
+from app.logic import db_logic
 from app.utils import InvalidUsage
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
@@ -80,7 +81,7 @@ def tag_data_package(publisher, package):
         raise InvalidUsage('version not found', 400)
 
     bitstore = BitStore(publisher, package)
-    status_db = Package.create_or_update_tag(publisher, package, data['version'])
+    status_db = db_logic.create_or_update_package_tag(publisher, package, data['version'])
     try:
         status_bitstore = bitstore.copy_to_new_version(data['version'])
     except Exception as e:

@@ -294,7 +294,7 @@ class EndToEndTestCase(unittest.TestCase):
             db.session.commit()
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_tag')
+    @patch('app.logic.db_logic.create_or_update_package_tag')
     @patch('app.package.models.Package.create_or_update')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_readme_object_key')
@@ -815,7 +815,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.auth = "%s" % self.jwt
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_tag')
+    @patch('app.logic.db_logic.create_or_update_package_tag')
     def test_return_200_if_all_goes_well(self, create_or_update_tag,
                                          copy_to_new_version):
         copy_to_new_version.return_value = True
@@ -829,7 +829,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_tag')
+    @patch('app.logic.db_logic.create_or_update_package_tag')
     def test_throw_400_if_version_missing(self, create_or_update_tag,
                                           copy_to_new_version):
         copy_to_new_version.return_value = True
@@ -845,7 +845,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertEqual('version not found', data['message'])
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_tag')
+    @patch('app.logic.db_logic.create_or_update_package_tag')
     def test_throw_500_if_failed_to_tag(self, create_or_update_tag,
                                         copy_to_new_version):
         copy_to_new_version.side_effect = Exception('failed')
@@ -901,7 +901,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.assertTrue('Contents' not in objects_nu)
 
     @patch('app.package.models.BitStore.copy_to_new_version')
-    @patch('app.package.models.Package.create_or_update_tag')
+    @patch('app.logic.db_logic.create_or_update_package_tag')
     def test_allow_if_member_of_publisher(self, create_or_update_tag,
                                           copy_to_new_version):
         copy_to_new_version.side_effect = Exception('failed')

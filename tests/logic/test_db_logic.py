@@ -10,6 +10,7 @@ from app import create_app
 from app.database import db
 from app.logic import db_logic
 from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
+from app.package.models import BitStore, Package, PackageStateEnum, PackageTag
 
 class UserTestCase(unittest.TestCase):
     def setUp(self):
@@ -124,6 +125,7 @@ class PackageTestCase(unittest.TestCase):
             db.session.add(user2)
 
             db.session.commit()
+
 
 
     def test_should_populate_new_versioned_data_package(self):
