@@ -88,10 +88,6 @@ class User(db.Model):
 
             db.session.add(user)
             db.session.commit()
-        elif user.secret == 'supersecret':
-            user.secret = os.urandom(24).encode('hex')
-            db.session.add(user)
-            db.session.commit()
         return user
 
 
