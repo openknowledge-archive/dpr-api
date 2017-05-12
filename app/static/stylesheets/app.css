@@ -5964,7 +5964,13 @@ a.explore {
   .jumbotron-secondary form input, .jumbotron-secondary form textarea {
     margin-bottom: 20px; }
 .jumbotron-secondary .medium {
-  padding: 0 25%; }
+  padding: 0 5%; }
+  @media (min-width: 768px) {
+    .jumbotron-secondary .medium {
+      padding: 0 15%; } }
+  @media (min-width: 992px) {
+    .jumbotron-secondary .medium {
+      padding: 0 25%; } }
   .jumbotron-secondary .medium hr {
     margin-bottom: 0;
     border-top: 4px solid #000; }
@@ -5987,9 +5993,21 @@ a.explore {
     margin-bottom: 30px; }
   .jumbotron form {
     margin-bottom: 30px;
-    padding: 0 25%; }
+    padding: 0 10%; }
+    @media (min-width: 768px) {
+      .jumbotron form {
+        padding: 0 15%; } }
+    @media (min-width: 992px) {
+      .jumbotron form {
+        padding: 0 25%; } }
   .jumbotron .narrow {
-    padding: 0 35%; }
+    padding: 0 5%; }
+    @media (min-width: 768px) {
+      .jumbotron .narrow {
+        padding: 0 15%; } }
+    @media (min-width: 992px) {
+      .jumbotron .narrow {
+        padding: 0 35%; } }
     .jumbotron .narrow hr {
       margin-bottom: 0;
       border-top: 2px solid #000; }
