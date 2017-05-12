@@ -18,6 +18,9 @@ body {
 .biege-wrapper {
   background-color: $brand-success;
   min-height: calc(100vh - 52px - 82px);
+  @media (max-width: $screen-xs-min) {
+    margin-bottom: 3em;
+  }
 }
 p {
   overflow-wrap: break-word;

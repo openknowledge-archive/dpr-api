@@ -5864,6 +5864,10 @@ h2 {
   color: #212121;
   background-color: #dbdbdb; }
 
+@media (max-width: 480px) {
+  .profile {
+    margin: 2em 0; } }
+
 /* General stylings
 =====================================*/
 html {
@@ -5882,6 +5886,9 @@ body {
 .biege-wrapper {
   background-color: #ecd3ad;
   min-height: calc(100vh - 52px - 82px); }
+  @media (max-width: 480px) {
+    .biege-wrapper {
+      margin-bottom: 3em; } }
 
 p {
   overflow-wrap: break-word; }
@@ -6382,6 +6389,9 @@ div.logout {
 
 .showcase {
   max-width: 100%; }
+  @media (max-width: 480px) {
+    .showcase {
+      margin-bottom: 3em; } }
 
 .side-bar {
   background-color: #ecd3ad; }

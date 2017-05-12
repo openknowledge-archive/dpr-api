@@ -1,5 +1,8 @@
 .showcase {
   max-width: 100%;
+  @media (max-width: $screen-xs-min) {
+    margin-bottom: 3em;
+  }
 }
 .side-bar {
   background-color: $brand-success;
