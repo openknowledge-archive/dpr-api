@@ -88,7 +88,7 @@
                 <i class="fa fa-file-text-o"></i> <a href="#resource-{{resource.name}}" class="explore" onclick="scrollDown(this)">{{resource.name}}</a> [{{resource.format}}]
               </td>
               <td class="download truncate text-center">
-                  <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}">
+                  <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" onclick="trackOutboundLink(this.href)">
                       <i class="fa fa-download" aria-hidden="true"></i>
                   </a>
               </td>
@@ -167,7 +167,7 @@
         <div id="resource-{{loop.index - 1}}" class="react-me tables"
              data-type="resource-preview" data-resource="{{ loop.index - 1 }}"></div>
         <div class="row download">
-          <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="btn btn-sm btn-primary pull-right">
+          <a href="{{ datapackageUrl | replace("/datapackage.json","")}}/{{ resource.path }}" class="btn btn-sm btn-primary pull-right" onclick="trackOutboundLink(this.href)">
             Download
           </a>
         </div>
