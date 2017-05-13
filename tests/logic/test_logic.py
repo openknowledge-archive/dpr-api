@@ -100,7 +100,7 @@ class PackageTest(unittest.TestCase):
         self.assertIsNone(package)
 
 
-    @patch('app.package.models.Package.create_or_update')
+    @patch('app.logic.db_logic.create_or_update_package')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_readme_object_key')
     @patch('app.package.models.BitStore.get_s3_object')
@@ -118,7 +118,7 @@ class PackageTest(unittest.TestCase):
         self.assertEqual(status, 'queued')
 
 
-    @patch('app.package.models.Package.create_or_update')
+    @patch('app.logic.db_logic.create_or_update_package')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_readme_object_key')
     @patch('app.package.models.BitStore.get_s3_object')

@@ -5,15 +5,12 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import boto3
-from urlparse import urlparse
-from moto import mock_s3
 import unittest
-import json
-from app import create_app
-from app.database import db
-from app.package.models import BitStore, Package, PackageStateEnum, PackageTag
-from app.profile.models import User, Publisher, UserRoleEnum, PublisherUser
 
+from app import create_app
+from app.package.models import BitStore
+from moto import mock_s3
+from urlparse import urlparse
 
 class BitStoreTestCase(unittest.TestCase):
     def setUp(self):
@@ -192,10 +189,6 @@ class BitStoreTestCase(unittest.TestCase):
             self.assertEqual(len(read_control), 1)
             self.assertEqual(read_control[0].get('Grantee')['URI'], aws_all_user_group_url)
 
-            # for grant in res['Grants']:
-            #     self.assertTrue(grant['Permission'] ==
-            #                     public_grants[grant['Grantee']['Type']])
-            #
             bit_store.change_acl("private")
             res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
             full_control = filter(lambda grant: grant['Permission'] == 'FULL_CONTROL', res['Grants'])
@@ -203,17 +196,6 @@ class BitStoreTestCase(unittest.TestCase):
             self.assertEqual(full_control[0].get('Grantee')['ID'], owner_id)
             read_control = filter(lambda grant: grant['Permission'] == 'READ', res['Grants'])
             self.assertEqual(len(read_control), 0)
-            #
-            # for grant in res['Grants']:
-            #     self.assertTrue(grant['Permission'] ==
-            #                     private_grants[grant['Grantee']['Type']])
-            #
-            # bit_store.change_acl("public-read")
-            # res = s3.get_object_acl(Bucket=bucket_name, Key=metadata_key)
-            #
-            # for grant in res['Grants']:
-            #     self.assertTrue(grant['Permission'] ==
-            #                     public_grants[grant['Grantee']['Type']])
 
     @mock_s3
     def test_delete_data_package(self):
@@ -287,70 +269,3 @@ class BitStoreTestCase(unittest.TestCase):
                                           .build_s3_versioned_prefix())
             self.assertEqual(len(objects_nu['Contents']),
                              len(objects_old['Contents']))
-
-
-class PackageTestCase(unittest.TestCase):
-    def setUp(self):
-        self.publisher_one = 'test_publisher1'
-        self.publisher_two = 'test_publisher2'
-        self.package_one = 'test_package1'
-        self.package_two = 'test_package2'
-        self.package_three = 'test_package3'
-        self.app = create_app()
-        self.app.app_context().push()
-
-        with self.app.test_request_context():
-            db.drop_all()
-            db.create_all()
-
-            user1 = User(name=self.publisher_one)
-            publisher1 = Publisher(name=self.publisher_one)
-            association1 = PublisherUser(role=UserRoleEnum.owner)
-            association1.publisher = publisher1
-            user1.publishers.append(association1)
-
-            user2 = User(name=self.publisher_two)
-            publisher2 = Publisher(name=self.publisher_two)
-            association2 = PublisherUser(role=UserRoleEnum.owner)
-            association2.publisher = publisher2
-            user2.publishers.append(association2)
-
-            metadata1 = Package(name=self.package_one)
-            tag1 = PackageTag(descriptor=dict(name='test_one'))
-            metadata1.tags.append(tag1)
-            publisher1.packages.append(metadata1)
-
-            metadata2 = Package(name=self.package_two)
-            tag2 = PackageTag(descriptor=dict(name='test_two'))
-            metadata2.tags.append(tag2)
-            publisher1.packages.append(metadata2)
-
-            metadata3 = Package(name=self.package_one)
-            tag3 = PackageTag(descriptor=dict(name='test_three'))
-            metadata3.tags.append(tag3)
-            publisher2.packages.append(metadata3)
-
-            metadata4 = Package(name=self.package_two)
-            tag4 = PackageTag(descriptor=dict(name='test_four'))
-            metadata4.tags.append(tag4)
-            publisher2.packages.append(metadata4)
-
-            metadata5 = Package(name=self.package_three)
-            tag5 = PackageTag(descriptor=dict(name='test_four'))
-            metadata5.tags.append(tag5)
-            publisher2.packages.append(metadata5)
-
-            db.session.add(user1)
-            db.session.add(user2)
-
-            db.session.commit()
-
-    def test_composite_key(self):
-        res = Package.query.join(Publisher).filter(Publisher.name ==
-                                                   self.publisher_one).all()
-        self.assertEqual(2, len(res))
-
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()

@@ -50,37 +50,12 @@ class UserTestCase(unittest.TestCase):
             db.session.add(user)
             db.session.commit()
 
-    def test_serialize(self):
-        user = User.query.filter_by(name='test_user_id').one() \
-            .serialize
-        self.assertEqual('test_user_id', user['name'])
 
     def test_user_role_on_publisher(self):
         user = User.query.filter_by(name='test_user_id').one()
         self.assertEqual(len(user.publishers), 1)
         self.assertEqual(user.publishers[0].role, UserRoleEnum.owner)
 
-    def test_user_creation_from_Oauth_response(self):
-        user_info = dict(email="test@test.com",
-                         login="test",
-                         name="The Test")
-        user = User.create_or_update_user_from_callback(user_info)
-        self.assertEqual(user.name, 'test')
-
-    def test_update_secret_if_it_is_supersecret(self):
-        user_info = dict(email="test@test.com",
-                         login="test",
-                         name="The Test")
-        user = User.create_or_update_user_from_callback(user_info)
-        self.assertNotEqual('supersecret', user.secret)
-
-    def test_create_user_should_handle_null_email(self):
-        user_info = dict(login="test_null_email")
-        User.create_or_update_user_from_callback(user_info)
-        user = User.query.filter_by(name='test_null_email').first()
-        self.assertIsNotNone(user)
-        self.assertIsNone(user.email)
-        self.assertIsNone(user.full_name)
 
     def tearDown(self):
         with self.app.app_context():

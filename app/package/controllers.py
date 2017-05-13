@@ -18,6 +18,7 @@ from app.auth.annotations import requires_auth, is_allowed
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
 from app.logic import get_package, get_metadata_for_package, \
         finalize_package_publish, get_package_names_for_publisher
+from app.logic import db_logic
 from app.utils import InvalidUsage
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
@@ -80,7 +81,7 @@ def tag_data_package(publisher, package):
         raise InvalidUsage('version not found', 400)
 
     bitstore = BitStore(publisher, package)
-    status_db = Package.create_or_update_tag(publisher, package, data['version'])
+    status_db = db_logic.create_or_update_package_tag(publisher, package, data['version'])
     try:
         status_bitstore = bitstore.copy_to_new_version(data['version'])
     except Exception as e:
@@ -128,7 +129,7 @@ def delete_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = Package.change_status(publisher, package, PackageStateEnum.deleted)
+    status_db = db_logic.change_package_status(publisher, package, PackageStateEnum.deleted)
     try:
         status_acl = bitstore.change_acl('private')
     except Exception as e:
@@ -178,7 +179,7 @@ def undelete_data_package(publisher, package):
 
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = Package.change_status(publisher, package, PackageStateEnum.active)
+    status_db = db_logic.change_package_status(publisher, package, PackageStateEnum.active)
     try:
         status_acl = bitstore.change_acl('public-read')
     except Exception as e:
@@ -227,7 +228,7 @@ def purge_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = Package.delete_data_package(publisher, package)
+    status_db = db_logic.delete_data_package(publisher, package)
     try:
         status_acl = bitstore.delete_data_package()
     except Exception as e:
