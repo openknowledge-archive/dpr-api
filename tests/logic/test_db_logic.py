@@ -8,22 +8,26 @@ import unittest
 import json
 
 from app import create_app
+from app.bitstore import BitStore
 from app.database import db
 from app.logic import db_logic
 from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
-from app.package.models import BitStore, Package, PackageStateEnum, PackageTag
+from app.package.models import Package, PackageStateEnum, PackageTag
+from app.utils import InvalidUsage
 
 class UserTestCase(unittest.TestCase):
     def setUp(self):
+        self.publisher = 'demo'
+        self.package = 'demo-package'
         self.app = create_app()
         self.app.app_context().push()
         with self.app.test_request_context():
             db.drop_all()
             db.create_all()
             user = User(id=11,
-                        name='test_user_id',
+                        name=self.publisher,
                         secret='supersecret')
-            publisher = Publisher(name='test_pub_id')
+            publisher = Publisher(name=self.publisher)
             association = PublisherUser(role=UserRoleEnum.owner)
             association.publisher = publisher
             user.publishers.append(association)
@@ -51,10 +55,10 @@ class UserTestCase(unittest.TestCase):
 
     def test_find_or_create_findes_user_from_0auth_response_if_found(self):
         user_info = dict(email="test@test.com",
-                         login="test_user_id",
+                         login="demo",
                          name="The Test")
         user = db_logic.find_or_create_user(user_info)
-        self.assertEqual(user.name, 'test_user_id')
+        self.assertEqual(user.name, self.publisher)
 
 
     def test_create_user_should_handle_null_email(self):
@@ -66,24 +70,52 @@ class UserTestCase(unittest.TestCase):
         self.assertIsNone(user.full_name)
 
 
+    def test_get_user_info(self):
+        publisher = db_logic.get_user_by_id(11)
+        self.assertEqual(publisher['name'], self.publisher)
+
+
+    def test_get_user_info_throws_404_if_no_publisher_found(self):
+        with self.assertRaises(InvalidUsage) as context:
+            db_logic.get_user_by_id(2)
+            self.assertEqual(context.exception.status_code, 404)
+
+
+    def test_get_publisher_info(self):
+        publisher = db_logic.get_publisher(self.publisher)
+        self.assertEqual(publisher['name'], self.publisher)
+
+
+    def test_get_publisher_info_throws_404_if_no_publisher_found(self):
+        with self.assertRaises(InvalidUsage) as context:
+            db_logic.get_publisher('not_a_publisher')
+        self.assertEqual(context.exception.status_code, 404)
+
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
 
+
 class PackageTestCase(unittest.TestCase):
     def setUp(self):
+        self.publisher = 'demo'
+        self.package = 'demo-package'
         self.publisher_one = 'test_publisher1'
         self.publisher_two = 'test_publisher2'
         self.package_one = 'test_package1'
         self.package_two = 'test_package2'
         self.package_three = 'test_package3'
+        self.descriptor = json.loads(open('fixtures/datapackage.json').read())
         self.app = create_app()
         self.app.app_context().push()
 
         with self.app.test_request_context():
             db.drop_all()
             db.create_all()
+
+            create_test_package(self.publisher, self.package, self.descriptor)
 
             user1 = User(name=self.publisher_one)
             publisher1 = Publisher(name=self.publisher_one)
@@ -267,7 +299,7 @@ class PackageTestCase(unittest.TestCase):
                    Package.name == self.package_one).all()
         self.assertEqual(0, len(data))
         data = Publisher.query.all()
-        self.assertEqual(2, len(data))
+        self.assertEqual(3, len(data))
 
     def test_is_package_exists(self):
         status = db_logic.package_exists(self.publisher_one, self.package_one)
@@ -275,7 +307,54 @@ class PackageTestCase(unittest.TestCase):
         status = db_logic.package_exists(self.publisher_one, 'non-exists-package')
         self.assertFalse(status)
 
+
+    def test_get_metadata(self):
+        metadata = db_logic.get_metadata_for_package(self.publisher, self.package)
+        self.assertEqual(metadata['descriptor'], self.descriptor)
+        self.assertEqual(metadata['publisher'], self.publisher)
+        self.assertEqual(metadata['name'], self.package)
+        self.assertEqual(metadata['readme'], '')
+        self.assertEqual(metadata['id'], 1)
+
+
+    def test_returns_none_if_package_not_found(self):
+        package = db_logic.get_metadata_for_package(self.publisher, 'unknown')
+        self.assertIsNone(package)
+        package = db_logic.get_metadata_for_package('unknown', self.package)
+        self.assertIsNone(package)
+        package = db_logic.get_metadata_for_package('unknown', 'unknown')
+        self.assertIsNone(package)
+
+
+    def test_get_package_names_for_publisher(self):
+        packages = db_logic.get_package_names_for_publisher(self.publisher)
+        self.assertEqual(packages, ['demo-package'])
+
+
+    def test_get_package_names_for_publisher_throws_404_if_no_package_found(self):
+        with self.assertRaises(InvalidUsage) as context:
+            db_logic.get_package_names_for_publisher('not_a_publisher')
+        self.assertEqual(context.exception.status_code, 404)
+
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+
+
+def create_test_package(publisher='demo', package='demo-package', descriptor={}):
+
+    user = User(name=publisher)
+    publisher = Publisher(name=publisher)
+    association = PublisherUser(role=UserRoleEnum.owner)
+    association.publisher = publisher
+    user.publishers.append(association)
+
+    metadata = Package(name=package)
+    tag = PackageTag(descriptor=descriptor)
+    metadata.tags.append(tag)
+    publisher.packages.append(metadata)
+
+    db.session.add(user)
+    db.session.commit()

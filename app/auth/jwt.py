@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import datetime
 import jwt
-from app.package.models import BitStore
+from app.bitstore import BitStore
 from app.utils import InvalidUsage
 
 class JWT(object):

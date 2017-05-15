@@ -7,12 +7,13 @@ from __future__ import unicode_literals
 from flask import Blueprint, render_template, \
     json, request, redirect, g, make_response
 from flask import current_app as app
-from app.auth.models import JWT
-from app.package.models import BitStore
+from app.auth.jwt import JWT
+from app.bitstore import BitStore
 from app.profile.models import User, Publisher
 from app.logic.search import DataPackageQuery
 from app.utils import InvalidUsage
-from app.logic import get_package, get_publisher
+from app.logic import get_package
+from app.logic import db_logic
 
 site_blueprint = Blueprint('site', __name__)
 
@@ -73,7 +74,7 @@ def publisher_dashboard(publisher):
     datapackage_list = DataPackageQuery(query_string="* publisher:{publisher}"
                                         .format(publisher=publisher)).get_data()
 
-    publisher = get_publisher(publisher)
+    publisher = db_logic.get_publisher(publisher)
     return render_template("publisher.html",
                            publisher=publisher,
                            datapackage_list=datapackage_list), 200

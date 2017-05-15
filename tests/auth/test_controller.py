@@ -187,7 +187,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
     @patch('flask_oauthlib.client.OAuthRemoteApp.get')
-    @patch('app.auth.models.JWT.encode')
+    @patch('app.auth.jwt.JWT.encode')
     @patch('app.logic.db_logic.find_or_create_user')
     def test_gets_private_email_and_return_200_if_all_right(self,
                                      create_user, jwt_helper, get_user,
@@ -217,7 +217,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
 
     @patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
     @patch('flask_oauthlib.client.OAuthRemoteApp.get')
-    @patch('app.auth.models.JWT.encode')
+    @patch('app.auth.jwt.JWT.encode')
     @patch('app.logic.db_logic.find_or_create_user')
     def test_return_200_if_all_right(self,
                                      create_user, jwt_helper, get_user,

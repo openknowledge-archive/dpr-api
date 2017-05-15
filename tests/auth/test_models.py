@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import unittest
 from app import create_app
 from moto import mock_s3
-from app.auth.models import FileData
+from app.auth.jwt import FileData
 
 
 class FileDataTestCase(unittest.TestCase):
