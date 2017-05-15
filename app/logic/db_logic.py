@@ -5,9 +5,11 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
+
+from app.bitstore import BitStore
 from app.database import db
 from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
-from app.package.models import BitStore, Package, PackageStateEnum, PackageTag
+from app.package.models import Package, PackageStateEnum, PackageTag
 from app.utils import InvalidUsage
 import app.schemas as schema
 

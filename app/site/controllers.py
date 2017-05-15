@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, \
     json, request, redirect, g, make_response
 from flask import current_app as app
 from app.auth.models import JWT
-from app.package.models import BitStore
+from app.bitstore import BitStore
 from app.profile.models import User, Publisher
 from app.logic.search import DataPackageQuery
 from app.utils import InvalidUsage

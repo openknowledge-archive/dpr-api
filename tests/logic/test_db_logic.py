@@ -8,10 +8,11 @@ import unittest
 import json
 
 from app import create_app
+from app.bitstore import BitStore
 from app.database import db
 from app.logic import db_logic
 from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
-from app.package.models import BitStore, Package, PackageStateEnum, PackageTag
+from app.package.models import Package, PackageStateEnum, PackageTag
 from app.utils import InvalidUsage
 
 class UserTestCase(unittest.TestCase):

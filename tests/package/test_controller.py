@@ -10,9 +10,10 @@ import boto3
 from mock import patch
 from moto import mock_s3
 from app import create_app
+from app.bitstore import BitStore
 from app.database import db
 from app.logic import db_logic
-from app.package.models import Package, BitStore, PackageStateEnum, PackageTag
+from app.package.models import Package, PackageStateEnum, PackageTag
 from app.profile.models import User, Publisher, UserRoleEnum, PublisherUser
 
 
@@ -206,10 +207,10 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         self.jwt1 = data['token']
 
     @patch('app.logic.db_logic.create_or_update_package')
-    @patch('app.package.models.BitStore.get_metadata_body')
-    @patch('app.package.models.BitStore.get_readme_object_key')
-    @patch('app.package.models.BitStore.get_s3_object')
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.get_metadata_body')
+    @patch('app.bitstore.BitStore.get_readme_object_key')
+    @patch('app.bitstore.BitStore.get_s3_object')
+    @patch('app.bitstore.BitStore.change_acl')
     def test_return_200_if_all_right(self, change_acl, get_s3_object,
                                      get_readme_object_key,
                                      get_metadata_body, create_or_update):
@@ -227,7 +228,7 @@ class FinalizeMetaDataTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual({'status': 'queued'}, data)
 
-    @patch('app.package.models.BitStore.get_metadata_body')
+    @patch('app.bitstore.BitStore.get_metadata_body')
     def test_throw_500_if_failed_to_get_data_from_s3(self, body_mock):
         body_mock.return_value = None
         auth = "%s" % self.jwt
@@ -294,14 +295,14 @@ class EndToEndTestCase(unittest.TestCase):
             db.session.add(self.user)
             db.session.commit()
 
-    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.bitstore.BitStore.copy_to_new_version')
     @patch('app.logic.db_logic.create_or_update_package_tag')
     @patch('app.logic.db_logic.create_or_update_package')
-    @patch('app.package.models.BitStore.get_metadata_body')
-    @patch('app.package.models.BitStore.get_readme_object_key')
-    @patch('app.package.models.BitStore.get_s3_object')
-    @patch('app.package.models.BitStore.change_acl')
-    @patch('app.package.models.BitStore.generate_pre_signed_post_object')
+    @patch('app.bitstore.BitStore.get_metadata_body')
+    @patch('app.bitstore.BitStore.get_readme_object_key')
+    @patch('app.bitstore.BitStore.get_s3_object')
+    @patch('app.bitstore.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.generate_pre_signed_post_object')
     def test_publish_end_to_end(self, generate_pre_signed_post_object,
                                 change_acl, get_s3_object,get_readme_object_key,
                                 get_metadata_body, create_or_update,
@@ -445,7 +446,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.jwt_member = data['token']
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     @patch('app.logic.db_logic.change_package_status')
     def test_return_200_if_all_goes_well(self, change_status, change_acl):
         change_acl.return_value = True
@@ -454,7 +455,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         response = self.client.delete(self.url, headers=dict(Authorization=self.auth))
         self.assertEqual(response.status_code, 200)
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     @patch('app.logic.db_logic.change_package_status')
     def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
         change_acl.return_value = True
@@ -464,7 +465,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         response = self.client.delete(self.url, headers=dict(Authorization=auth))
         self.assertEqual(response.status_code, 403)
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     @patch('app.logic.db_logic.change_package_status')
     def test_return_401_if_not_header(self, change_status, change_acl):
         change_acl.return_value = True
@@ -473,7 +474,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, 401)
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     @patch('app.logic.db_logic.change_package_status')
     def test_throw_500_if_change_acl_fails(self,  change_status, change_acl):
         change_acl.side_effect = Exception('failed')
@@ -482,7 +483,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     @patch('app.logic.db_logic.change_package_status')
     def test_throw_500_if_change_status_fails(self, change_status, change_acl):
         change_acl.return_value = True
@@ -491,7 +492,7 @@ class SoftDeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     @patch('app.logic.db_logic.change_package_status')
     def test_throw_generic_error_if_internal_error(self, change_status, change_acl):
         change_acl.side_effect = Exception('failed')
@@ -567,7 +568,7 @@ class HardDeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.jwt_member = data['token']
 
-    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.bitstore.BitStore.delete_data_package')
     @patch('app.logic.db_logic.delete_data_package')
     def test_return_200_if_all_goes_well(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
@@ -576,7 +577,7 @@ class HardDeleteTestCase(unittest.TestCase):
         response = self.client.delete(self.url, headers={'Auth-Token': auth})
         self.assertEqual(response.status_code, 200)
 
-    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.bitstore.BitStore.delete_data_package')
     @patch('app.logic.db_logic.delete_data_package')
     def test_throw_500_if_change_acl_fails(self, db_delete, bitstore_delete):
         bitstore_delete.side_effect = Exception('failed')
@@ -586,7 +587,7 @@ class HardDeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
 
-    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.bitstore.BitStore.delete_data_package')
     @patch('app.logic.db_logic.delete_data_package')
     def test_throw_500_if_change_status_fails(self, db_delete, bitstore_delete):
         bitstore_delete.return_value = True
@@ -596,7 +597,7 @@ class HardDeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
 
-    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.bitstore.BitStore.delete_data_package')
     @patch('app.logic.db_logic.delete_data_package')
     def test_throw_generic_error_if_internal_error(self, db_delete, bitstore_delete):
         bitstore_delete.side_effect = Exception('failed')
@@ -606,7 +607,7 @@ class HardDeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 500)
 
-    @patch('app.package.models.BitStore.delete_data_package')
+    @patch('app.bitstore.BitStore.delete_data_package')
     @patch('app.logic.db_logic.delete_data_package')
     def test_should_throw_403_if_user_is_not_owner_of_the_package(self,
                                                                   db_delete,
@@ -702,7 +703,7 @@ class UndeleteTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.jwt_non_member = data['token']
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     @patch('app.logic.db_logic.change_package_status')
     def test_should_return_200_if_all_goes_well(self, change_status,
                                                 change_acl):
@@ -712,7 +713,7 @@ class UndeleteTestCase(unittest.TestCase):
         response = self.client.post(self.url, headers={'Auth-Token': auth})
         self.assertEqual(response.status_code, 200)
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     @patch('app.logic.db_logic.change_package_status')
     def test_return_403_not_allowed_to_do_operation(self, change_status, change_acl):
         auth = "%s" % self.jwt_non_member
@@ -721,7 +722,7 @@ class UndeleteTestCase(unittest.TestCase):
         self.assertFalse(change_acl.called)
         self.assertFalse(change_status.called)
 
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.change_acl')
     def test_should_change_package_status_to_active(self, change_acl):
         with self.app.app_context():
             package = Package.query.join(Publisher)\
@@ -815,7 +816,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         self.jwt = data['token']
         self.auth = "%s" % self.jwt
 
-    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.bitstore.BitStore.copy_to_new_version')
     @patch('app.logic.db_logic.create_or_update_package_tag')
     def test_return_200_if_all_goes_well(self, create_or_update_tag,
                                          copy_to_new_version):
@@ -829,7 +830,7 @@ class TagDataPackageTestCase(unittest.TestCase):
                                     headers=dict(Authorization=self.auth))
         self.assertEqual(response.status_code, 200)
 
-    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.bitstore.BitStore.copy_to_new_version')
     @patch('app.logic.db_logic.create_or_update_package_tag')
     def test_throw_400_if_version_missing(self, create_or_update_tag,
                                           copy_to_new_version):
@@ -845,7 +846,7 @@ class TagDataPackageTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual('version not found', data['message'])
 
-    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.bitstore.BitStore.copy_to_new_version')
     @patch('app.logic.db_logic.create_or_update_package_tag')
     def test_throw_500_if_failed_to_tag(self, create_or_update_tag,
                                         copy_to_new_version):
@@ -901,7 +902,7 @@ class TagDataPackageTestCase(unittest.TestCase):
                                      .build_s3_versioned_prefix())
         self.assertTrue('Contents' not in objects_nu)
 
-    @patch('app.package.models.BitStore.copy_to_new_version')
+    @patch('app.bitstore.BitStore.copy_to_new_version')
     @patch('app.logic.db_logic.create_or_update_package_tag')
     def test_allow_if_member_of_publisher(self, create_or_update_tag,
                                           copy_to_new_version):

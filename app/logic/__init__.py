@@ -13,7 +13,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
 from app.auth.models import JWT, FileData
-from app.package.models import BitStore, Package, PackageStateEnum
+from app.bitstore import BitStore
+from app.package.models import Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.logic import db_logic
 from app.logic.search import DataPackageQuery

@@ -7,10 +7,11 @@ from __future__ import unicode_literals
 import boto3
 import unittest
 
-from app import create_app
-from app.bitstore import BitStore
-from moto import mock_s3
 from urlparse import urlparse
+from moto import mock_s3
+from app import create_app
+from app.bitstore import BitStore 
+
 
 class BitStoreTestCase(unittest.TestCase):
     def setUp(self):

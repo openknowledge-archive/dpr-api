@@ -83,10 +83,10 @@ class PackageTest(unittest.TestCase):
 
 
     @patch('app.logic.db_logic.create_or_update_package')
-    @patch('app.package.models.BitStore.get_metadata_body')
-    @patch('app.package.models.BitStore.get_readme_object_key')
-    @patch('app.package.models.BitStore.get_s3_object')
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.get_metadata_body')
+    @patch('app.bitstore.BitStore.get_readme_object_key')
+    @patch('app.bitstore.BitStore.get_s3_object')
+    @patch('app.bitstore.BitStore.change_acl')
     def test_finalize_package_publish_returns_queued_if_fine(
                                     self, change_acl, get_s3_object,
                                     get_readme_object_key,
@@ -101,10 +101,10 @@ class PackageTest(unittest.TestCase):
 
 
     @patch('app.logic.db_logic.create_or_update_package')
-    @patch('app.package.models.BitStore.get_metadata_body')
-    @patch('app.package.models.BitStore.get_readme_object_key')
-    @patch('app.package.models.BitStore.get_s3_object')
-    @patch('app.package.models.BitStore.change_acl')
+    @patch('app.bitstore.BitStore.get_metadata_body')
+    @patch('app.bitstore.BitStore.get_readme_object_key')
+    @patch('app.bitstore.BitStore.get_s3_object')
+    @patch('app.bitstore.BitStore.change_acl')
     def test_finalize_package_publish_throws_400_if_publisher_does_not_exist(
                                     self, change_acl, get_s3_object,
                                     get_readme_object_key,
