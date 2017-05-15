@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from flask import Blueprint, jsonify, session, g, make_response, render_template
 from flask import current_app as app
-from app.auth.models import JWT
+from app.auth.jwt import JWT
 from app.logic import db_logic
 from app.logic import get_authorized_user_info, get_jwt_token, generate_signed_url
 from app.profile.models import User

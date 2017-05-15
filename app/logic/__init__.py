@@ -12,7 +12,7 @@ from flask import current_app as app
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
-from app.auth.models import JWT, FileData
+from app.auth.jwt import JWT, FileData
 from app.bitstore import BitStore
 from app.package.models import Package, PackageStateEnum
 from app.profile.models import Publisher, User

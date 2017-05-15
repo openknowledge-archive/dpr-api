@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 from flask import Blueprint, render_template, \
     json, request, redirect, g, make_response
 from flask import current_app as app
-from app.auth.models import JWT
+from app.auth.jwt import JWT
 from app.bitstore import BitStore
 from app.profile.models import User, Publisher
 from app.logic.search import DataPackageQuery
