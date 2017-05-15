@@ -37,11 +37,6 @@ class SchemaTest(unittest.TestCase):
         self.assertEqual(package_tag_schema.dump(tag).data['tag'], 'first')
 
 
-    def test_schema_for_user(self):
-        user = User(name=self.publisher)
-        user_schema = UserSchema()
-        self.assertEqual(user_schema.dump(user).data['name'], self.publisher)
-
     def test_schema_for_publisher_user(self):
         user = User(name=self.publisher, id=2)
         publisher = Publisher(name=self.publisher, id=3)
@@ -139,6 +134,61 @@ class SchemaTest(unittest.TestCase):
             'name': 'demo-package'
         }
         self.assertEqual(result.data, expected)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+
+class UserSchemaTest(unittest.TestCase):
+    def setUp(self):
+        self.user = 'demo'
+        self.email = 'email'
+        self.full_name = 'Demo'
+        self.app = create_app()
+        self.app.app_context().push()
+        with self.app.test_request_context():
+            db.drop_all()
+            db.create_all()
+            db.session.commit()
+
+
+    def test_user_schema_dump(self):
+        user = User(name=self.user, email=self.email, full_name=self.full_name)
+        user_schema = UserSchema()
+        serialized_data = user_schema.dump(user).data
+        self.assertEqual(serialized_data['name'], self.user)
+        self.assertEqual(serialized_data['full_name'], self.full_name)
+        self.assertEqual(serialized_data['email'], self.email)
+
+
+    def test_user_schema_load(self):
+        response = dict(
+            email = self.email,
+            login = self.user,
+            name = self.full_name
+        )
+        user_schema = UserSchema()
+        deserialized = user_schema.load(response).data
+
+        self.assertEqual(deserialized.name, self.user)
+        self.assertEqual(deserialized.email, self.email)
+        self.assertEqual(deserialized.full_name, self.full_name)
+
+
+    def test_user_schema_creates_secret_on_load(self):
+        response = dict(
+            email = self.email,
+            login = self.user,
+            name = self.full_name
+        )
+        user_schema = UserSchema()
+        deserialized = user_schema.load(response).data
+
+        self.assertIsNotNone(deserialized.secret, self.user)
+
 
     def tearDown(self):
         with self.app.app_context():

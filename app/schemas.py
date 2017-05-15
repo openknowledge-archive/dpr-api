@@ -21,12 +21,12 @@ class PublisherSchema(ma.ModelSchema):
     id = ma.Field(load_only=True)
     created_at = ma.Field(load_only=True)
     phone = ma.Field(load_only=True)
-    private = ma.Field(load_only=True)
+    private = ma.Field  (load_only=True)
     country = ma.Field(load_only=True)
     email = ma.Field(load_only=True)
     contact_public = ma.Field(load_only=True)
-    users = ma.Field(load_only=True)
-    packages = ma.Field(load_only=True)
+    users = ma.Nested('UserSchema', only = ('publishers'), load_only=True)
+    packages = ma.Nested('PackageSchema', only = ('publisher'), load_only=True)
     contact = ma.Method('add_public_contact')
     joined = ma.DateTime(attribute = 'created_at')
 
@@ -37,9 +37,25 @@ class PublisherSchema(ma.ModelSchema):
                            country=data.country)
             return contact
 
+
 class UserSchema(ma.ModelSchema):
     class Meta:
         model = User
+
+    id = ma.Field(load_only=True)
+    created_at = ma.Field(load_only=True)
+    sysadmin = ma.Field(load_only=True)
+    oauth_source = ma.Field(load_only=True)
+    publishers = ma.Nested(PublisherSchema, only=('users'), load_only=True,)
+
+    @pre_load
+    def get_secret(self, data):
+        data['secret'] = os.urandom(24).encode('hex')
+        if data.get('name'):
+            data['full_name'] = data.pop('name')
+        if data.get('login'):
+            data['name'] = data.pop('login')
+        return data
 
 
 class UserInfoSchema(ma.Schema):

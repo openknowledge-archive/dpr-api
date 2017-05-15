@@ -13,7 +13,7 @@ from app.package.models import Package, PackageStateEnum, PackageTag
 from app.utils import InvalidUsage
 import app.schemas as schema
 
-def find_or_create_user(user_info, oauth_source='github'):
+def find_or_create_user(user_info):
     """
     This method populates db when user sign up or login through external auth system
     :param user_info: User data from external auth system
@@ -21,23 +21,21 @@ def find_or_create_user(user_info, oauth_source='github'):
     :return: User data from Database
     """
     user = User.query.filter_by(name=user_info['login']).one_or_none()
-    if user is None:
-        user = User()
-        user.email = user_info.get('email', None)
-        user.secret = os.urandom(24).encode('hex')
-        user.name = user_info['login']
-        user.full_name = user_info.get('name', None)
-        user.oauth_source = oauth_source
+    if user:
+        return user
 
-        publisher = Publisher(name=user.name)
-        association = PublisherUser(role=UserRoleEnum.owner)
-        association.publisher = publisher
-        user.publishers.append(association)
+    user_schema = schema.UserSchema()
+    user = user_schema.load(user_info).data
 
-        db.session.add(user)
-        db.session.commit()
+    publisher = Publisher(name=user.name)
+    association = PublisherUser(role=UserRoleEnum.owner)
+    association.publisher = publisher
+    user.publishers.append(association)
+
+    db.session.add(user)
+    db.session.commit()
+
     return user
-
 
 def get_user_by_id(user_id):
     '''

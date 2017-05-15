@@ -49,7 +49,7 @@ class User(db.Model):
     name = db.Column(db.TEXT, unique=True, index=True, nullable=False)
     full_name = db.Column(db.TEXT)
     sysadmin = db.Column(db.BOOLEAN, default=False)
-    oauth_source = db.Column(db.TEXT, default=None)
+    oauth_source = db.Column(db.TEXT, default='github')
 
     publishers = relationship("PublisherUser", back_populates="user",
                               cascade='save-update, merge, delete, delete-orphan')
