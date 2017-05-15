@@ -82,24 +82,6 @@ class PackageTest(unittest.TestCase):
             create_test_package(self.publisher, self.package, self.descriptor)
 
 
-    def test_get_metadata(self):
-        metadata = get_metadata_for_package(self.publisher, self.package)
-        self.assertEqual(metadata['descriptor'], self.descriptor)
-        self.assertEqual(metadata['publisher'], self.publisher)
-        self.assertEqual(metadata['name'], self.package)
-        self.assertEqual(metadata['readme'], '')
-        self.assertEqual(metadata['id'], 1)
-
-
-    def test_returns_none_if_package_not_found(self):
-        package = get_metadata_for_package(self.publisher, 'unknown')
-        self.assertIsNone(package)
-        package = get_metadata_for_package('unknown', self.package)
-        self.assertIsNone(package)
-        package = get_metadata_for_package('unknown', 'unknown')
-        self.assertIsNone(package)
-
-
     @patch('app.logic.db_logic.create_or_update_package')
     @patch('app.package.models.BitStore.get_metadata_body')
     @patch('app.package.models.BitStore.get_readme_object_key')
@@ -135,39 +117,6 @@ class PackageTest(unittest.TestCase):
         with self.assertRaises(InvalidUsage) as context:
             finalize_package_publish(2, self.datapackage_url)
         self.assertEqual(context.exception.status_code, 400)
-
-
-    def test_get_package_names_for_publisher(self):
-        packages = get_package_names_for_publisher(self.publisher)
-        self.assertEqual(packages, ['demo-package'])
-
-
-    def test_get_package_names_for_publisher_throws_404_if_no_package_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            get_package_names_for_publisher('not_a_publisher')
-        self.assertEqual(context.exception.status_code, 404)
-
-
-    def test_get_publisher_info(self):
-        publisher = get_publisher(self.publisher)
-        self.assertEqual(publisher['name'], self.publisher)
-
-
-    def test_get_publisher_info_throws_404_if_no_publisher_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            get_publisher('not_a_publisher')
-        self.assertEqual(context.exception.status_code, 404)
-
-
-    def test_get_user_info(self):
-        publisher = get_user_by_id(1)
-        self.assertEqual(publisher['name'], self.publisher)
-
-
-    def test_get_user_info_throws_404_if_no_publisher_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            get_user_by_id(2)
-        self.assertEqual(context.exception.status_code, 404)
 
 
     def tearDown(self):

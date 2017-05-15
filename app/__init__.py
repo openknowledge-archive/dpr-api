@@ -21,7 +21,7 @@ from .database import db
 from .schemas import ma
 from app.auth.controllers import auth_blueprint, bitstore_blueprint
 from app.auth.models import JWT
-from app.logic import get_user_by_id
+from app.logic.db_logic import get_user_by_id
 from app.package.controllers import package_blueprint
 from app.site.controllers import site_blueprint
 from app.profile.controllers import profile_blueprint
@@ -150,5 +150,5 @@ def create_app():
         if token:
             payload = JWT(app.config['JWT_SEED']).decode(token)
             g.current_user = get_user_by_id(payload['user'])
-            
+
     return app

@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from flask import Blueprint, jsonify
 from flask import current_app as app
-from app.logic import get_publisher
+from app.logic import db_logic
 from app.profile.models import Publisher
 from app.schemas import PublisherSchema
 from app.utils import InvalidUsage
@@ -64,5 +64,5 @@ def get_publisher_profile(name):
                             type: string
                             default: SUCCESS
         """
-    info = get_publisher(name)
+    info = db_logic.get_publisher(name)
     return jsonify(dict(data=info, status="SUCCESS"))

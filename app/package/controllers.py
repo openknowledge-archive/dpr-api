@@ -16,8 +16,7 @@ from app.package.models import BitStore, Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
 from app.auth.annotations import check_is_authorized, get_user_from_jwt
-from app.logic import get_package, get_metadata_for_package, \
-        finalize_package_publish, get_package_names_for_publisher
+from app.logic import get_package, finalize_package_publish
 from app.logic import db_logic
 from app.utils import InvalidUsage
 
@@ -315,7 +314,7 @@ def get_metadata(publisher, package):
         404:
             description: No metadata found for the package
     """
-    metadata = get_metadata_for_package(publisher, package)
+    metadata = db_logic.get_metadata_for_package(publisher, package)
     if metadata is None:
         raise InvalidUsage('No metadata found for the package', 404)
     return jsonify(metadata), 200
@@ -352,5 +351,5 @@ def get_all_metadata_names_for_publisher(publisher):
         404:
             description: No Data Package Found For The Publisher
     """
-    packages = get_package_names_for_publisher(publisher)
+    packages = db_logic.get_package_names_for_publisher(publisher)
     return jsonify({'data': packages}), 200

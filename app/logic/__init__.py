@@ -27,7 +27,7 @@ def get_package(publisher, package):
     Returns info for package - modified descriptor, bitstore URL for descriptor,
     views and short README
     '''
-    metadata = get_metadata_for_package(publisher, package)
+    metadata = db_logic.get_metadata_for_package(publisher, package)
     if not metadata:
         return None
 
@@ -57,51 +57,6 @@ def get_package(publisher, package):
     return datapackage
 
 
-def get_publisher(publisher):
-    '''
-    Returns publisher info from DB
-    '''
-
-    publisher_info = Publisher.query.filter_by(name=publisher).first()
-    if publisher_info is None:
-        raise InvalidUsage("Publisher not found", 404)
-    publisher_schema = schema.PublisherSchema()
-    info = publisher_schema.dump(publisher_info)
-
-    return info.data
-
-
-def get_user_by_id(user_id):
-    '''
-    Returns user info by given id from DB
-    '''
-    user = User.query.filter_by(id=user_id).first()
-    if not user:
-        raise InvalidUsage("User not found", 404)
-    user_schema = schema.UserSchema()
-    user_info = user_schema.dump(user)
-
-    return user_info.data
-
-
-def get_metadata_for_package(publisher, package):
-    '''
-    Returns metadata for given package owned by publisher
-    '''
-    data = Package.query.join(Publisher).\
-        filter(Publisher.name == publisher,
-               Package.name == package,
-               Package.status == PackageStateEnum.active).\
-        first()
-    if not data:
-        return None
-
-    metadata_schema = schema.PackageMetadataSchema()
-    metadata = metadata_schema.dump(data).data
-
-    return metadata
-
-
 def finalize_package_publish(user_id, datapackage_url):
     '''
     Gets the datapackage.json and README from S3 and imports into database.
@@ -125,17 +80,6 @@ def finalize_package_publish(user_id, datapackage_url):
                              descriptor=body, readme=readme)
     return "queued"
 
-
-def get_package_names_for_publisher(publisher):
-    metadata = Package.query.join(Publisher).\
-        with_entities(Package.name).\
-        filter(Publisher.name == publisher).all()
-    if len(metadata) is 0:
-        raise InvalidUsage('No Data Package Found For The Publisher', 404)
-    keys = []
-    for d in metadata:
-        keys.append(d[0])
-    return keys
 
 def get_authorized_user_info():
     '''
