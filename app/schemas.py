@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from flask_marshmallow import Marshmallow
 from marshmallow import pre_load, pre_dump
+from marshmallow_enum import EnumField
 
 from app.package.models import *
 from app.profile.models import *
@@ -21,7 +22,7 @@ class PublisherSchema(ma.ModelSchema):
     id = ma.Field(load_only=True)
     created_at = ma.Field(load_only=True)
     phone = ma.Field(load_only=True)
-    private = ma.Field  (load_only=True)
+    private = ma.Field(load_only=True)
     country = ma.Field(load_only=True)
     email = ma.Field(load_only=True)
     contact_public = ma.Field(load_only=True)
@@ -87,6 +88,8 @@ class PublisherUserSchema(ma.ModelSchema):
 class PackageSchema(ma.ModelSchema):
     class Meta:
         model = Package
+
+    status = EnumField(PackageStateEnum)
 
 
 class PackageTagSchema(ma.ModelSchema):

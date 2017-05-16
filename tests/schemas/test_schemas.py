@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import unittest
+import datetime
 
 from app import create_app
 from app.database import db
@@ -188,6 +189,88 @@ class UserSchemaTest(unittest.TestCase):
         deserialized = user_schema.load(response).data
 
         self.assertIsNotNone(deserialized.secret, self.user)
+
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+
+class PackageSchemaTest(unittest.TestCase):
+    def setUp(self):
+        self.publisher_name = 'demo'
+        self.package_name = 'demo-package'
+        self.app = create_app()
+        self.app.app_context().push()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = 1
+            self.user.email, self.user.name, self.user.secret = \
+                'demot@test.com', self.publisher_name, 'super_secret'
+            self.publisher = Publisher(name=self.publisher_name)
+            self.association = PublisherUser(role=UserRoleEnum.owner)
+            self.metadata = Package(name=self.package_name)
+            self.metadata.tags.append(PackageTag(descriptor={}))
+            self.publisher.packages.append(self.metadata)
+            self.association.publisher = self.publisher
+            self.user.publishers.append(self.association)
+
+            db.session.add(self.user)
+            db.session.commit()
+
+
+    def tests_package_schema_on_dump(self):
+        package = Package.query.join(Publisher)\
+            .filter(Package.name == self.package_name,
+                    Publisher.name == self.publisher_name).first()
+        package_schema = PackageSchema()
+        package = package_schema.dump(package).data
+        self.assertEqual(package['status'], 'active')
+        self.assertEqual(package['publisher'], 1)
+        self.assertEqual(package['name'], self.package_name)
+        self.assertEqual(package['tags'], [1])
+        self.assertFalse(package['private'])
+        self.assertEqual(package['id'], 1)
+
+
+    def tests_package_schema_on_load(self):
+        package = Package.query.join(Publisher)\
+            .filter(Package.name == self.package_name,
+                    Publisher.name == self.publisher_name).first()
+        package_schema = PackageSchema()
+        dump = package_schema.dump(package).data
+        load = package_schema.load(dump, session = db.session).data
+        self.assertEqual(package.status, PackageStateEnum.active)
+        self.assertEqual(type(package.publisher), type(self.publisher))
+        self.assertEqual(package.name, self.package_name)
+        self.assertFalse(package.private)
+
+
+    def tests_package_schema_on_load_creates_package_in_db(self):
+        dump = {
+            'status': 'active',
+            'publisher': 1,
+            'name': 'new-package',
+            'tags': [2],
+        }
+        package_schema = PackageSchema()
+        package = package_schema.load(dump, session = db.session).data
+        db.session.add(package)
+
+        package = Package.query.join(Publisher)\
+            .filter(Package.name == 'new-package',
+                    Publisher.id == 1).first()
+        package = package_schema.dump(package).data
+        self.assertEqual(package['status'], 'active')
+        self.assertEqual(package['publisher'], 1)
+        self.assertEqual(package['name'], 'new-package')
+        self.assertEqual(package['tags'], [2])
+        self.assertFalse(package['private'])
+        self.assertEqual(package['id'], 2)
 
 
     def tearDown(self):
