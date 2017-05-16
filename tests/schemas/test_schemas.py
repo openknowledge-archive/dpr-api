@@ -26,18 +26,6 @@ class SchemaTest(unittest.TestCase):
             db.session.commit()
 
 
-    def test_schema_for_package(self):
-        package = Package(name=self.package)
-        package_schema = PackageSchema()
-        self.assertEqual(package_schema.dump(package).data['name'], self.package)
-
-
-    def test_schema_for_tag_package(self):
-        tag = PackageTag(tag='first')
-        package_tag_schema = PackageTagSchema()
-        self.assertEqual(package_tag_schema.dump(tag).data['tag'], 'first')
-
-
     def test_schema_for_publisher_user(self):
         user = User(name=self.publisher, id=2)
         publisher = Publisher(name=self.publisher, id=3)
@@ -244,10 +232,10 @@ class PackageSchemaTest(unittest.TestCase):
         package_schema = PackageSchema()
         dump = package_schema.dump(package).data
         load = package_schema.load(dump, session = db.session).data
-        self.assertEqual(package.status, PackageStateEnum.active)
-        self.assertEqual(type(package.publisher), type(self.publisher))
-        self.assertEqual(package.name, self.package_name)
-        self.assertFalse(package.private)
+        self.assertEqual(load.status, PackageStateEnum.active)
+        self.assertEqual(type(load.publisher), type(self.publisher))
+        self.assertEqual(load.name, self.package_name)
+        self.assertFalse(load.private)
 
 
     def tests_package_schema_on_load_creates_package_in_db(self):
@@ -271,6 +259,69 @@ class PackageSchemaTest(unittest.TestCase):
         self.assertEqual(package['tags'], [2])
         self.assertFalse(package['private'])
         self.assertEqual(package['id'], 2)
+
+
+    def test_package_tag_schema_on_dump(self):
+        tag = PackageTag.query.join(Package)\
+            .filter(Package.name == self.package_name,
+                    PackageTag.tag == 'latest').first()
+        package_tag_schema = PackageTagSchema()
+        tag = package_tag_schema.dump(tag).data
+        self.assertEqual(tag['package'], 1)
+        self.assertEqual(tag['tag'], 'latest')
+        self.assertEqual(tag['id'], 1)
+        self.assertEqual(tag['descriptor'], {})
+
+
+    def tests_package_tag_schema_on_load(self):
+        tag = PackageTag.query.join(Package)\
+            .filter(Package.name == self.package_name).first()
+        package_tag_schema = PackageTagSchema()
+        dump = package_tag_schema.dump(tag).data
+        load = package_tag_schema.load(dump, session = db.session).data
+        self.assertEqual(load.package.id, 1)
+        self.assertEqual(load.tag, 'latest')
+        self.assertEqual(load.descriptor, {})
+
+
+    def test_package_tag_schema_on_creates_new_tag(self):
+        dump = {
+            'package': 1,
+            'descriptor': {'new': 'descriptor'},
+            'tag': 'new'
+        }
+
+        package_tag_schema = PackageTagSchema()
+        load = package_tag_schema.load(dump, session = db.session).data
+
+        tag = PackageTag.query.join(Package)\
+            .filter(Package.name == self.package_name,
+                    PackageTag.tag == 'new').first()
+        tag = package_tag_schema.dump(tag).data
+
+        self.assertEqual(tag['package'], 1)
+        self.assertEqual(tag['tag'], 'new')
+        self.assertEqual(tag['id'], 2)
+        self.assertEqual(tag['descriptor'], {u'new': u'descriptor'})
+
+
+    def test_package_tag_schema_on_creates_package_and_new_tag(self):
+        dump = {
+            'package': 10,
+            'descriptor': {'test': 'descriptor'}
+        }
+
+        package_tag_schema = PackageTagSchema()
+        tag = package_tag_schema.load(dump, session = db.session).data
+        db.session.add(tag)
+
+        tag = PackageTag.query.join(Package).filter(Package.id == 10).first()
+        tag = package_tag_schema.dump(tag).data
+
+        self.assertEqual(tag['package'], 10)
+        self.assertEqual(tag['tag'], 'latest')
+        self.assertEqual(tag['id'], 2)
+        self.assertEqual(tag['descriptor'], {u'test': u'descriptor'})
 
 
     def tearDown(self):
