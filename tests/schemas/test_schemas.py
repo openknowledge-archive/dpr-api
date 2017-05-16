@@ -49,13 +49,6 @@ class SchemaTest(unittest.TestCase):
         self.assertEqual(publisher_schema.dump(publisher).data['name'], self.publisher)
 
 
-    def test_schema_for_publisher_with_pubic_contact(self):
-        publisher = Publisher(name=self.publisher, contact_public=True)
-        publisher_schema = PublisherSchema()
-        expected = {'country': None, 'email': None, 'phone': None}
-        self.assertEqual(publisher_schema.dump(publisher).data['contact'], expected)
-
-
     def test_nested_relationships(self):
 
         publisher = Publisher(name=self.publisher, id=3)
@@ -123,6 +116,117 @@ class SchemaTest(unittest.TestCase):
             'name': 'demo-package'
         }
         self.assertEqual(result.data, expected)
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+
+class PublisherSchemaTest(unittest.TestCase):
+    def setUp(self):
+        self.publisher_name = 'demo'
+        self.package_name = 'demo-package'
+        self.app = create_app()
+        self.app.app_context().push()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            self.user = User()
+            self.user.id = 1
+            self.user.email, self.user.name, self.user.secret = \
+                'demot@test.com', self.publisher_name, 'super_secret'
+            self.publisher = Publisher(name=self.publisher_name)
+            self.association = PublisherUser(role=UserRoleEnum.owner)
+            self.metadata = Package(name=self.package_name)
+            self.metadata.tags.append(PackageTag(descriptor={}))
+            self.publisher.packages.append(self.metadata)
+            self.association.publisher = self.publisher
+            self.user.publishers.append(self.association)
+
+            db.session.add(self.user)
+            db.session.commit()
+
+
+    def tests_publisher_schema_on_dump(self):
+        publisher = Publisher.query.filter(Publisher.name == self.publisher_name).first()
+        publisher_schema = PublisherSchema(
+                only=('joined', 'title', 'contact', 'name', 'description')
+            )
+        publisher = publisher_schema.dump(publisher).data
+
+        self.assertEqual(publisher['name'], 'demo')
+        self.assertIsNone(publisher['title'])
+        self.assertIsNone(publisher['contact'])
+        self.assertIsNone(publisher['description'])
+
+
+    def tests_publisher_schema_on_dump(self):
+        publisher = Publisher.query.filter(Publisher.name == self.publisher_name).first()
+        publisher_schema = PublisherSchema(
+                only=('joined', 'title', 'contact', 'name', 'description')
+            )
+        publisher = publisher_schema.dump(publisher).data
+
+        self.assertEqual(publisher['name'], 'demo')
+        self.assertIsNone(publisher['title'])
+        self.assertIsNone(publisher['contact'])
+        self.assertIsNone(publisher['description'])
+
+
+    def test_schema_for_publisher_with_pubic_contact(self):
+        publisher = Publisher(name=self.publisher, contact_public=True)
+        publisher_schema = PublisherSchema()
+        expected = {'country': None, 'email': None, 'phone': None}
+        self.assertEqual(publisher_schema.dump(publisher).data['contact'], expected)
+
+
+    def test_publisher_schema_on_load(self):
+        publisher = Publisher.query.filter(Publisher.name == self.publisher_name).first()
+        publisher_schema = PublisherSchema()
+        dump = publisher_schema.dump(publisher).data
+        load = publisher_schema.load(dump, session = db.session).data
+
+        self.assertEqual(publisher.name, 'demo')
+        self.assertIsNone(publisher.title)
+        self.assertIsNone(publisher.contact_public)
+        self.assertIsNone(publisher.description)
+
+
+    def test_publisher_schema_on_load_creates_publisher_if_user_exists(self):
+        dump = {
+            'name': 'test_publisher',
+            'users': [{'user_id': 1, 'role': 'owner'}],
+            }
+        publisher_schema = PublisherSchema()
+        load = publisher_schema.load(dump, session = db.session).data
+        db.session.add(load)
+
+        publisher = Publisher.query.filter(Publisher.name == 'test_publisher').first()
+        dump = publisher_schema.dump(publisher).data
+
+        self.assertEqual(dump['name'], 'test_publisher')
+        self.assertEqual(dump['users'], [{'publisher_id': 2, 'user_id': 1, 'id': 2}])
+
+
+    def test_publisher_schema_on_load_creates_publisher_and_packages_from_response(self):
+        dump = {
+            'name': 'test_publisher',
+            'users': [{'user_id': 1, 'role': 'owner'}],
+            'packages': [{'name': self.package_name}, {'name': 'new-package'}],
+            }
+        publisher_schema = PublisherSchema()
+        load = publisher_schema.load(dump, session = db.session).data
+        db.session.add(load)
+
+        publisher = Publisher.query.filter(Publisher.name == 'test_publisher').first()
+        dump = publisher_schema.dump(publisher).data
+
+        self.assertEqual(dump['name'], 'test_publisher')
+        self.assertEqual(dump['users'], [{'publisher_id': 2, 'user_id': 1, 'id': 2}])
+        self.assertEqual(dump['packages'], [2,3])
+
 
     def tearDown(self):
         with self.app.app_context():

@@ -19,15 +19,6 @@ class PublisherSchema(ma.ModelSchema):
         model = Publisher
         dateformat = ("%B %Y")
 
-    id = ma.Field(load_only=True)
-    created_at = ma.Field(load_only=True)
-    phone = ma.Field(load_only=True)
-    private = ma.Field(load_only=True)
-    country = ma.Field(load_only=True)
-    email = ma.Field(load_only=True)
-    contact_public = ma.Field(load_only=True)
-    users = ma.Nested('UserSchema', only = ('publishers'), load_only=True)
-    packages = ma.Nested('PackageSchema', only = ('publisher'), load_only=True)
     contact = ma.Method('add_public_contact')
     joined = ma.DateTime(attribute = 'created_at')
 
@@ -42,12 +33,6 @@ class PublisherSchema(ma.ModelSchema):
 class UserSchema(ma.ModelSchema):
     class Meta:
         model = User
-
-    id = ma.Field(load_only=True)
-    created_at = ma.Field(load_only=True)
-    sysadmin = ma.Field(load_only=True)
-    oauth_source = ma.Field(load_only=True)
-    publishers = ma.Nested(PublisherSchema, only=('users'), load_only=True,)
 
     @pre_load
     def get_secret(self, data):
@@ -83,6 +68,8 @@ class UserInfoSchema(ma.Schema):
 class PublisherUserSchema(ma.ModelSchema):
     class Meta:
         model = PublisherUser
+
+    role = EnumField(UserRoleEnum)
 
 
 class PackageSchema(ma.ModelSchema):
