@@ -133,11 +133,12 @@ class PublisherUserSchema(ma.ModelSchema):
 
 
 class Publisher(LogicBase):
+    
     schema = PublisherSchema
 
     @classmethod
     def get(cls, publisher):
-        publisher = models.Publisher.query.filter_by(name=publisher).first()
+        publisher = models.Publisher.get_by_name(publisher)
         return cls.serialize(publisher)
 
 class User(LogicBase):
@@ -146,7 +147,7 @@ class User(LogicBase):
 
     @classmethod
     def get(cls, user_id):
-        user = models.User.query.filter_by(id=user_id).first()
+        user = models.User.query.get(user_id)
         return cls.serialize(user)
 
 

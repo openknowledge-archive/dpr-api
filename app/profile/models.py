@@ -35,6 +35,12 @@ class Publisher(db.Model):
                          cascade='save-update, merge, delete, delete-orphan')
 
 
+    @classmethod
+    def get_by_name(cls, publisher):
+        publisher = Publisher.query.filter_by(name=publisher).first()
+        return publisher
+
+
 class User(db.Model):
     """
     This class is DB model for storing user attributes
@@ -53,6 +59,11 @@ class User(db.Model):
 
     publishers = relationship("PublisherUser", back_populates="user",
                               cascade='save-update, merge, delete, delete-orphan')
+
+    @classmethod
+    def get_by_name(cls, user):
+        user = User.query.filter_by(name=user).first()
+        return user
 
 
 class UserRoleEnum(enum.Enum):
