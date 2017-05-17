@@ -75,6 +75,8 @@ def publisher_dashboard(publisher):
                                         .format(publisher=publisher)).get_data()
 
     publisher = db_logic.get_publisher(publisher)
+    if not publisher:
+        raise InvalidUsage('Not Found', 404)
     return render_template("publisher.html",
                            publisher=publisher,
                            datapackage_list=datapackage_list), 200

@@ -353,4 +353,6 @@ def get_all_metadata_names_for_publisher(publisher):
             description: No Data Package Found For The Publisher
     """
     packages = db_logic.get_package_names_for_publisher(publisher)
+    if not packages:
+        raise InvalidUsage('Not Found', 404)
     return jsonify({'data': packages}), 200

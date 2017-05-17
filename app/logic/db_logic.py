@@ -6,12 +6,152 @@ from __future__ import unicode_literals
 
 import os
 
+from flask_marshmallow import Marshmallow
+from marshmallow import pre_load, pre_dump
+from marshmallow_enum import EnumField
+
 from app.bitstore import BitStore
 from app.database import db
-from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
-from app.package.models import Package, PackageStateEnum, PackageTag
+import app.models as models
 from app.utils import InvalidUsage
-import app.schemas as schema
+
+ma = Marshmallow()
+
+class LogicBase(object):
+
+    schema = None
+
+    @classmethod
+    def serialize(cls, sqla_instance):
+        if sqla_instance is None:
+            return None
+        serialized = cls.schema().dump(sqla_instance).data
+        return serialized
+
+    @classmethod
+    def deserialize(cls, dict_object):
+        deserialized = cls.schema().load(dict_object, session=db.session).data
+        return deserialized
+
+
+#####################################################
+# Packages
+
+class PackageSchema(ma.ModelSchema):
+    class Meta:
+        model = models.Package
+
+    status = EnumField(models.PackageStateEnum)
+
+
+class PackageTagSchema(ma.ModelSchema):
+    class Meta:
+        model = models.PackageTag
+
+
+class PackageMetadataSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'name', 'publisher', 'readme', 'descriptor')
+
+    publisher = ma.Method('get_publisher_name')
+    readme = ma.Method('get_readme')
+    descriptor = ma.Method('get_descriptor')
+
+    def get_publisher_name(self, data):
+        return data.publisher.name
+
+    def get_readme(self, data):
+        version = filter(lambda t: t.tag == 'latest', data.tags)[0]
+        return version.readme or ''
+
+    def get_descriptor(self, data):
+        version = filter(lambda t: t.tag == 'latest', data.tags)[0]
+        return version.descriptor
+
+class Package(LogicBase):
+
+    schema = PackageSchema
+
+#####################################################
+# Profiles - Publishers and Users
+
+class PublisherSchema(ma.ModelSchema):
+    class Meta:
+        model = models.Publisher
+        dateformat = ("%B %Y")
+
+    contact = ma.Method('add_public_contact')
+    joined = ma.DateTime(attribute = 'created_at')
+
+    def add_public_contact(self, data):
+        if data.contact_public:
+            contact = dict(phone=data.phone,
+                           email=data.email,
+                           country=data.country)
+            return contact
+
+class UserSchema(ma.ModelSchema):
+    class Meta:
+        model = models.User
+
+    @pre_load
+    def get_secret(self, data):
+        data['secret'] = os.urandom(24).encode('hex')
+        if data.get('name'):
+            data['full_name'] = data.pop('name')
+        if data.get('login'):
+            data['name'] = data.pop('login')
+        return data
+
+
+class UserInfoSchema(ma.Schema):
+    class Meta:
+        fields = ('email', 'login', 'name')
+
+    @pre_load
+    def load_user(self, data):
+        email = data.get('email')
+        emails = data.get('emails')
+
+        if email:
+            return data
+
+        if not emails or not len(emails):
+            raise InvalidUsage('Email Not Found', 404)
+
+        for email in emails:
+            if email.get('primary') == 'true':
+                data['email'] = email.get('email')
+                return data
+
+
+class PublisherUserSchema(ma.ModelSchema):
+    class Meta:
+        model = models.PublisherUser
+
+    role = EnumField(models.UserRoleEnum)
+
+
+class Publisher(LogicBase):
+    schema = PublisherSchema
+
+    @classmethod
+    def get(cls, publisher):
+        publisher = models.Publisher.query.filter_by(name=publisher).first()
+        return cls.serialize(publisher)
+
+class User(LogicBase):
+
+    schema = UserSchema
+
+    @classmethod
+    def get(cls, user_id):
+        user = models.User.query.filter_by(id=user_id).first()
+        return cls.serialize(user)
+
+
+## Logic
+#####################
 
 def find_or_create_user(user_info):
     """
@@ -20,15 +160,15 @@ def find_or_create_user(user_info):
     :param oauth_source: From which oauth source the user coming from e.g. github
     :return: User data from Database
     """
-    user = User.query.filter_by(name=user_info['login']).one_or_none()
+    user = models.User.query.filter_by(name=user_info['login']).one_or_none()
     if user:
         return user
 
-    user_schema = schema.UserSchema()
+    user_schema = UserSchema()
     user = user_schema.load(user_info).data
 
-    publisher = Publisher(name=user.name)
-    association = PublisherUser(role=UserRoleEnum.owner)
+    publisher = models.Publisher(name=user.name)
+    association = models.PublisherUser(role=models.UserRoleEnum.owner)
     association.publisher = publisher
     user.publishers.append(association)
 
@@ -38,48 +178,28 @@ def find_or_create_user(user_info):
     return user
 
 def get_user_by_id(user_id):
-    '''
-    Returns user info by given id from DB
-    '''
-    user = User.query.filter_by(id=user_id).first()
-    if not user:
-        raise InvalidUsage("User not found", 404)
-    user_schema = schema.UserSchema()
-    user_info = user_schema.dump(user)
-
-    return user_info.data
-
+    return User.get(user_id)
 
 def get_publisher(publisher):
-    '''
-    Returns publisher info from DB
-    '''
-
-    publisher_info = Publisher.query.filter_by(name=publisher).first()
-    if publisher_info is None:
-        raise InvalidUsage("Publisher not found", 404)
-    publisher_schema = schema.PublisherSchema()
-    info = publisher_schema.dump(publisher_info)
-
-    return info.data
+    return Publisher.get(publisher)
 
 
 def create_or_update_package_tag(publisher_name, package_name, tag):
-    package = Package.query.join(Publisher)\
-        .filter(Publisher.name == publisher_name,
-                Package.name == package_name).one()
+    package = models.Package.query.join(models.Publisher)\
+        .filter(models.Publisher.name == publisher_name,
+                models.Package.name == package_name).one()
 
-    data_latest = PackageTag.query.join(Package)\
-        .filter(Package.id == package.id,
-                PackageTag.tag == 'latest').one()
+    data_latest = models.PackageTag.query.join(models.Package)\
+        .filter(models.Package.id==package.id,
+                models.PackageTag.tag=='latest').one()
 
-    tag_instance = PackageTag.query.join(Package) \
-        .filter(Package.id == package.id,
-                PackageTag.tag == tag).first()
+    tag_instance = models.PackageTag.query.join(models.Package) \
+        .filter(models.Package.id==package.id,
+                models.PackageTag.tag == tag).first()
 
     update_props = ['descriptor', 'readme', 'package_id']
     if tag_instance is None:
-        tag_instance = PackageTag()
+        tag_instance = models.PackageTag()
 
     for update_prop in update_props:
         setattr(tag_instance, update_prop, getattr(data_latest, update_prop))
@@ -89,7 +209,6 @@ def create_or_update_package_tag(publisher_name, package_name, tag):
     db.session.commit()
     return True
 
-
 def create_or_update_package(name, publisher_name, **kwargs):
     """
     This method creates data package or updates data package attributes
@@ -97,20 +216,18 @@ def create_or_update_package(name, publisher_name, **kwargs):
     :param publisher_name: publisher name
     :param kwargs: package attribute names
     """
-    pub_id = Publisher.query.filter_by(name=publisher_name).one().id
-    instance = Package.query.join(Publisher)\
-        .filter(Package.name == name,
-                Publisher.name == publisher_name).first()
+    pub_id = models.Publisher.query.filter_by(name=publisher_name).one().id
+    instance = models.Package.get_by_publisher(publisher_name, name)
 
-    if not instance:
-        instance = Package(name=name)
+    if instance is None:
+        instance = models.Package(name=name)
         instance.publisher_id = pub_id
-        tag_instance = PackageTag()
+        tag_instance = models.PackageTag()
         instance.tags.append(tag_instance)
     else:
-        tag_instance = PackageTag.query.join(Package) \
-            .filter(Package.id == instance.id,
-                    PackageTag.tag == 'latest').one()
+        tag_instance = models.PackageTag.query.join(models.Package) \
+            .filter(models.Package.id == instance.id,
+                    models.PackageTag.tag == 'latest').one()
     for key, value in kwargs.items():
         if key not in ['descriptor', 'readme']:
             setattr(instance, key, value)
@@ -119,93 +236,40 @@ def create_or_update_package(name, publisher_name, **kwargs):
     db.session.add(instance)
     db.session.commit()
 
-
-def change_package_status(publisher_name, package_name, status=PackageStateEnum.active):
+def change_package_status(publisher_name, package_name, status=models.PackageStateEnum.active):
     """
     This method changes status of the data package. This method used
     for soft delete the data package
-    :param publisher_name: publisher name
-    :param package_name: package name
-    :param status: status of the package
-    :return: If success True else False
     """
-    data = Package.query.join(Publisher). \
-        filter(Publisher.name == publisher_name,
-               Package.name == package_name).one()
-    data.status = status
-    db.session.add(data)
+    pkg = models.Package.get_by_publisher(publisher_name, package_name)
+    pkg.status = status
+    db.session.add(pkg)
     db.session.commit()
     return True
-
 
 def delete_data_package(publisher_name, package_name):
-    """
-    This method deletes the data package. This method used
-    for hard delete the data package
-    :param publisher_name: publisher name
-    :param package_name: package name
-    :return: If success True else False
-    """
-    data = Package.query.join(Publisher). \
-        filter(Publisher.name == publisher_name,
-               Package.name == package_name).one()
-    package_id = data.id
-    Package.query.filter(Package.id == package_id).delete()
+    pkg = models.Package.get_by_publisher(publisher_name, package_name)
+    models.Package.query.filter(models.Package.id == pkg.id).delete()
     db.session.commit()
     return True
 
-
-def get_package(publisher_name, package_name):
-    """
-    This method returns certain data package belonging to a publisher
-    :param publisher_name: publisher name
-    :param package_name: package name
-    :return: data package object based on the filter.
-    """
-    instance = Package.query.join(Publisher) \
-        .filter(Package.name == package_name,
-                Publisher.name == publisher_name).one_or_none()
-    return instance
-
-
 def package_exists(publisher_name, package_name):
-    """
-    This method will check package with the name already exists or not
-    :param publisher_name: publisher name
-    :param package_name: package name
-    :return: True is data already exists else false
-    """
-    instance = Package.query.join(Publisher)\
-        .filter(Package.name == package_name,
-                Publisher.name == publisher_name).all()
-    return len(instance) > 0
-
+    instance = models.Package.get_by_publisher(publisher_name, package_name)
+    return instance is not None
 
 def get_metadata_for_package(publisher, package):
     '''
     Returns metadata for given package owned by publisher
     '''
-    data = Package.query.join(Publisher).\
-        filter(Publisher.name == publisher,
-               Package.name == package,
-               Package.status == PackageStateEnum.active).\
-        first()
+    data = models.Package.get_by_publisher(publisher, package)
     if not data:
         return None
-
-    metadata_schema = schema.PackageMetadataSchema()
+    metadata_schema = PackageMetadataSchema()
     metadata = metadata_schema.dump(data).data
-
     return metadata
 
-
 def get_package_names_for_publisher(publisher):
-    metadata = Package.query.join(Publisher).\
-        with_entities(Package.name).\
-        filter(Publisher.name == publisher).all()
-    if len(metadata) is 0:
-        raise InvalidUsage('No Data Package Found For The Publisher', 404)
-    keys = []
-    for d in metadata:
-        keys.append(d[0])
-    return keys
+    publisher = models.Publisher.query.filter_by(name=publisher).one_or_none()
+    if not publisher:
+        return None
+    return [ pkg.name for pkg in publisher.packages ]

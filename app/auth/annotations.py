@@ -67,7 +67,7 @@ def check_is_authorized(action, publisher, package=None, user_id=None):
 
     if entity_str == 'Package':
         publisher_name, package_name = publisher, package
-        instance = db_logic.get_package(publisher_name, package_name)
+        instance = Package.get_by_publisher(publisher_name, package_name)
 
     elif entity_str == 'Publisher':
         publisher_name = publisher

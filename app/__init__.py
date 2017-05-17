@@ -18,7 +18,7 @@ from flask_oauthlib.client import OAuth
 from werkzeug.utils import import_string
 from werkzeug.exceptions import NotFound, Unauthorized, MethodNotAllowed, BadRequest
 from .database import db
-from .schemas import ma
+from .logic import ma
 from app.auth.controllers import auth_blueprint, bitstore_blueprint
 from app.auth.jwt import JWT
 from app.logic.db_logic import get_user_by_id

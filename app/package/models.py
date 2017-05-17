@@ -46,6 +46,13 @@ class Package(db.Model):
         UniqueConstraint("name", "publisher_id"),
     )
 
+    @classmethod
+    def get_by_publisher(cls, publisher_name, package_name):
+        instance = cls.query.join(Publisher) \
+            .filter(Package.name == package_name,
+                    Publisher.name == publisher_name).one_or_none()
+        return instance
+
 
 class PackageTag(db.Model):
 

@@ -75,10 +75,9 @@ class UserTestCase(unittest.TestCase):
         self.assertEqual(publisher['name'], self.publisher)
 
 
-    def test_get_user_info_throws_404_if_no_publisher_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            db_logic.get_user_by_id(2)
-            self.assertEqual(context.exception.status_code, 404)
+    def test_get_user_info_returns_none_if_no_publisher_found(self):
+            user_info = db_logic.get_user_by_id(2)
+            self.assertIsNone(user_info)
 
 
     def test_get_publisher_info(self):
@@ -86,10 +85,10 @@ class UserTestCase(unittest.TestCase):
         self.assertEqual(publisher['name'], self.publisher)
 
 
-    def test_get_publisher_info_throws_404_if_no_publisher_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            db_logic.get_publisher('not_a_publisher')
-        self.assertEqual(context.exception.status_code, 404)
+    def test_get_publisher_info_returns_none_if_no_publisher_found(self):
+
+        publisher = db_logic.get_publisher('not_a_publisher')
+        self.assertIsNone(publisher)
 
 
     def tearDown(self):
@@ -329,12 +328,6 @@ class PackageTestCase(unittest.TestCase):
     def test_get_package_names_for_publisher(self):
         packages = db_logic.get_package_names_for_publisher(self.publisher)
         self.assertEqual(packages, ['demo-package'])
-
-
-    def test_get_package_names_for_publisher_throws_404_if_no_package_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            db_logic.get_package_names_for_publisher('not_a_publisher')
-        self.assertEqual(context.exception.status_code, 404)
 
 
     def tearDown(self):

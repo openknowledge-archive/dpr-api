@@ -76,6 +76,19 @@ class PackageTestCase(unittest.TestCase):
                                                    self.publisher_one).all()
         self.assertEqual(2, len(res))
 
+    def test_get_by_publisher(self):
+        pkg = Package.get_by_publisher(self.publisher_one, self.package_one)
+        self.assertEqual(pkg.name, self.package_one)
+
+    def test_get_by_publisher_returns_none_if_no_publisher(self):
+        pkg = Package.get_by_publisher('not_a_publisher', self.package_one)
+        self.assertIsNone(pkg)
+
+    def test_get_by_publisher_returns_none_if_no_package(self):
+        pkg = Package.get_by_publisher(self.publisher_one, 'not_a_package')
+        self.assertIsNone(pkg)
+        
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()

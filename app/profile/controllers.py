@@ -8,7 +8,7 @@ from flask import Blueprint, jsonify
 from flask import current_app as app
 from app.logic import db_logic
 from app.profile.models import Publisher
-from app.schemas import PublisherSchema
+from app.logic.db_logic import PublisherSchema
 from app.utils import InvalidUsage
 
 profile_blueprint = Blueprint('profile', __name__, url_prefix='/api/profile')
@@ -65,4 +65,6 @@ def get_publisher_profile(name):
                             default: SUCCESS
         """
     info = db_logic.get_publisher(name)
+    if not info:
+        raise InvalidUsage('Not Found', 404)
     return jsonify(dict(data=info, status="SUCCESS"))

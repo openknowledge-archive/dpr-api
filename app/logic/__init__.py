@@ -20,7 +20,8 @@ from app.logic import db_logic
 from app.logic.search import DataPackageQuery
 from app.utils import InvalidUsage
 from app.utils.helpers import text_to_markdown, dp_in_readme
-import app.schemas as schema
+
+from .db_logic import ma
 
 # TODO: authz
 def get_package(publisher, package):
@@ -97,7 +98,7 @@ def get_authorized_user_info():
     emails = github.get('user/emails').data
     user_info['emails'] = emails
 
-    user_info_schema = schema.UserInfoSchema()
+    user_info_schema = db_logic.UserInfoSchema()
     user_info = user_info_schema.load(user_info).data
 
     return user_info

@@ -9,9 +9,8 @@ import datetime
 
 from app import create_app
 from app.database import db
-from app.package.models import *
-from app.profile.models import *
-from app.schemas import *
+import app.models as models
+from app.logic.db_logic import *
 
 
 class SchemaTest(unittest.TestCase):
@@ -27,9 +26,9 @@ class SchemaTest(unittest.TestCase):
 
 
     def test_schema_for_publisher_user(self):
-        user = User(name=self.publisher, id=2)
-        publisher = Publisher(name=self.publisher, id=3)
-        association = PublisherUser(role=UserRoleEnum.owner, user=user, publisher=publisher)
+        user = models.User(name=self.publisher, id=2)
+        publisher = models.Publisher(name=self.publisher, id=3)
+        association = models.PublisherUser(role=models.UserRoleEnum.owner, user=user, publisher=publisher)
         user.publishers.append(association)
 
         db.session.add(user)
@@ -44,20 +43,20 @@ class SchemaTest(unittest.TestCase):
 
 
     def test_schema_for_publisher(self):
-        publisher = Publisher(name=self.publisher)
+        publisher = models.Publisher(name=self.publisher)
         publisher_schema = PublisherSchema()
         self.assertEqual(publisher_schema.dump(publisher).data['name'], self.publisher)
 
 
     def test_nested_relationships(self):
 
-        publisher = Publisher(name=self.publisher, id=3)
-        user = User(name='user', id=2)
-        association = PublisherUser(role=UserRoleEnum.owner, user=user, publisher=publisher)
+        publisher = models.Publisher(name=self.publisher, id=3)
+        user = models.User(name='user', id=2)
+        association = models.PublisherUser(role=UserRoleEnum.owner, user=user, publisher=publisher)
         user.publishers.append(association)
 
-        metadata = Package(name=self.package)
-        tag = PackageTag(descriptor={})
+        metadata = models.Package(name=self.package)
+        tag = models.PackageTag(descriptor={})
         metadata.tags.append(tag)
         publisher.packages.append(metadata)
 
@@ -85,14 +84,13 @@ class SchemaTest(unittest.TestCase):
         self.assertEqual(publisher_schema.dump(publisher).data['name'], self.publisher)
 
     def test_nested_relationships(self):
-
-        publisher = Publisher(name=self.publisher, id=3)
-        user = User(name='user', id=2)
-        association = PublisherUser(role=UserRoleEnum.owner, user=user, publisher=publisher)
+        publisher = models.Publisher(name=self.publisher, id=3)
+        user = models.User(name='user', id=2)
+        association = models.PublisherUser(role=models.UserRoleEnum.owner, user=user, publisher=publisher)
         user.publishers.append(association)
 
-        metadata = Package(name=self.package, status=PackageStateEnum.active)
-        tag = PackageTag(descriptor={})
+        metadata = models.Package(name=self.package, status=models.PackageStateEnum.active)
+        tag = models.PackageTag(descriptor={})
         metadata.tags.append(tag)
         publisher.packages.append(metadata)
 
@@ -101,10 +99,10 @@ class SchemaTest(unittest.TestCase):
         db.session.add(association)
         db.session.commit()
 
-        data = Package.query.join(Publisher).\
-            filter(Publisher.name == self.publisher,
-                   Package.name == self.package,
-                   Package.status == PackageStateEnum.active).\
+        data = models.Package.query.join(models.Publisher).\
+            filter(models.Publisher.name == self.publisher,
+                   models.Package.name == self.package,
+                   models.Package.status == models.PackageStateEnum.active).\
             first()
         metadata_schema = PackageMetadataSchema()
         result = metadata_schema.dump(data)
@@ -133,14 +131,14 @@ class PublisherSchemaTest(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            self.user = User()
+            self.user = models.User()
             self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
                 'demot@test.com', self.publisher_name, 'super_secret'
-            self.publisher = Publisher(name=self.publisher_name)
-            self.association = PublisherUser(role=UserRoleEnum.owner)
-            self.metadata = Package(name=self.package_name)
-            self.metadata.tags.append(PackageTag(descriptor={}))
+            self.publisher = models.Publisher(name=self.publisher_name)
+            self.association = models.PublisherUser(role=models.UserRoleEnum.owner)
+            self.metadata = models.Package(name=self.package_name)
+            self.metadata.tags.append(models.PackageTag(descriptor={}))
             self.publisher.packages.append(self.metadata)
             self.association.publisher = self.publisher
             self.user.publishers.append(self.association)
@@ -150,7 +148,7 @@ class PublisherSchemaTest(unittest.TestCase):
 
 
     def tests_publisher_schema_on_dump(self):
-        publisher = Publisher.query.filter(Publisher.name == self.publisher_name).first()
+        publisher = models.Publisher.query.filter(models.Publisher.name == self.publisher_name).first()
         publisher_schema = PublisherSchema(
                 only=('joined', 'title', 'contact', 'name', 'description')
             )
@@ -163,7 +161,7 @@ class PublisherSchemaTest(unittest.TestCase):
 
 
     def tests_publisher_schema_on_dump(self):
-        publisher = Publisher.query.filter(Publisher.name == self.publisher_name).first()
+        publisher = models.Publisher.query.filter(models.Publisher.name == self.publisher_name).first()
         publisher_schema = PublisherSchema(
                 only=('joined', 'title', 'contact', 'name', 'description')
             )
@@ -176,14 +174,14 @@ class PublisherSchemaTest(unittest.TestCase):
 
 
     def test_schema_for_publisher_with_pubic_contact(self):
-        publisher = Publisher(name=self.publisher, contact_public=True)
+        publisher = models.Publisher(name=self.publisher, contact_public=True)
         publisher_schema = PublisherSchema()
         expected = {'country': None, 'email': None, 'phone': None}
         self.assertEqual(publisher_schema.dump(publisher).data['contact'], expected)
 
 
     def test_publisher_schema_on_load(self):
-        publisher = Publisher.query.filter(Publisher.name == self.publisher_name).first()
+        publisher = models.Publisher.query.filter(models.Publisher.name == self.publisher_name).first()
         publisher_schema = PublisherSchema()
         dump = publisher_schema.dump(publisher).data
         load = publisher_schema.load(dump, session = db.session).data
@@ -203,7 +201,7 @@ class PublisherSchemaTest(unittest.TestCase):
         load = publisher_schema.load(dump, session = db.session).data
         db.session.add(load)
 
-        publisher = Publisher.query.filter(Publisher.name == 'test_publisher').first()
+        publisher = models.Publisher.query.filter(models.Publisher.name == 'test_publisher').first()
         dump = publisher_schema.dump(publisher).data
 
         self.assertEqual(dump['name'], 'test_publisher')
@@ -220,7 +218,7 @@ class PublisherSchemaTest(unittest.TestCase):
         load = publisher_schema.load(dump, session = db.session).data
         db.session.add(load)
 
-        publisher = Publisher.query.filter(Publisher.name == 'test_publisher').first()
+        publisher = models.Publisher.query.filter(models.Publisher.name == 'test_publisher').first()
         dump = publisher_schema.dump(publisher).data
 
         self.assertEqual(dump['name'], 'test_publisher')
@@ -249,7 +247,7 @@ class UserSchemaTest(unittest.TestCase):
 
 
     def test_user_schema_dump(self):
-        user = User(name=self.user, email=self.email, full_name=self.full_name)
+        user = models.User(name=self.user, email=self.email, full_name=self.full_name)
         user_schema = UserSchema()
         serialized_data = user_schema.dump(user).data
         self.assertEqual(serialized_data['name'], self.user)
@@ -299,14 +297,14 @@ class PackageSchemaTest(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            self.user = User()
+            self.user = models.User()
             self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
                 'demot@test.com', self.publisher_name, 'super_secret'
-            self.publisher = Publisher(name=self.publisher_name)
-            self.association = PublisherUser(role=UserRoleEnum.owner)
-            self.metadata = Package(name=self.package_name)
-            self.metadata.tags.append(PackageTag(descriptor={}))
+            self.publisher = models.Publisher(name=self.publisher_name)
+            self.association = models.PublisherUser(role=models.UserRoleEnum.owner)
+            self.metadata = models.Package(name=self.package_name)
+            self.metadata.tags.append(models.PackageTag(descriptor={}))
             self.publisher.packages.append(self.metadata)
             self.association.publisher = self.publisher
             self.user.publishers.append(self.association)
@@ -316,9 +314,9 @@ class PackageSchemaTest(unittest.TestCase):
 
 
     def tests_package_schema_on_dump(self):
-        package = Package.query.join(Publisher)\
-            .filter(Package.name == self.package_name,
-                    Publisher.name == self.publisher_name).first()
+        package = models.Package.query.join(models.Publisher)\
+            .filter(models.Package.name == self.package_name,
+                    models.Publisher.name == self.publisher_name).first()
         package_schema = PackageSchema()
         package = package_schema.dump(package).data
         self.assertEqual(package['status'], 'active')
@@ -330,13 +328,13 @@ class PackageSchemaTest(unittest.TestCase):
 
 
     def tests_package_schema_on_load(self):
-        package = Package.query.join(Publisher)\
-            .filter(Package.name == self.package_name,
-                    Publisher.name == self.publisher_name).first()
+        package = models.Package.query.join(models.Publisher)\
+            .filter(models.Package.name == self.package_name,
+                    models.Publisher.name == self.publisher_name).first()
         package_schema = PackageSchema()
         dump = package_schema.dump(package).data
         load = package_schema.load(dump, session = db.session).data
-        self.assertEqual(load.status, PackageStateEnum.active)
+        self.assertEqual(load.status, models.PackageStateEnum.active)
         self.assertEqual(type(load.publisher), type(self.publisher))
         self.assertEqual(load.name, self.package_name)
         self.assertFalse(load.private)
@@ -353,9 +351,9 @@ class PackageSchemaTest(unittest.TestCase):
         package = package_schema.load(dump, session = db.session).data
         db.session.add(package)
 
-        package = Package.query.join(Publisher)\
-            .filter(Package.name == 'new-package',
-                    Publisher.id == 1).first()
+        package = models.Package.query.join(models.Publisher)\
+            .filter(models.Package.name == 'new-package',
+                    models.Publisher.id == 1).first()
         package = package_schema.dump(package).data
         self.assertEqual(package['status'], 'active')
         self.assertEqual(package['publisher'], 1)
@@ -366,9 +364,9 @@ class PackageSchemaTest(unittest.TestCase):
 
 
     def test_package_tag_schema_on_dump(self):
-        tag = PackageTag.query.join(Package)\
-            .filter(Package.name == self.package_name,
-                    PackageTag.tag == 'latest').first()
+        tag = models.PackageTag.query.join(models.Package)\
+            .filter(models.Package.name == self.package_name,
+                    models.PackageTag.tag == 'latest').first()
         package_tag_schema = PackageTagSchema()
         tag = package_tag_schema.dump(tag).data
         self.assertEqual(tag['package'], 1)
@@ -378,8 +376,8 @@ class PackageSchemaTest(unittest.TestCase):
 
 
     def tests_package_tag_schema_on_load(self):
-        tag = PackageTag.query.join(Package)\
-            .filter(Package.name == self.package_name).first()
+        tag = models.PackageTag.query.join(models.Package)\
+            .filter(models.Package.name == self.package_name).first()
         package_tag_schema = PackageTagSchema()
         dump = package_tag_schema.dump(tag).data
         load = package_tag_schema.load(dump, session = db.session).data
@@ -398,9 +396,9 @@ class PackageSchemaTest(unittest.TestCase):
         package_tag_schema = PackageTagSchema()
         load = package_tag_schema.load(dump, session = db.session).data
 
-        tag = PackageTag.query.join(Package)\
-            .filter(Package.name == self.package_name,
-                    PackageTag.tag == 'new').first()
+        tag = models.PackageTag.query.join(models.Package)\
+            .filter(models.Package.name == self.package_name,
+                    models.PackageTag.tag == 'new').first()
         tag = package_tag_schema.dump(tag).data
 
         self.assertEqual(tag['package'], 1)
@@ -419,7 +417,7 @@ class PackageSchemaTest(unittest.TestCase):
         tag = package_tag_schema.load(dump, session = db.session).data
         db.session.add(tag)
 
-        tag = PackageTag.query.join(Package).filter(Package.id == 10).first()
+        tag = models.PackageTag.query.join(models.Package).filter(models.Package.id == 10).first()
         tag = package_tag_schema.dump(tag).data
 
         self.assertEqual(tag['package'], 10)
