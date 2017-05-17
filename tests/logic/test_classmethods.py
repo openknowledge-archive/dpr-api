@@ -22,7 +22,6 @@ class LogicBaseTest(unittest.TestCase):
             db.drop_all()
             db.create_all()
             self.user = models.User()
-            self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
                 'demot@test.com', self.publisher_name, 'super_secret'
             self.publisher = models.Publisher(name=self.publisher_name)
@@ -95,7 +94,6 @@ class PackageClassMethodsTest(unittest.TestCase):
             db.drop_all()
             db.create_all()
             self.user = models.User()
-            self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
                 'demot@test.com', self.publisher_name, 'super_secret'
             self.publisher = models.Publisher(name=self.publisher_name)
@@ -146,7 +144,6 @@ class PublisherClassMethodsTest(unittest.TestCase):
             db.drop_all()
             db.create_all()
             self.user = models.User()
-            self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
                 'demot@test.com', self.publisher_name, 'super_secret'
             self.publisher = models.Publisher(name=self.publisher_name)
@@ -169,12 +166,34 @@ class PublisherClassMethodsTest(unittest.TestCase):
         pub = logic.Publisher.get('not-a-publisher')
         self.assertIsNone(pub)
 
+    def test_publisher_create_method_loads_in_db_new_publisher(self):
+        metadata = {
+            'name': 'new-publisher'
+        }
+        pub = logic.Publisher.create(metadata)
+        created_pub = models.Publisher.query.get(pub.id)
+        self.assertEqual(created_pub.name, 'new-publisher')
+
+    def test_publisher_create_method_creates_user_publisher_relaitontion_if_user_exists(self):
+        metadata = {
+            'name': 'new-publisher',
+            'users': [{'role': 'owner', 'user_id': 1}]
+        }
+        pub = logic.Publisher.create(metadata)
+        pub_usr = models.PublisherUser.query.filter_by(publisher_id=pub.id).first()
+        self.assertEqual(pub_usr.publisher_id, 2)
+        self.assertEqual(pub_usr.publisher_id, pub.id)
+        self.assertEqual(pub_usr.role, models.UserRoleEnum.owner)
+        self.assertEqual(pub_usr.publisher.name, 'new-publisher')
+        self.assertEqual(pub_usr.user.name, self.publisher_name)
+
 
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
             db.engine.dispose()
+
 
 class UserClassMethodsTest(unittest.TestCase):
     def setUp(self):
@@ -186,7 +205,6 @@ class UserClassMethodsTest(unittest.TestCase):
             db.drop_all()
             db.create_all()
             self.user = models.User()
-            self.user.id = 1
             self.user.email, self.user.name, self.user.secret = \
                 'demot@test.com', self.publisher_name, 'super_secret'
             self.publisher = models.Publisher(name=self.publisher_name)
@@ -208,6 +226,34 @@ class UserClassMethodsTest(unittest.TestCase):
     def tests_user_get_returns_none_if_no_user(self):
         usr = logic.User.get(2)
         self.assertIsNone(usr)
+
+    def test_user_create_method_loads_in_db_new_user(self):
+        metadata = {
+            'email': 'new@test.com',
+            'name': 'new-user',
+            'full_name': 'New User',
+        }
+        usr = logic.User.create(metadata)
+        created_usr = models.User.query.get(usr.id)
+        self.assertEqual(created_usr.email, 'new@test.com')
+        self.assertEqual(created_usr.name, 'new-user')
+        self.assertEqual(created_usr.full_name, 'New User')
+
+
+    def test_user_create_method_creates_user_publisher_relaitontion_if_publisher_exists(self):
+        metadata = {
+            'email': 'new@test.com',
+            'name': 'new-user',
+            'full_name': 'New User',
+            'publishers': [{'role': 'owner', 'publisher_id': 1}]
+        }
+        usr = logic.User.create(metadata)
+        pub_usr = models.PublisherUser.query.filter_by(user_id=usr.id).first()
+        self.assertEqual(pub_usr.publisher_id, 1)
+        self.assertEqual(pub_usr.user_id, usr.id)
+        self.assertEqual(pub_usr.role, models.UserRoleEnum.owner)
+        self.assertEqual(pub_usr.publisher.name, self.publisher_name)
+        self.assertEqual(pub_usr.user.name, 'new-user')
 
 
     def tearDown(self):

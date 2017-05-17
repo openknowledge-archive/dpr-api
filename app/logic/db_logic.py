@@ -95,18 +95,10 @@ class PublisherSchema(ma.ModelSchema):
                            country=data.country)
             return contact
 
+
 class UserSchema(ma.ModelSchema):
     class Meta:
         model = models.User
-
-    @pre_load
-    def get_secret(self, data):
-        data['secret'] = os.urandom(24).encode('hex')
-        if data.get('name'):
-            data['full_name'] = data.pop('name')
-        if data.get('login'):
-            data['name'] = data.pop('login')
-        return data
 
 
 class UserInfoSchema(ma.Schema):
@@ -143,17 +135,31 @@ class Publisher(LogicBase):
 
     @classmethod
     def get(cls, publisher):
-        publisher = models.Publisher.get_by_name(publisher)
-        return cls.serialize(publisher)
+        pub = models.Publisher.get_by_name(publisher)
+        return cls.serialize(pub)
+
+    @classmethod
+    def create(cls, metadata):
+        pub = cls.deserialize(metadata)
+        db.session.add(pub)
+        db.session.commit()
+        return pub
 
 class User(LogicBase):
 
     schema = UserSchema
 
     @classmethod
-    def get(cls, user_id):
-        user = models.User.query.get(user_id)
-        return cls.serialize(user)
+    def get(cls, usr_id):
+        usr = models.User.query.get(usr_id)
+        return cls.serialize(usr)
+
+    @classmethod
+    def create(cls, metadata):
+        usr = cls.deserialize(metadata)
+        db.session.add(usr)
+        db.session.commit()
+        return usr
 
 
 ## Logic
@@ -170,16 +176,18 @@ def find_or_create_user(user_info):
     if user:
         return user
 
-    user_schema = UserSchema()
-    user = user_schema.load(user_info).data
+    if user_info.get('name'):
+        user_info['full_name'] = user_info.pop('name')
+    if user_info.get('login'):
+        user_info['name'] = user_info.pop('login')
 
-    publisher = models.Publisher(name=user.name)
-    association = models.PublisherUser(role=models.UserRoleEnum.owner)
-    association.publisher = publisher
-    user.publishers.append(association)
-
-    db.session.add(user)
-    db.session.commit()
+    user = User.create(user_info)
+    # create publisher and accociate with user 
+    pub_info = {
+        'name': user.name,
+        'users': [{'role': 'owner', 'user_id': user.id}]
+    }
+    Publisher.create(pub_info)
 
     return user
 

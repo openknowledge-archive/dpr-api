@@ -258,8 +258,8 @@ class UserSchemaTest(unittest.TestCase):
     def test_user_schema_load(self):
         response = dict(
             email = self.email,
-            login = self.user,
-            name = self.full_name
+            name = self.user,
+            full_name = self.full_name
         )
         user_schema = UserSchema()
         deserialized = user_schema.load(response).data
@@ -267,18 +267,6 @@ class UserSchemaTest(unittest.TestCase):
         self.assertEqual(deserialized.name, self.user)
         self.assertEqual(deserialized.email, self.email)
         self.assertEqual(deserialized.full_name, self.full_name)
-
-
-    def test_user_schema_creates_secret_on_load(self):
-        response = dict(
-            email = self.email,
-            login = self.user,
-            name = self.full_name
-        )
-        user_schema = UserSchema()
-        deserialized = user_schema.load(response).data
-
-        self.assertIsNotNone(deserialized.secret, self.user)
 
 
     def tearDown(self):

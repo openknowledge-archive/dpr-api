@@ -51,7 +51,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     email = db.Column(db.TEXT, unique=True, index=True)
-    secret = db.Column(db.TEXT)
+    secret = db.Column(db.TEXT, default=os.urandom(24).encode('hex'))
     name = db.Column(db.TEXT, unique=True, index=True, nullable=False)
     full_name = db.Column(db.TEXT)
     sysadmin = db.Column(db.BOOLEAN, default=False)
