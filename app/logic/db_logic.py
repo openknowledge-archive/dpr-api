@@ -72,6 +72,11 @@ class Package(LogicBase):
 
     schema = PackageSchema
 
+    @classmethod
+    def get(cls, publisher, package):
+        pkg = models.Package.get_by_publisher(publisher, package)
+        return cls.serialize(pkg)
+
 #####################################################
 # Profiles - Publishers and Users
 
@@ -133,7 +138,7 @@ class PublisherUserSchema(ma.ModelSchema):
 
 
 class Publisher(LogicBase):
-    
+
     schema = PublisherSchema
 
     @classmethod
