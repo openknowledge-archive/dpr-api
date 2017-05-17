@@ -352,7 +352,6 @@ def get_all_metadata_names_for_publisher(publisher):
         404:
             description: No Data Package Found For The Publisher
     """
-    packages = db_logic.get_package_names_for_publisher(publisher)
-    if not packages:
-        raise InvalidUsage('Not Found', 404)
-    return jsonify({'data': packages}), 200
+    publisher = models.Publisher.query.filter_by(name=publisher).first_or_404()
+    pkgnames = [ pkg.name for pkg in publisher.packages ]
+    return jsonify({'data': pkgnames}), 200

@@ -325,11 +325,6 @@ class PackageTestCase(unittest.TestCase):
         self.assertIsNone(package)
 
 
-    def test_get_package_names_for_publisher(self):
-        packages = db_logic.get_package_names_for_publisher(self.publisher)
-        self.assertEqual(packages, ['demo-package'])
-
-
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()

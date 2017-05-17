@@ -281,9 +281,3 @@ def get_metadata_for_package(publisher, package):
     metadata_schema = PackageMetadataSchema()
     metadata = metadata_schema.dump(data).data
     return metadata
-
-def get_package_names_for_publisher(publisher):
-    publisher = models.Publisher.query.filter_by(name=publisher).one_or_none()
-    if not publisher:
-        return None
-    return [ pkg.name for pkg in publisher.packages ]
