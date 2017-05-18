@@ -13,115 +13,6 @@ import app.models as models
 from app.logic.db_logic import *
 
 
-class SchemaTest(unittest.TestCase):
-    def setUp(self):
-        self.package = 'demo-package'
-        self.publisher = 'demo'
-        self.app = create_app()
-        self.app.app_context().push()
-        with self.app.test_request_context():
-            db.drop_all()
-            db.create_all()
-            db.session.commit()
-
-
-    def test_schema_for_publisher_user(self):
-        user = models.User(name=self.publisher, id=2)
-        publisher = models.Publisher(name=self.publisher, id=3)
-        association = models.PublisherUser(role=models.UserRoleEnum.owner, user=user, publisher=publisher)
-        user.publishers.append(association)
-
-        db.session.add(user)
-        db.session.add(publisher)
-        db.session.add(association)
-        db.session.commit()
-
-        association_schema = PublisherUserSchema()
-
-        self.assertEqual(association_schema.dump(association).data['publisher'], 3)
-        self.assertEqual(association_schema.dump(association).data['user'], 2)
-
-
-    def test_schema_for_publisher(self):
-        publisher = models.Publisher(name=self.publisher)
-        publisher_schema = PublisherSchema()
-        self.assertEqual(publisher_schema.dump(publisher).data['name'], self.publisher)
-
-
-    def test_nested_relationships(self):
-
-        publisher = models.Publisher(name=self.publisher, id=3)
-        user = models.User(name='user', id=2)
-        association = models.PublisherUser(role=UserRoleEnum.owner, user=user, publisher=publisher)
-        user.publishers.append(association)
-
-        metadata = models.Package(name=self.package)
-        tag = models.PackageTag(descriptor={})
-        metadata.tags.append(tag)
-        publisher.packages.append(metadata)
-
-        db.session.add(user)
-        db.session.add(publisher)
-        db.session.add(association)
-        db.session.commit()
-
-        publisher_schema = PublisherSchema()
-        user_schema = UserSchema()
-        association_schema = PublisherUserSchema()
-        package_schema = PackageSchema()
-        package_tag_schema = PackageTagSchema()
-
-        self.assertEqual(publisher_schema.dump(publisher).data['name'], self.publisher)
-        self.assertEqual(publisher_schema.dump(publisher).data['users'],
-                                    [{'publisher_id': 3, 'user_id': 2, 'id': 1}])
-        self.assertEqual(user_schema.dump(user).data['name'], 'user')
-        self.assertEqual(user_schema.dump(user).data['publishers'],
-                                    [{'publisher_id': 3, 'user_id': 2, 'id': 1}])
-        self.assertEqual(association_schema.dump(association).data['publisher'], 3)
-        self.assertEqual(association_schema.dump(association).data['user'], 2)
-        self.assertEqual(package_schema.dump(metadata).data['name'], 'demo-package')
-        self.assertEqual(package_schema.dump(metadata).data['publisher'], 3)
-        self.assertEqual(publisher_schema.dump(publisher).data['name'], self.publisher)
-
-    def test_nested_relationships(self):
-        publisher = models.Publisher(name=self.publisher, id=3)
-        user = models.User(name='user', id=2)
-        association = models.PublisherUser(role=models.UserRoleEnum.owner, user=user, publisher=publisher)
-        user.publishers.append(association)
-
-        metadata = models.Package(name=self.package, status=models.PackageStateEnum.active)
-        tag = models.PackageTag(descriptor={})
-        metadata.tags.append(tag)
-        publisher.packages.append(metadata)
-
-        db.session.add(user)
-        db.session.add(publisher)
-        db.session.add(association)
-        db.session.commit()
-
-        data = models.Package.query.join(models.Publisher).\
-            filter(models.Publisher.name == self.publisher,
-                   models.Package.name == self.package,
-                   models.Package.status == models.PackageStateEnum.active).\
-            first()
-        metadata_schema = PackageMetadataSchema()
-        result = metadata_schema.dump(data)
-        expected = {
-            'readme': '',
-            'publisher': 'demo',
-            'id': 1,
-            'descriptor': {},
-            'name': 'demo-package'
-        }
-        self.assertEqual(result.data, expected)
-
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
-
-
 class PublisherSchemaTest(unittest.TestCase):
     def setUp(self):
         self.publisher_name = 'demo'
@@ -234,6 +125,7 @@ class PublisherSchemaTest(unittest.TestCase):
 
 
 class UserSchemaTest(unittest.TestCase):
+    
     def setUp(self):
         self.user = 'demo'
         self.email = 'email'
@@ -422,7 +314,8 @@ class PackageSchemaTest(unittest.TestCase):
 
 
 class CustomSchemaTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         self.app = create_app()
         self.app.app_context().push()
 
@@ -452,3 +345,10 @@ class CustomSchemaTest(unittest.TestCase):
         with self.assertRaises(InvalidUsage) as context:
             user_info_schema.load(response).data
         self.assertEqual(context.exception.status_code, 404)
+
+
+    @classmethod
+    def teardown_class(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
