@@ -76,3 +76,9 @@ class PackageTag(db.Model):
     __table_args__ = (
         UniqueConstraint("tag", "package_id"),
     )
+
+    @classmethod
+    def get_by_tag(cls, package_id, tag):
+        instance = cls.query.join(Package).filter(
+                Package.id==package_id, PackageTag.tag==tag).first()
+        return instance

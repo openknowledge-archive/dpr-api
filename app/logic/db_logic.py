@@ -77,6 +77,16 @@ class Package(LogicBase):
         pkg = models.Package.get_by_publisher(publisher, package)
         return cls.serialize(pkg)
 
+
+class PackageTag(LogicBase):
+
+    schema = PackageTagSchema
+
+    @classmethod
+    def get(cls, package_id, tag):
+        tag = models.PackageTag.get_by_tag(package_id, tag)
+        return cls.serialize(tag)
+
 #####################################################
 # Profiles - Publishers and Users
 
@@ -161,35 +171,39 @@ class User(LogicBase):
         db.session.commit()
         return usr
 
+    @classmethod
+    def find_or_create(cls, user_info):
+        """
+        This method populates db when user sign up or login through external auth system
+        :param user_info: User data from external auth system
+        :param oauth_source: From which oauth source the user coming from e.g. github
+        :return: User data from Database
+        """
+        user = models.User.get_by_name(user_info['login'])
+        if user:
+            return user
+
+        # convert github info to our local user info
+        ourinfo = {
+            'name': user_info['login'],
+            'full_name': user_info.get('name'),
+            'email': user_info.get('email')
+        }
+        user = models.User(**ourinfo)
+        # create publisher for this user
+        publisher = models.Publisher(name=user.name)
+        association = models.PublisherUser(role=models.UserRoleEnum.owner, publisher=publisher, user=user)
+        # user.publishers.append(association)
+        db.session.add(user)
+        db.session.commit()
+        return user
+
 
 ## Logic
 #####################
 
 def find_or_create_user(user_info):
-    """
-    This method populates db when user sign up or login through external auth system
-    :param user_info: User data from external auth system
-    :param oauth_source: From which oauth source the user coming from e.g. github
-    :return: User data from Database
-    """
-    user = models.User.query.filter_by(name=user_info['login']).one_or_none()
-    if user:
-        return user
-
-    if user_info.get('name'):
-        user_info['full_name'] = user_info.pop('name')
-    if user_info.get('login'):
-        user_info['name'] = user_info.pop('login')
-
-    user = User.create(user_info)
-    # create publisher and accociate with user 
-    pub_info = {
-        'name': user.name,
-        'users': [{'role': 'owner', 'user_id': user.id}]
-    }
-    Publisher.create(pub_info)
-
-    return user
+    return User.find_or_create(user_info)
 
 def get_user_by_id(user_id):
     return User.get(user_id)
@@ -204,11 +218,11 @@ def create_or_update_package_tag(publisher_name, package_name, tag):
                 models.Package.name == package_name).one()
 
     data_latest = models.PackageTag.query.join(models.Package)\
-        .filter(models.Package.id==package.id,
-                models.PackageTag.tag=='latest').one()
+        .filter(models.Package.id == package.id,
+                models.PackageTag.tag == 'latest').one()
 
     tag_instance = models.PackageTag.query.join(models.Package) \
-        .filter(models.Package.id==package.id,
+        .filter(models.Package.id == package.id,
                 models.PackageTag.tag == tag).first()
 
     update_props = ['descriptor', 'readme', 'package_id']

@@ -13,6 +13,7 @@ from flask import current_app as app
 from flask import Response
 
 from app.bitstore import BitStore
+import app.models as models
 from app.package.models import Package, PackageStateEnum
 from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
