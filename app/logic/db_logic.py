@@ -115,12 +115,12 @@ class Package(LogicBase):
         return True
 
     @classmethod
-    def create_or_update(cls, package_name, publisher_name, **kwargs):
+    def create_or_update(cls, name, publisher_name, **kwargs):
         pub_id = models.Publisher.query.filter_by(name=publisher_name).one().id
-        instance = models.Package.get_by_publisher(publisher_name, package_name)
+        instance = models.Package.get_by_publisher(publisher_name, name)
 
         if instance is None:
-            instance = models.Package(name=package_name)
+            instance = models.Package(name=name)
             instance.publisher_id = pub_id
             tag_instance = models.PackageTag()
             instance.tags.append(tag_instance)
@@ -277,7 +277,6 @@ def get_user_by_id(user_id):
 
 def get_publisher(publisher):
     return Publisher.get(publisher)
-
 
 def create_or_update_package_tag(publisher_name, package_name, tag):
     return Package.create_or_update_tag(publisher_name, package_name, tag)

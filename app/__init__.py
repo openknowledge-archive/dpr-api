@@ -18,10 +18,9 @@ from flask_oauthlib.client import OAuth
 from werkzeug.utils import import_string
 from werkzeug.exceptions import NotFound, Unauthorized, MethodNotAllowed, BadRequest
 from .database import db
-from .logic import ma
+from .logic import ma, db_logic
 from app.auth.controllers import auth_blueprint, bitstore_blueprint
 from app.auth.jwt import JWT
-from app.logic.db_logic import get_user_by_id
 from app.package.controllers import package_blueprint
 from app.site.controllers import site_blueprint
 from app.profile.controllers import profile_blueprint
@@ -149,6 +148,6 @@ def create_app():
         g.current_user = None
         if token:
             payload = JWT(app.config['JWT_SEED']).decode(token)
-            g.current_user = get_user_by_id(payload['user'])
+            g.current_user = db_logic.User.get(payload['user'])
 
     return app

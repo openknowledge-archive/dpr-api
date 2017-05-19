@@ -29,7 +29,7 @@ def get_package(publisher, package):
     Returns info for package - modified descriptor, bitstore URL for descriptor,
     views and short README
     '''
-    metadata = db_logic.get_metadata_for_package(publisher, package)
+    metadata = db_logic.Package.get(publisher, package)
     if not metadata:
         return None
 
@@ -65,7 +65,7 @@ def finalize_package_publish(user_id, datapackage_url):
     Returns status "queued" if ok, else - None
     '''
     publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
-    if db_logic.package_exists(publisher, package):
+    if db_logic.Package.exists(publisher, package):
         status = check_is_authorized('Package::Update', publisher, package, user_id)
     else:
         status = check_is_authorized('Package::Create', publisher, package, user_id)
@@ -78,7 +78,7 @@ def finalize_package_publish(user_id, datapackage_url):
     body = json.loads(b)
     bit_store.change_acl('public-read')
     readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
-    db_logic.create_or_update_package(name=package, publisher_name=publisher,
+    db_logic.Package.create_or_update(name=package, publisher_name=publisher,
                              descriptor=body, readme=readme)
     return "queued"
 
@@ -151,7 +151,7 @@ def generate_signed_url():
     publisher, package_name = metadata['owner'], metadata['name']
     res_payload = {'filedata': {}}
 
-    if db_logic.package_exists(publisher, package_name):
+    if db_logic.Package.exists(publisher, package_name):
         status = check_is_authorized('Package::Update', publisher, package_name, user_id)
     else:
         status = check_is_authorized('Package::Create', publisher, package_name, user_id)

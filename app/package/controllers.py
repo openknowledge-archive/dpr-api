@@ -82,7 +82,7 @@ def tag_data_package(publisher, package):
         raise InvalidUsage('version not found', 400)
 
     bitstore = BitStore(publisher, package)
-    status_db = db_logic.create_or_update_package_tag(publisher, package, data['version'])
+    status_db = db_logic.Package.create_or_update_tag(publisher, package, data['version'])
     try:
         status_bitstore = bitstore.copy_to_new_version(data['version'])
     except Exception as e:
@@ -130,7 +130,7 @@ def delete_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = db_logic.change_package_status(publisher, package, PackageStateEnum.deleted)
+    status_db = db_logic.Package.change_status(publisher, package, PackageStateEnum.deleted)
     try:
         status_acl = bitstore.change_acl('private')
     except Exception as e:
@@ -180,7 +180,7 @@ def undelete_data_package(publisher, package):
 
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = db_logic.change_package_status(publisher, package, PackageStateEnum.active)
+    status_db = db_logic.Package.change_status(publisher, package, PackageStateEnum.active)
     try:
         status_acl = bitstore.change_acl('public-read')
     except Exception as e:
@@ -229,7 +229,7 @@ def purge_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = db_logic.delete_data_package(publisher, package)
+    status_db = db_logic.Package.delete(publisher, package)
     try:
         status_acl = bitstore.delete_data_package()
     except Exception as e:
@@ -316,7 +316,7 @@ def get_metadata(publisher, package):
         404:
             description: No metadata found for the package
     """
-    metadata = db_logic.get_metadata_for_package(publisher, package)
+    metadata = db_logic.Package.get(publisher, package)
     if metadata is None:
         raise InvalidUsage('No metadata found for the package', 404)
     return jsonify(metadata), 200

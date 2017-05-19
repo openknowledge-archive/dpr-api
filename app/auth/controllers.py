@@ -46,7 +46,7 @@ def callback_handling():
                                      picture, name
     """
     user_info = get_authorized_user_info()
-    user = db_logic.find_or_create_user(user_info)
+    user = db_logic.User.find_or_create(user_info)
     jwt_helper = JWT(app.config['JWT_SEED'], user.id)
     session.pop('github_token', None)
     g.current_user = user

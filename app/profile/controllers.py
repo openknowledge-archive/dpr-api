@@ -64,7 +64,7 @@ def get_publisher_profile(name):
                             type: string
                             default: SUCCESS
         """
-    info = db_logic.get_publisher(name)
+    info = db_logic.Publisher.get(name)
     if not info:
         raise InvalidUsage('Not Found', 404)
     return jsonify(dict(data=info, status="SUCCESS"))

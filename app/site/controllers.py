@@ -74,7 +74,7 @@ def publisher_dashboard(publisher):
     datapackage_list = DataPackageQuery(query_string="* publisher:{publisher}"
                                         .format(publisher=publisher)).get_data()
 
-    publisher = db_logic.get_publisher(publisher)
+    publisher = db_logic.Publisher.get(publisher)
     if not publisher:
         raise InvalidUsage('Not Found', 404)
     return render_template("publisher.html",
