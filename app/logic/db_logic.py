@@ -264,35 +264,3 @@ class User(LogicBase):
         db.session.add(user)
         db.session.commit()
         return user
-
-
-## Logic
-#####################
-
-def find_or_create_user(user_info):
-    return User.find_or_create(user_info)
-
-def get_user_by_id(user_id):
-    return User.get(user_id)
-
-def get_publisher(publisher):
-    return Publisher.get(publisher)
-
-def create_or_update_package_tag(publisher_name, package_name, tag):
-    return Package.create_or_update_tag(publisher_name, package_name, tag)
-
-def create_or_update_package(package_name, publisher_name, **kwargs):
-
-    Package.create_or_update(package_name, publisher_name, **kwargs)
-
-def change_package_status(publisher_name, package_name, status=models.PackageStateEnum.active):
-    return Package.change_status(publisher_name, package_name, status)
-
-def delete_data_package(publisher, package):
-    return Package.delete(publisher, package)
-
-def package_exists(publisher, package):
-    return Package.exists(publisher, package)
-
-def get_metadata_for_package(publisher, package):
-    return Package.get(publisher, package)
