@@ -4,23 +4,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import csv
-import json
-
-from flask import Blueprint, request, jsonify, \
-    _request_ctx_stack
+from flask import Blueprint, request, jsonify, _request_ctx_stack
 from flask import current_app as app
-from flask import Response
 
-from app.bitstore import BitStore
-import app.models as models
-from app.package.models import Package, PackageStateEnum
-from app.profile.models import Publisher, User
 from app.auth.annotations import requires_auth, is_allowed
-from app.auth.annotations import check_is_authorized, get_user_from_jwt
-from app.logic import get_package, finalize_package_publish
-from app.logic import db_logic
+from app.auth.annotations import get_user_from_jwt
+from app.bitstore import BitStore
 from app.utils import InvalidUsage
+import app.logic as logic
+import app.models as models
 
 package_blueprint = Blueprint('package', __name__, url_prefix='/api/package')
 
@@ -82,7 +74,7 @@ def tag_data_package(publisher, package):
         raise InvalidUsage('version not found', 400)
 
     bitstore = BitStore(publisher, package)
-    status_db = db_logic.Package.create_or_update_tag(publisher, package, data['version'])
+    status_db = logic.Package.create_or_update_tag(publisher, package, data['version'])
     try:
         status_bitstore = bitstore.copy_to_new_version(data['version'])
     except Exception as e:
@@ -130,7 +122,7 @@ def delete_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = db_logic.Package.change_status(publisher, package, PackageStateEnum.deleted)
+    status_db = logic.Package.change_status(publisher, package, models.PackageStateEnum.deleted)
     try:
         status_acl = bitstore.change_acl('private')
     except Exception as e:
@@ -180,7 +172,7 @@ def undelete_data_package(publisher, package):
 
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = db_logic.Package.change_status(publisher, package, PackageStateEnum.active)
+    status_db = logic.Package.change_status(publisher, package, models.PackageStateEnum.active)
     try:
         status_acl = bitstore.change_acl('public-read')
     except Exception as e:
@@ -229,7 +221,7 @@ def purge_data_package(publisher, package):
                         default: OK
     """
     bitstore = BitStore(publisher=publisher, package=package)
-    status_db = db_logic.Package.delete(publisher, package)
+    status_db = logic.Package.delete(publisher, package)
     try:
         status_acl = bitstore.delete_data_package()
     except Exception as e:
@@ -276,7 +268,7 @@ def finalize_publish():
     if jwt_status:
         user_id = user_info['user']
 
-    status = finalize_package_publish(user_id, datapackage_url)
+    status = logic.finalize_package_publish(user_id, datapackage_url)
     if status:
         return jsonify({"status": status}), 200
     raise InvalidUsage("Failed to get data from s3")
@@ -316,7 +308,7 @@ def get_metadata(publisher, package):
         404:
             description: No metadata found for the package
     """
-    metadata = db_logic.Package.get(publisher, package)
+    metadata = logic.Package.get(publisher, package)
     if metadata is None:
         raise InvalidUsage('No metadata found for the package', 404)
     return jsonify(metadata), 200

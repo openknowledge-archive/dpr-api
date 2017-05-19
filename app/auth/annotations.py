@@ -12,7 +12,6 @@ from flask import request, _request_ctx_stack
 from app.utils import InvalidUsage
 from app.auth.jwt import JWT
 from app.auth.authorization import is_authorize
-from app.logic import db_logic
 from app.package.models import Package
 from app.profile.models import Publisher
 

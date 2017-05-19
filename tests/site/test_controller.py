@@ -172,7 +172,7 @@ class SignupEndToEndTestCase(unittest.TestCase):
 
         with nested(patch("flask_oauthlib.client.OAuthRemoteApp.authorized_response"),
                     patch('flask_oauthlib.client.OAuthRemoteApp.get'),
-                    patch('app.auth.jwt.JWT')) \
+                    patch('app.auth.jwt')) \
                 as (get_auth0_token, get_user, JWTHelper):
             # Mocking Auth0 user info & Return value for Dashboard
             with self.app.app_context():

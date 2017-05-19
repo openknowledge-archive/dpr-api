@@ -9,11 +9,8 @@ from flask import Blueprint, render_template, \
 from flask import current_app as app
 from app.auth.jwt import JWT
 from app.bitstore import BitStore
-from app.profile.models import User, Publisher
-from app.logic.search import DataPackageQuery
 from app.utils import InvalidUsage
-from app.logic import get_package
-from app.logic import db_logic
+import app.logic as logic
 
 site_blueprint = Blueprint('site', __name__)
 
@@ -24,8 +21,8 @@ def index():
     Renders index.html if no token found in cookie.
     If token found in cookie then it renders dashboard.html
     """
-    showcase_packages = [get_package(item['publisher'], item['package']) for item in app.config['FRONT_PAGE_SHOWCASE_PACKAGES']]
-    tutorial_packages = [ get_package(item['publisher'], item['package']) for item in app.config['TUTORIAL_PACKAGES']]
+    showcase_packages = [logic.get_package(item['publisher'], item['package']) for item in app.config['FRONT_PAGE_SHOWCASE_PACKAGES']]
+    tutorial_packages = [ logic.get_package(item['publisher'], item['package']) for item in app.config['TUTORIAL_PACKAGES']]
     showcase_packages = filter(None, showcase_packages)
     tutorial_packages = filter(None, tutorial_packages)
 
@@ -55,7 +52,7 @@ def datapackage_show(publisher, package):
     """
     Loads datapackage page for given owner
     """
-    datapackage = get_package(publisher, package)
+    datapackage = logic.get_package(publisher, package)
     if not datapackage:
         raise InvalidUsage("Page Not Found", 404)
 
@@ -71,10 +68,10 @@ def datapackage_show(publisher, package):
 
 @site_blueprint.route("/<publisher>", methods=["GET"])
 def publisher_dashboard(publisher):
-    datapackage_list = DataPackageQuery(query_string="* publisher:{publisher}"
+    datapackage_list = logic.search.DataPackageQuery(query_string="* publisher:{publisher}"
                                         .format(publisher=publisher)).get_data()
 
-    publisher = db_logic.Publisher.get(publisher)
+    publisher = logic.Publisher.get(publisher)
     if not publisher:
         raise InvalidUsage('Not Found', 404)
     return render_template("publisher.html",
@@ -87,7 +84,7 @@ def search_package():
     q = request.args.get('q')
     if q is None:
         q = ''
-    datapackage_list = DataPackageQuery(query_string=q.strip(),
+    datapackage_list = logic.search.DataPackageQuery(query_string=q.strip(),
                                         limit=1000).get_data()
     return render_template("search.html",
                            datapackage_list=datapackage_list,

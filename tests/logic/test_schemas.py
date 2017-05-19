@@ -9,8 +9,9 @@ import datetime
 
 from app import create_app
 from app.database import db
+from app.utils import InvalidUsage
+import app.logic as logic
 import app.models as models
-from app.logic.db_logic import *
 
 
 class PublisherSchemaTest(unittest.TestCase):
@@ -40,7 +41,7 @@ class PublisherSchemaTest(unittest.TestCase):
 
     def tests_publisher_schema_on_dump(self):
         publisher = models.Publisher.query.filter(models.Publisher.name == self.publisher_name).first()
-        publisher_schema = PublisherSchema(
+        publisher_schema = logic.PublisherSchema(
                 only=('joined', 'title', 'contact', 'name', 'description')
             )
         publisher = publisher_schema.dump(publisher).data
@@ -53,7 +54,7 @@ class PublisherSchemaTest(unittest.TestCase):
 
     def tests_publisher_schema_on_dump(self):
         publisher = models.Publisher.query.filter(models.Publisher.name == self.publisher_name).first()
-        publisher_schema = PublisherSchema(
+        publisher_schema = logic.PublisherSchema(
                 only=('joined', 'title', 'contact', 'name', 'description')
             )
         publisher = publisher_schema.dump(publisher).data
@@ -66,14 +67,14 @@ class PublisherSchemaTest(unittest.TestCase):
 
     def test_schema_for_publisher_with_pubic_contact(self):
         publisher = models.Publisher(name=self.publisher, contact_public=True)
-        publisher_schema = PublisherSchema()
+        publisher_schema = logic.PublisherSchema()
         expected = {'country': None, 'email': None, 'phone': None}
         self.assertEqual(publisher_schema.dump(publisher).data['contact'], expected)
 
 
     def test_publisher_schema_on_load(self):
         publisher = models.Publisher.query.filter(models.Publisher.name == self.publisher_name).first()
-        publisher_schema = PublisherSchema()
+        publisher_schema = logic.PublisherSchema()
         dump = publisher_schema.dump(publisher).data
         load = publisher_schema.load(dump, session = db.session).data
 
@@ -88,7 +89,7 @@ class PublisherSchemaTest(unittest.TestCase):
             'name': 'test_publisher',
             'users': [{'user_id': 1, 'role': 'owner'}],
             }
-        publisher_schema = PublisherSchema()
+        publisher_schema = logic.PublisherSchema()
         load = publisher_schema.load(dump, session = db.session).data
         db.session.add(load)
 
@@ -105,7 +106,7 @@ class PublisherSchemaTest(unittest.TestCase):
             'users': [{'user_id': 1, 'role': 'owner'}],
             'packages': [{'name': self.package_name}, {'name': 'new-package'}],
             }
-        publisher_schema = PublisherSchema()
+        publisher_schema = logic.PublisherSchema()
         load = publisher_schema.load(dump, session = db.session).data
         db.session.add(load)
 
@@ -125,7 +126,7 @@ class PublisherSchemaTest(unittest.TestCase):
 
 
 class UserSchemaTest(unittest.TestCase):
-    
+
     def setUp(self):
         self.user = 'demo'
         self.email = 'email'
@@ -140,7 +141,7 @@ class UserSchemaTest(unittest.TestCase):
 
     def test_user_schema_dump(self):
         user = models.User(name=self.user, email=self.email, full_name=self.full_name)
-        user_schema = UserSchema()
+        user_schema = logic.UserSchema()
         serialized_data = user_schema.dump(user).data
         self.assertEqual(serialized_data['name'], self.user)
         self.assertEqual(serialized_data['full_name'], self.full_name)
@@ -153,7 +154,7 @@ class UserSchemaTest(unittest.TestCase):
             name = self.user,
             full_name = self.full_name
         )
-        user_schema = UserSchema()
+        user_schema = logic.UserSchema()
         deserialized = user_schema.load(response).data
 
         self.assertEqual(deserialized.name, self.user)
@@ -197,7 +198,7 @@ class PackageSchemaTest(unittest.TestCase):
         package = models.Package.query.join(models.Publisher)\
             .filter(models.Package.name == self.package_name,
                     models.Publisher.name == self.publisher_name).first()
-        package_schema = PackageSchema()
+        package_schema = logic.PackageSchema()
         package = package_schema.dump(package).data
         self.assertEqual(package['status'], 'active')
         self.assertEqual(package['publisher'], 1)
@@ -211,7 +212,7 @@ class PackageSchemaTest(unittest.TestCase):
         package = models.Package.query.join(models.Publisher)\
             .filter(models.Package.name == self.package_name,
                     models.Publisher.name == self.publisher_name).first()
-        package_schema = PackageSchema()
+        package_schema = logic.PackageSchema()
         dump = package_schema.dump(package).data
         load = package_schema.load(dump, session = db.session).data
         self.assertEqual(load.status, models.PackageStateEnum.active)
@@ -227,7 +228,7 @@ class PackageSchemaTest(unittest.TestCase):
             'name': 'new-package',
             'tags': [2],
         }
-        package_schema = PackageSchema()
+        package_schema = logic.PackageSchema()
         package = package_schema.load(dump, session = db.session).data
         db.session.add(package)
 
@@ -247,7 +248,7 @@ class PackageSchemaTest(unittest.TestCase):
         tag = models.PackageTag.query.join(models.Package)\
             .filter(models.Package.name == self.package_name,
                     models.PackageTag.tag == 'latest').first()
-        package_tag_schema = PackageTagSchema()
+        package_tag_schema = logic.PackageTagSchema()
         tag = package_tag_schema.dump(tag).data
         self.assertEqual(tag['package'], 1)
         self.assertEqual(tag['tag'], 'latest')
@@ -258,7 +259,7 @@ class PackageSchemaTest(unittest.TestCase):
     def tests_package_tag_schema_on_load(self):
         tag = models.PackageTag.query.join(models.Package)\
             .filter(models.Package.name == self.package_name).first()
-        package_tag_schema = PackageTagSchema()
+        package_tag_schema = logic.PackageTagSchema()
         dump = package_tag_schema.dump(tag).data
         load = package_tag_schema.load(dump, session = db.session).data
         self.assertEqual(load.package.id, 1)
@@ -273,7 +274,7 @@ class PackageSchemaTest(unittest.TestCase):
             'tag': 'new'
         }
 
-        package_tag_schema = PackageTagSchema()
+        package_tag_schema = logic.PackageTagSchema()
         load = package_tag_schema.load(dump, session = db.session).data
 
         tag = models.PackageTag.query.join(models.Package)\
@@ -293,7 +294,7 @@ class PackageSchemaTest(unittest.TestCase):
             'descriptor': {'test': 'descriptor'}
         }
 
-        package_tag_schema = PackageTagSchema()
+        package_tag_schema = logic.PackageTagSchema()
         tag = package_tag_schema.load(dump, session = db.session).data
         db.session.add(tag)
 
@@ -322,7 +323,7 @@ class CustomSchemaTest(unittest.TestCase):
 
     def test_user_info_schema_works_fine_if_response_has_email(self):
         response = {'email': 'test@email.com', 'name': 'test', 'login': 'test'}
-        user_info_schema = UserInfoSchema()
+        user_info_schema = logic.UserInfoSchema()
         user_info = user_info_schema.load(response).data
         expected = response
         self.assertEqual(expected, user_info)
@@ -333,7 +334,7 @@ class CustomSchemaTest(unittest.TestCase):
         response['emails'] = [
             {'email': 'test@email.com', 'primary': 'true'},
             {'email': 'other@email.com', 'primary': 'false'}]
-        user_info_schema = UserInfoSchema()
+        user_info_schema = logic.UserInfoSchema()
         user_info = user_info_schema.load(response).data
         expected = {'name': 'test', 'login': 'test', 'email': 'test@email.com'}
         self.assertEqual(expected, user_info)
@@ -341,7 +342,7 @@ class CustomSchemaTest(unittest.TestCase):
 
     def test_user_info_schema_thrwos_404_if_no_email_provided(self):
         response = {'name': 'test', 'login': 'test'}
-        user_info_schema = UserInfoSchema()
+        user_info_schema = logic.UserInfoSchema()
         with self.assertRaises(InvalidUsage) as context:
             user_info_schema.load(response).data
         self.assertEqual(context.exception.status_code, 404)

@@ -6,10 +6,8 @@ from __future__ import unicode_literals
 
 from flask import Blueprint, jsonify, session, g, make_response, render_template
 from flask import current_app as app
-from app.auth.jwt import JWT
-from app.logic import db_logic
-from app.logic import get_authorized_user_info, get_jwt_token, generate_signed_url
-from app.profile.models import User
+import app.logic as logic
+import app.auth.jwt as jwt
 
 auth_blueprint = Blueprint('auth', __name__, url_prefix='/api/auth')
 bitstore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore')
@@ -45,9 +43,9 @@ def callback_handling():
                         description: Returns back email, nickname,
                                      picture, name
     """
-    user_info = get_authorized_user_info()
-    user = db_logic.User.find_or_create(user_info)
-    jwt_helper = JWT(app.config['JWT_SEED'], user.id)
+    user_info = logic.get_authorized_user_info()
+    user = logic.User.find_or_create(user_info)
+    jwt_helper = jwt.JWT(app.config['JWT_SEED'], user.id)
     session.pop('github_token', None)
     g.current_user = user
 
@@ -98,7 +96,7 @@ def get_jwt():
             description: Secret key do not match
 
     """
-    token = get_jwt_token()
+    token = logic.get_jwt_token()
     return jsonify({'token': token}), 200
 
 
@@ -141,5 +139,5 @@ def authorize_upload():
         500:
             description: Internal Server Error
     """
-    payload = generate_signed_url()
+    payload = logic.generate_signed_url()
     return jsonify(payload), 200

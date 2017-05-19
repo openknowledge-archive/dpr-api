@@ -8,7 +8,7 @@ import unittest
 
 from app import create_app
 from app.database import db
-import app.logic.db_logic as logic
+import app.logic as logic
 import app.models as models
 
 
@@ -41,7 +41,7 @@ class PackageClassMethodsTest(unittest.TestCase):
 
         self.assertEqual(pkg['publisher'], self.publisher_name)
         self.assertEqual(pkg['name'], self.package_name)
-        
+
     def tests_package_get_returns_none_if_no_package(self):
         pkg = logic.Package.get(self.publisher_name, 'not-a-package')
         self.assertIsNone(pkg)
