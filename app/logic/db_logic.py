@@ -68,18 +68,85 @@ class PackageMetadataSchema(ma.Schema):
         version = filter(lambda t: t.tag == 'latest', data.tags)[0]
         return version.descriptor
 
-class Package(LogicBase):
 
-    schema = PackageSchema
+class Package(LogicBase):
+    schema = PackageMetadataSchema
 
     @classmethod
     def get(cls, publisher, package):
+        data = models.Package.get_by_publisher(publisher, package)
+        return cls.serialize(data)
+
+    @classmethod
+    def exists(cls, publisher, package):
+        instance = models.Package.get_by_publisher(publisher, package)
+        return instance is not None
+
+    @classmethod
+    def delete(cls, publisher, package):
         pkg = models.Package.get_by_publisher(publisher, package)
-        return cls.serialize(pkg)
+        # TODO: should be able to db.session.delete(pkg) but deletes publishers!
+        models.Package.query.filter(models.Package.id == pkg.id).delete()
+        db.session.commit()
+        return True
+
+    @classmethod
+    def create_or_update_tag(cls, publisher, package, tag):
+        package = models.Package.get_by_publisher(publisher, package)
+
+        data_latest = models.PackageTag.query.join(models.Package)\
+            .filter(models.Package.id == package.id,
+                    models.PackageTag.tag == 'latest').one()
+
+        tag_instance = models.PackageTag.query.join(models.Package) \
+            .filter(models.Package.id == package.id,
+                    models.PackageTag.tag == tag).first()
+
+        update_props = ['descriptor', 'readme', 'package_id']
+        if tag_instance is None:
+            tag_instance = models.PackageTag()
+
+        for update_prop in update_props:
+            setattr(tag_instance, update_prop, getattr(data_latest, update_prop))
+        tag_instance.tag = tag
+
+        db.session.add(tag_instance)
+        db.session.commit()
+        return True
+
+    @classmethod
+    def create_or_update(cls, package_name, publisher_name, **kwargs):
+        pub_id = models.Publisher.query.filter_by(name=publisher_name).one().id
+        instance = models.Package.get_by_publisher(publisher_name, package_name)
+
+        if instance is None:
+            instance = models.Package(name=package_name)
+            instance.publisher_id = pub_id
+            tag_instance = models.PackageTag()
+            instance.tags.append(tag_instance)
+        else:
+            tag_instance = models.PackageTag.query.join(models.Package) \
+                .filter(models.Package.id == instance.id,
+                        models.PackageTag.tag == 'latest').one()
+        for key, value in kwargs.items():
+            if key not in ['descriptor', 'readme']:
+                setattr(instance, key, value)
+            else:
+                setattr(tag_instance, key, value)
+        db.session.add(instance)
+        db.session.commit()
+
+    @classmethod
+    def change_status(cls, publisher_name,
+                            package_name, status=models.PackageStateEnum.active):
+        pkg = models.Package.get_by_publisher(publisher_name, package_name)
+        pkg.status = status
+        db.session.add(pkg)
+        db.session.commit()
+        return True
 
 
 class PackageTag(LogicBase):
-
     schema = PackageTagSchema
 
     @classmethod
@@ -213,85 +280,20 @@ def get_publisher(publisher):
 
 
 def create_or_update_package_tag(publisher_name, package_name, tag):
-    package = models.Package.query.join(models.Publisher)\
-        .filter(models.Publisher.name == publisher_name,
-                models.Package.name == package_name).one()
+    return Package.create_or_update_tag(publisher_name, package_name, tag)
 
-    data_latest = models.PackageTag.query.join(models.Package)\
-        .filter(models.Package.id == package.id,
-                models.PackageTag.tag == 'latest').one()
+def create_or_update_package(package_name, publisher_name, **kwargs):
 
-    tag_instance = models.PackageTag.query.join(models.Package) \
-        .filter(models.Package.id == package.id,
-                models.PackageTag.tag == tag).first()
-
-    update_props = ['descriptor', 'readme', 'package_id']
-    if tag_instance is None:
-        tag_instance = models.PackageTag()
-
-    for update_prop in update_props:
-        setattr(tag_instance, update_prop, getattr(data_latest, update_prop))
-    tag_instance.tag = tag
-
-    db.session.add(tag_instance)
-    db.session.commit()
-    return True
-
-def create_or_update_package(name, publisher_name, **kwargs):
-    """
-    This method creates data package or updates data package attributes
-    :param name: package name
-    :param publisher_name: publisher name
-    :param kwargs: package attribute names
-    """
-    pub_id = models.Publisher.query.filter_by(name=publisher_name).one().id
-    instance = models.Package.get_by_publisher(publisher_name, name)
-
-    if instance is None:
-        instance = models.Package(name=name)
-        instance.publisher_id = pub_id
-        tag_instance = models.PackageTag()
-        instance.tags.append(tag_instance)
-    else:
-        tag_instance = models.PackageTag.query.join(models.Package) \
-            .filter(models.Package.id == instance.id,
-                    models.PackageTag.tag == 'latest').one()
-    for key, value in kwargs.items():
-        if key not in ['descriptor', 'readme']:
-            setattr(instance, key, value)
-        else:
-            setattr(tag_instance, key, value)
-    db.session.add(instance)
-    db.session.commit()
+    Package.create_or_update(package_name, publisher_name, **kwargs)
 
 def change_package_status(publisher_name, package_name, status=models.PackageStateEnum.active):
-    """
-    This method changes status of the data package. This method used
-    for soft delete the data package
-    """
-    pkg = models.Package.get_by_publisher(publisher_name, package_name)
-    pkg.status = status
-    db.session.add(pkg)
-    db.session.commit()
-    return True
+    return Package.change_status(publisher_name, package_name, status)
 
-def delete_data_package(publisher_name, package_name):
-    pkg = models.Package.get_by_publisher(publisher_name, package_name)
-    models.Package.query.filter(models.Package.id == pkg.id).delete()
-    db.session.commit()
-    return True
+def delete_data_package(publisher, package):
+    return Package.delete(publisher, package)
 
-def package_exists(publisher_name, package_name):
-    instance = models.Package.get_by_publisher(publisher_name, package_name)
-    return instance is not None
+def package_exists(publisher, package):
+    return Package.exists(publisher, package)
 
 def get_metadata_for_package(publisher, package):
-    '''
-    Returns metadata for given package owned by publisher
-    '''
-    data = models.Package.get_by_publisher(publisher, package)
-    if not data:
-        return None
-    metadata_schema = PackageMetadataSchema()
-    metadata = metadata_schema.dump(data).data
-    return metadata
+    return Package.get(publisher, package)

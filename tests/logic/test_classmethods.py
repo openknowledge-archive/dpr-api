@@ -39,13 +39,9 @@ class PackageClassMethodsTest(unittest.TestCase):
     def tests_package_get_method(self):
         pkg = logic.Package.get(self.publisher_name, self.package_name)
 
-        self.assertEqual(pkg['status'], 'active')
-        self.assertEqual(pkg['publisher'], 1)
+        self.assertEqual(pkg['publisher'], self.publisher_name)
         self.assertEqual(pkg['name'], self.package_name)
-        self.assertEqual(pkg['tags'], [1])
-        self.assertFalse(pkg['private'])
-        self.assertEqual(pkg['id'], 1)
-
+        
     def tests_package_get_returns_none_if_no_package(self):
         pkg = logic.Package.get(self.publisher_name, 'not-a-package')
         self.assertIsNone(pkg)
