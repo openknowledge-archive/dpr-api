@@ -268,7 +268,7 @@ def finalize_publish():
     if jwt_status:
         user_id = user_info['user']
 
-    status = logic.finalize_package_publish(user_id, datapackage_url)
+    status = logic.Package.finalize_publish(user_id, datapackage_url)
     if status:
         return jsonify({"status": status}), 200
     raise InvalidUsage("Failed to get data from s3")

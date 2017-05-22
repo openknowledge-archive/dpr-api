@@ -188,6 +188,30 @@ class Package(LogicBase):
         db.session.commit()
         return True
 
+    @classmethod
+    def finalize_publish(cls, user_id, datapackage_url):
+        '''
+        Gets the datapackage.json and README from S3 and imports into database.
+        Returns status "queued" if ok, else - None
+        '''
+        publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
+        if Package.exists(publisher, package):
+            status = check_is_authorized('Package::Update', publisher, package, user_id)
+        else:
+            status = check_is_authorized('Package::Create', publisher, package, user_id)
+
+        if not status:
+            raise InvalidUsage('Not authorized to upload data', 400)
+
+        bit_store = BitStore(publisher, package)
+        b = bit_store.get_metadata_body()
+        body = json.loads(b)
+        bit_store.change_acl('public-read')
+        readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
+        Package.create_or_update(name=package, publisher_name=publisher,
+                                 descriptor=body, readme=readme)
+        return "queued"
+
 
 class PackageTag(LogicBase):
     schema = PackageTagSchema
@@ -308,31 +332,7 @@ class User(LogicBase):
         db.session.add(user)
         db.session.commit()
         return user
-
-
-def finalize_package_publish(user_id, datapackage_url):
-    '''
-    Gets the datapackage.json and README from S3 and imports into database.
-    Returns status "queued" if ok, else - None
-    '''
-    publisher, package, version = BitStore.extract_information_from_s3_url(datapackage_url)
-    if Package.exists(publisher, package):
-        status = check_is_authorized('Package::Update', publisher, package, user_id)
-    else:
-        status = check_is_authorized('Package::Create', publisher, package, user_id)
-
-    if not status:
-        raise InvalidUsage('Not authorized to upload data', 400)
-
-    bit_store = BitStore(publisher, package)
-    b = bit_store.get_metadata_body()
-    body = json.loads(b)
-    bit_store.change_acl('public-read')
-    readme = bit_store.get_s3_object(bit_store.get_readme_object_key())
-    Package.create_or_update(name=package, publisher_name=publisher,
-                             descriptor=body, readme=readme)
-    return "queued"
-
+        
 
 def get_authorized_user_info():
     '''

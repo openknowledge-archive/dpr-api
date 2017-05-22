@@ -96,7 +96,7 @@ class PackageTest(unittest.TestCase):
         get_readme_object_key.return_value = ''
         get_s3_object.return_value = ''
         change_acl.return_value = None
-        status = logic.finalize_package_publish(1, self.datapackage_url)
+        status = logic.Package.finalize_publish(1, self.datapackage_url)
         self.assertEqual(status, 'queued')
 
 
@@ -115,7 +115,7 @@ class PackageTest(unittest.TestCase):
         get_s3_object.return_value = ''
         change_acl.return_value = None
         with self.assertRaises(InvalidUsage) as context:
-            logic.finalize_package_publish(2, self.datapackage_url)
+            logic.Package.finalize_publish(2, self.datapackage_url)
         self.assertEqual(context.exception.status_code, 400)
 
 
