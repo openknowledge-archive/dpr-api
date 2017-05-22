@@ -308,6 +308,7 @@ class PackageTestCase(unittest.TestCase):
 
 
     def test_get_metadata(self):
+        self.descriptor['owner'] = self.publisher
         metadata = logic.Package.get(self.publisher, self.package)
         self.assertEqual(metadata['descriptor'], self.descriptor)
         self.assertEqual(metadata['publisher'], self.publisher)

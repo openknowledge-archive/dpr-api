@@ -21,8 +21,8 @@ def index():
     Renders index.html if no token found in cookie.
     If token found in cookie then it renders dashboard.html
     """
-    showcase_packages = [logic.get_package(item['publisher'], item['package']) for item in app.config['FRONT_PAGE_SHOWCASE_PACKAGES']]
-    tutorial_packages = [ logic.get_package(item['publisher'], item['package']) for item in app.config['TUTORIAL_PACKAGES']]
+    showcase_packages = [logic.Package.get(item['publisher'], item['package']) for item in app.config['FRONT_PAGE_SHOWCASE_PACKAGES']]
+    tutorial_packages = [ logic.Package.get(item['publisher'], item['package']) for item in app.config['TUTORIAL_PACKAGES']]
     showcase_packages = filter(None, showcase_packages)
     tutorial_packages = filter(None, tutorial_packages)
 
@@ -52,7 +52,7 @@ def datapackage_show(publisher, package):
     """
     Loads datapackage page for given owner
     """
-    datapackage = logic.get_package(publisher, package)
+    datapackage = logic.Package.get(publisher, package)
     if not datapackage:
         raise InvalidUsage("Page Not Found", 404)
 

@@ -42,7 +42,7 @@ class DataPackageShowTest(unittest.TestCase):
 
     def test_get_package(self):
         # result is a dict ready for passing to templates or API
-        package = logic.get_package(self.publisher, self.package)
+        package = logic.Package.get(self.publisher, self.package)
         self.assertEqual(package['descriptor']['name'], self.package)
         self.assertEqual(package['descriptor']['owner'], self.publisher)
         self.assertTrue(package.get('datapackag_url'))
@@ -50,11 +50,11 @@ class DataPackageShowTest(unittest.TestCase):
         self.assertEqual(package['short_readme'], '')
 
     def test_returns_none_if_package_not_found(self):
-        package = logic.get_package(self.publisher, 'unknown')
+        package = logic.Package.get(self.publisher, 'unknown')
         self.assertIsNone(package)
-        package = logic.get_package('unknown', self.package)
+        package = logic.Package.get('unknown', self.package)
         self.assertIsNone(package)
-        package = logic.get_package('unknown', 'unknown')
+        package = logic.Package.get('unknown', 'unknown')
         self.assertIsNone(package)
 
     def tearDown(self):

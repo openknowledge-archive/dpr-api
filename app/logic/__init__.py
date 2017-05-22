@@ -62,24 +62,54 @@ class PackageTagSchema(ma.ModelSchema):
         model = models.PackageTag
 
 
+
+
 class PackageMetadataSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'publisher', 'readme', 'descriptor')
+        fields = ('id', 'name', 'publisher', 'readme',
+            'descriptor', 'views', 'datapackag_url', 'short_readme')
 
     publisher = ma.Method('get_publisher_name')
     readme = ma.Method('get_readme')
     descriptor = ma.Method('get_descriptor')
+    views = ma.Method('get_views')
+    datapackag_url = ma.Method('get_url')
+    short_readme = ma.Method('get_short_readme')
+
 
     def get_publisher_name(self, data):
         return data.publisher.name
 
     def get_readme(self, data):
         version = filter(lambda t: t.tag == 'latest', data.tags)[0]
-        return version.readme or ''
+        readme_variables_replaced = dp_in_readme(version.readme or '', version.descriptor)
+        readme = text_to_markdown(readme_variables_replaced)
+        return readme
 
     def get_descriptor(self, data):
         version = filter(lambda t: t.tag == 'latest', data.tags)[0]
+        descriptor = validate_for_template(version.descriptor)
+        descriptor['owner'] = data.publisher.name
         return version.descriptor
+
+    def get_views(self, data):
+        version = filter(lambda t: t.tag == 'latest', data.tags)[0]
+        descriptor = validate_for_template(version.descriptor)
+        views = descriptor.get('views') or []
+        return views
+
+    def get_url(self, data):
+        bitstore = BitStore(data.publisher.name, data.name)
+        datapackage_json_url_in_s3 = bitstore.build_s3_object_url('datapackage.json')
+        return datapackage_json_url_in_s3
+
+    def get_short_readme(self, data):
+        version = filter(lambda t: t.tag == 'latest', data.tags)[0]
+        readme_short_markdown = text_to_markdown(version.readme or '')
+        readme_short = ''.join(BeautifulSoup(readme_short_markdown).findAll(text=True)) \
+            .split('\n\n')[0].replace(' \n', '') \
+            .replace('\n', ' ').replace('/^ /', '')
+        return readme_short
 
 
 class Package(LogicBase):
@@ -278,42 +308,6 @@ class User(LogicBase):
         db.session.add(user)
         db.session.commit()
         return user
-
-
-# TODO: authz
-def get_package(publisher, package):
-    '''
-    Returns info for package - modified descriptor, bitstore URL for descriptor,
-    views and short README
-    '''
-    metadata = Package.get(publisher, package)
-    if not metadata:
-        return None
-
-    descriptor = metadata.get('descriptor')
-    descriptor = validate_for_template(descriptor)
-    readme = metadata.get('readme')
-    descriptor['owner'] = publisher
-    readme_variables_replaced = dp_in_readme(readme, descriptor)
-    descriptor["readme"] = text_to_markdown(readme_variables_replaced)
-
-    dataViews = descriptor.get('views') or []
-
-    bitstore = BitStore(publisher, package)
-    datapackage_json_url_in_s3 = bitstore.build_s3_object_url('datapackage.json')
-    readme_short_markdown = text_to_markdown(metadata.get('readme', ''))
-    readme_short = ''.join(BeautifulSoup(readme_short_markdown).findAll(text=True)) \
-        .split('\n\n')[0].replace(' \n', '') \
-        .replace('\n', ' ').replace('/^ /', '')
-
-    datapackage = dict(
-        descriptor=descriptor,
-        datapackag_url=datapackage_json_url_in_s3,
-        views=dataViews,
-        short_readme=readme_short
-    )
-
-    return datapackage
 
 
 def finalize_package_publish(user_id, datapackage_url):
