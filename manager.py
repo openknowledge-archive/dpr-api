@@ -10,11 +10,10 @@ from flask_migrate import Migrate, MigrateCommand
 from flask import current_app, json
 from os.path import join, dirname
 from dotenv import load_dotenv
-from app.database import db
-from app.package import models
 from app import create_app
-from app.package.models import Package, BitStore, PackageTag
-from app.profile.models import Publisher, PublisherUser, User, UserRoleEnum
+from app.bitstore import BitStore
+from app.database import db
+import app.models as models
 
 dot_env_path = join(dirname(__file__), '.env')
 load_dotenv(dot_env_path)
@@ -60,11 +59,11 @@ def populate():
 
 
 def populate_db(email, user_name, full_name, secret):
-    user = User.query.filter_by(name=user_name).first()
+    user = models.User.query.filter_by(name=user_name).first()
 
-    publisher = Publisher.query.filter_by(name=user_name).first()
+    publisher = models.Publisher.query.filter_by(name=user_name).first()
     if user is None:
-        user = User()
+        user = models.User()
         user.email, user.name, user.full_name, user.secret \
             = email, user_name, full_name, secret
         db.session.add(user)
@@ -72,9 +71,9 @@ def populate_db(email, user_name, full_name, secret):
 
     if publisher is None:
 
-        publisher = Publisher(name=user_name)
+        publisher = models.Publisher(name=user_name)
 
-        association = PublisherUser(role=UserRoleEnum.owner)
+        association = models.PublisherUser(role=models.UserRoleEnum.owner)
         association.publisher = publisher
         user.publishers.append(association)
 
@@ -86,17 +85,17 @@ def populate_data(publisher_name):
     data = json.loads(open('fixtures/datapackage.json').read())
     data_csv = open('fixtures/data/demo-resource.csv').read()
     readme = open('fixtures/README.md').read()
-    package = Package.query.join(Publisher)\
-        .filter(Package.name == "demo-package",
-                Publisher.name == publisher_name).first()
+    package = models.Package.query.join(models.Publisher)\
+        .filter(models.Package.name == "demo-package",
+                models.Publisher.name == publisher_name).first()
     if package:
-        db.session.delete(Package.query.get(package.id))
+        db.session.delete(models.Package.query.get(package.id))
         db.session.commit()
-    publisher = Publisher.query.filter_by(name=publisher_name).first()
-    metadata = Package(name="demo-package")
+    publisher = models.Publisher.query.filter_by(name=publisher_name).first()
+    metadata = models.Package(name="demo-package")
     metadata.status, metadata.private \
         = 'active', False
-    tag = PackageTag(descriptor=data, readme=readme)
+    tag = models.PackageTag(descriptor=data, readme=readme)
 
     metadata.tags.append(tag)
 

@@ -35,6 +35,12 @@ class Publisher(db.Model):
                          cascade='save-update, merge, delete, delete-orphan')
 
 
+    @classmethod
+    def get_by_name(cls, publisher):
+        publisher = Publisher.query.filter_by(name=publisher).first()
+        return publisher
+
+
 class User(db.Model):
     """
     This class is DB model for storing user attributes
@@ -45,14 +51,19 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     email = db.Column(db.TEXT, unique=True, index=True)
-    secret = db.Column(db.TEXT)
+    secret = db.Column(db.TEXT, default=os.urandom(24).encode('hex'))
     name = db.Column(db.TEXT, unique=True, index=True, nullable=False)
     full_name = db.Column(db.TEXT)
     sysadmin = db.Column(db.BOOLEAN, default=False)
-    oauth_source = db.Column(db.TEXT, default=None)
+    oauth_source = db.Column(db.TEXT, default='github')
 
     publishers = relationship("PublisherUser", back_populates="user",
                               cascade='save-update, merge, delete, delete-orphan')
+
+    @classmethod
+    def get_by_name(cls, user):
+        user = User.query.filter_by(name=user).first()
+        return user
 
 
 class UserRoleEnum(enum.Enum):

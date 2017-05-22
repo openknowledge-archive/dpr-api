@@ -10,10 +10,10 @@ import json
 from app import create_app
 from app.bitstore import BitStore
 from app.database import db
-from app.logic import db_logic
 from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
 from app.package.models import Package, PackageStateEnum, PackageTag
 from app.utils import InvalidUsage
+import app.logic as logic
 
 class UserTestCase(unittest.TestCase):
     def setUp(self):
@@ -40,7 +40,7 @@ class UserTestCase(unittest.TestCase):
         user_info = dict(email="test@test.com",
                          login="test",
                          name="The Test")
-        user = db_logic.find_or_create_user(user_info)
+        user = logic.User.find_or_create(user_info)
         self.assertEqual(user.name, 'test')
 
 
@@ -48,7 +48,7 @@ class UserTestCase(unittest.TestCase):
         user_info = dict(email="test@test.com",
                          login="test",
                          name="The Test")
-        user = db_logic.find_or_create_user(user_info)
+        user = logic.User.find_or_create(user_info)
         publisher = Publisher.query.filter_by(name='test').one()
         self.assertEqual(publisher.name, 'test')
 
@@ -57,13 +57,13 @@ class UserTestCase(unittest.TestCase):
         user_info = dict(email="test@test.com",
                          login="demo",
                          name="The Test")
-        user = db_logic.find_or_create_user(user_info)
+        user = logic.User.find_or_create(user_info)
         self.assertEqual(user.name, self.publisher)
 
 
     def test_create_user_should_handle_null_email(self):
         user_info = dict(login="test_null_email")
-        db_logic.find_or_create_user(user_info)
+        logic.User.find_or_create(user_info)
         user = User.query.filter_by(name='test_null_email').first()
         self.assertIsNotNone(user)
         self.assertIsNone(user.email)
@@ -71,25 +71,24 @@ class UserTestCase(unittest.TestCase):
 
 
     def test_get_user_info(self):
-        publisher = db_logic.get_user_by_id(11)
+        publisher = logic.User.get(11)
         self.assertEqual(publisher['name'], self.publisher)
 
 
-    def test_get_user_info_throws_404_if_no_publisher_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            db_logic.get_user_by_id(2)
-            self.assertEqual(context.exception.status_code, 404)
+    def test_get_user_info_returns_none_if_no_publisher_found(self):
+            user_info = logic.User.get(2)
+            self.assertIsNone(user_info)
 
 
     def test_get_publisher_info(self):
-        publisher = db_logic.get_publisher(self.publisher)
+        publisher = logic.Publisher.get(self.publisher)
         self.assertEqual(publisher['name'], self.publisher)
 
 
-    def test_get_publisher_info_throws_404_if_no_publisher_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            db_logic.get_publisher('not_a_publisher')
-        self.assertEqual(context.exception.status_code, 404)
+    def test_get_publisher_info_returns_none_if_no_publisher_found(self):
+
+        publisher = logic.Publisher.get('not_a_publisher')
+        self.assertIsNone(publisher)
 
 
     def tearDown(self):
@@ -167,7 +166,7 @@ class PackageTestCase(unittest.TestCase):
         descriptor = metadata.tags[0].descriptor
 
         self.assertEqual(descriptor['name'], "test_one")
-        db_logic.create_or_update_package(self.package_one, self.publisher_one,
+        logic.Package.create_or_update(self.package_one, self.publisher_one,
                                  descriptor=json.dumps(dict(name='sub')),
                                  private=True)
         metadata = Package.query.join(Publisher) \
@@ -185,7 +184,7 @@ class PackageTestCase(unittest.TestCase):
             .filter(Publisher.name == pub,
                     Package.name == name).all()
         self.assertEqual(len(metadata), 0)
-        db_logic.create_or_update_package(name, pub,
+        logic.Package.create_or_update(name, pub,
                                  descriptor=json.dumps(dict(name='sub')),
                                  private=True)
         metadata = Package.query.join(Publisher) \
@@ -194,7 +193,7 @@ class PackageTestCase(unittest.TestCase):
         self.assertEqual(len(metadata), 1)
 
     def test_should_populate_new_versioned_data_package(self):
-        db_logic.create_or_update_package_tag(self.publisher_one,
+        logic.Package.create_or_update_tag(self.publisher_one,
                                      self.package_two, 'tag_one')
         package = Package.query.join(Publisher) \
             .filter(Publisher.name == self.publisher_one,
@@ -237,7 +236,7 @@ class PackageTestCase(unittest.TestCase):
 
         self.assertNotEqual(latest_data.readme, tagged_data.readme)
 
-        db_logic.create_or_update_package_tag(self.publisher_one,
+        logic.Package.create_or_update_tag(self.publisher_one,
                                      self.package_two,
                                      'tag_one')
         tagged_data = PackageTag.query.join(Package) \
@@ -252,7 +251,7 @@ class PackageTestCase(unittest.TestCase):
                    Package.name == self.package_one).one()
         self.assertEqual(PackageStateEnum.active, data.status)
 
-        db_logic.change_package_status(self.publisher_one, self.package_one,
+        logic.Package.change_status(self.publisher_one, self.package_one,
                                                         PackageStateEnum.deleted)
 
         data = Package.query.join(Publisher). \
@@ -260,7 +259,7 @@ class PackageTestCase(unittest.TestCase):
                    Package.name == self.package_one).one()
         self.assertEqual(PackageStateEnum.deleted, data.status)
 
-        db_logic.change_package_status(self.publisher_one, self.package_one,
+        logic.Package.change_status(self.publisher_one, self.package_one,
                               status=PackageStateEnum.active)
 
         data = Package.query.join(Publisher). \
@@ -269,29 +268,29 @@ class PackageTestCase(unittest.TestCase):
         self.assertEqual(PackageStateEnum.active, data.status)
 
     def test_update_status_with_tag(self):
-        db_logic.create_or_update_package_tag(self.publisher_two,
+        logic.Package.create_or_update_tag(self.publisher_two,
                                      self.package_three,
                                      '1.0')
-        db_logic.create_or_update_package_tag(self.publisher_two,
+        logic.Package.create_or_update_tag(self.publisher_two,
                                      self.package_three,
                                      '1.1')
-        status = db_logic.change_package_status(self.publisher_two,
+        status = logic.Package.change_status(self.publisher_two,
                                        self.package_three,
                                        PackageStateEnum.deleted)
         self.assertTrue(status)
 
     def test_delete_with_tag(self):
-        db_logic.create_or_update_package_tag(self.publisher_two,
+        logic.Package.create_or_update_tag(self.publisher_two,
                                      self.package_three,
                                      '1.0')
-        db_logic.create_or_update_package_tag(self.publisher_two,
+        logic.Package.create_or_update_tag(self.publisher_two,
                                      self.package_three,
                                      '1.1')
-        status = db_logic.delete_data_package(self.publisher_two, self.package_three)
+        status = logic.Package.delete(self.publisher_two, self.package_three)
         self.assertTrue(status)
 
     def test_return_true_if_delete_data_package_success(self):
-        status = db_logic.delete_data_package(self.publisher_one,
+        status = logic.Package.delete(self.publisher_one,
                                              self.package_one)
         self.assertTrue(status)
         data = Package.query.join(Publisher). \
@@ -302,14 +301,15 @@ class PackageTestCase(unittest.TestCase):
         self.assertEqual(3, len(data))
 
     def test_is_package_exists(self):
-        status = db_logic.package_exists(self.publisher_one, self.package_one)
+        status = logic.Package.exists(self.publisher_one, self.package_one)
         self.assertTrue(status)
-        status = db_logic.package_exists(self.publisher_one, 'non-exists-package')
+        status = logic.Package.exists(self.publisher_one, 'non-exists-package')
         self.assertFalse(status)
 
 
     def test_get_metadata(self):
-        metadata = db_logic.get_metadata_for_package(self.publisher, self.package)
+        self.descriptor['owner'] = self.publisher
+        metadata = logic.Package.get(self.publisher, self.package)
         self.assertEqual(metadata['descriptor'], self.descriptor)
         self.assertEqual(metadata['publisher'], self.publisher)
         self.assertEqual(metadata['name'], self.package)
@@ -318,23 +318,12 @@ class PackageTestCase(unittest.TestCase):
 
 
     def test_returns_none_if_package_not_found(self):
-        package = db_logic.get_metadata_for_package(self.publisher, 'unknown')
+        package = logic.Package.get(self.publisher, 'unknown')
         self.assertIsNone(package)
-        package = db_logic.get_metadata_for_package('unknown', self.package)
+        package = logic.Package.get('unknown', self.package)
         self.assertIsNone(package)
-        package = db_logic.get_metadata_for_package('unknown', 'unknown')
+        package = logic.Package.get('unknown', 'unknown')
         self.assertIsNone(package)
-
-
-    def test_get_package_names_for_publisher(self):
-        packages = db_logic.get_package_names_for_publisher(self.publisher)
-        self.assertEqual(packages, ['demo-package'])
-
-
-    def test_get_package_names_for_publisher_throws_404_if_no_package_found(self):
-        with self.assertRaises(InvalidUsage) as context:
-            db_logic.get_package_names_for_publisher('not_a_publisher')
-        self.assertEqual(context.exception.status_code, 404)
 
 
     def tearDown(self):
