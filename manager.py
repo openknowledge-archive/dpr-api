@@ -10,11 +10,10 @@ from flask_migrate import Migrate, MigrateCommand
 from flask import current_app, json
 from os.path import join, dirname
 from dotenv import load_dotenv
-from app.database import db
 from app import create_app
-# from app.package import models
-import app.models as models
 from app.bitstore import BitStore
+from app.database import db
+import app.models as models
 
 dot_env_path = join(dirname(__file__), '.env')
 load_dotenv(dot_env_path)
