@@ -60,9 +60,9 @@ def datapackage_show(publisher, package):
                            dataset=datapackage.get('descriptor'),
                            datapackageUrl=datapackage.get('datapackag_url'),
                            showDataApi=True,
-                           jsonDataPackage=datapackage.get('descriptor'),
                            dataViews=datapackage.get('views'),
-                           readmeShort=datapackage.get('short_readme')
+                           readmeShort=datapackage.get('short_readme'),
+                           readme_long=datapackage.get('readme')
                            ), 200
 
 

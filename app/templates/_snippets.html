@@ -29,7 +29,7 @@
   {% endfor %}
 {%- endmacro %}
 
-{% macro dataset_show(dataset, jsonDataPackage, dataViews, showDataApi, datapackageUrl, readmeShort) -%}
+{% macro dataset_show(dataset, dataViews, showDataApi, datapackageUrl, readmeShort, readme_long) -%}
 <div class="dataset row row-eq-height">
   <div class="col-sm-3 side-bar hidden-xs">
     <div class="side-section">
@@ -201,7 +201,7 @@
     <div class="row moreinfo">
       <div class="col-md-8">
         <h2 id="readme" class="section-title">README</h2>
-        <div class="readme">{{dataset.readme|safe}}</div>
+        <div class="readme">{{readme_long|safe}}</div>
       </div>
       <div class="col-md-4"></div>
     </div>
