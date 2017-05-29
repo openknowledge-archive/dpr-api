@@ -34,3 +34,17 @@ class FileDataTestCase(unittest.TestCase):
                                         'name': 'readme.md'})
             response = file_data.build_file_information()
             self.assertIsNotNone(response['upload_url'])
+
+
+    @mock_s3
+    def test_should_remove_datapackage_json_from_bitstore_key(self):
+        with self.app.app_context():
+            file_data = FileData(package_name='abc',
+                                 publisher='pub',
+                                 relative_path="datapackage.json",
+                                 props={'md5': 'as131twfc56t7',
+                                        'type': 'json',
+                                        'name': 'datapackage.json'})
+            response = file_data.build_file_information()
+            self.assertEqual('metadata/pub/abc/_v/latest',
+                                        response['upload_query']['key'])
