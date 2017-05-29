@@ -67,13 +67,12 @@ class PackageTagSchema(ma.ModelSchema):
 class PackageMetadataSchema(ma.Schema):
     class Meta:
         fields = ('id', 'name', 'publisher', 'readme',
-            'descriptor', 'views', 'datapackag_url', 'short_readme')
+            'descriptor', 'bitstore_url', 'short_readme')
 
     publisher = ma.Method('get_publisher_name')
     readme = ma.Method('get_readme')
     descriptor = ma.Method('get_descriptor')
-    views = ma.Method('get_views')
-    datapackag_url = ma.Method('get_url')
+    bitstore_url = ma.Method('get_url')
     short_readme = ma.Method('get_short_readme')
 
 
@@ -92,15 +91,9 @@ class PackageMetadataSchema(ma.Schema):
         descriptor['owner'] = data.publisher.name
         return version.descriptor
 
-    def get_views(self, data):
-        version = filter(lambda t: t.tag == 'latest', data.tags)[0]
-        descriptor = validate_for_template(version.descriptor)
-        views = descriptor.get('views') or []
-        return views
-
     def get_url(self, data):
         bitstore = BitStore(data.publisher.name, data.name)
-        datapackage_json_url_in_s3 = bitstore.build_s3_object_url('datapackage.json')
+        datapackage_json_url_in_s3 = bitstore.build_s3_object_url()
         return datapackage_json_url_in_s3
 
     def get_short_readme(self, data):
@@ -332,7 +325,7 @@ class User(LogicBase):
         db.session.add(user)
         db.session.commit()
         return user
-        
+
 
 def get_authorized_user_info():
     '''

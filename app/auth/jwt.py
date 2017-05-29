@@ -66,8 +66,8 @@ class FileData(object):
         if 'acl' in self.props:
             kwargs['acl'] = self.props['acl']
         post = self.bitstore.\
-            generate_pre_signed_post_object(self.relative_path,
-                                            md5=self.props['md5'],
+            generate_pre_signed_post_object(md5=self.props['md5'],
+                                            path=self.relative_path,
                                             **kwargs)
         return post
 
