@@ -45,7 +45,7 @@ class DataPackageShowTest(unittest.TestCase):
         package = logic.Package.get(self.publisher, self.package)
         self.assertEqual(package['descriptor']['name'], self.package)
         self.assertEqual(package['descriptor']['owner'], self.publisher)
-        self.assertTrue(package.get('datapackag_url'))
+        self.assertTrue(package.get('bitstore_url'))
         self.assertEqual(package['views'], self.descriptor['views'])
         self.assertEqual(package['short_readme'], '')
 

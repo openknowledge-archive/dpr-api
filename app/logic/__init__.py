@@ -67,13 +67,13 @@ class PackageTagSchema(ma.ModelSchema):
 class PackageMetadataSchema(ma.Schema):
     class Meta:
         fields = ('id', 'name', 'publisher', 'readme',
-            'descriptor', 'views', 'datapackag_url', 'short_readme')
+            'descriptor', 'views', 'bitstore_url', 'short_readme')
 
     publisher = ma.Method('get_publisher_name')
     readme = ma.Method('get_readme')
     descriptor = ma.Method('get_descriptor')
     views = ma.Method('get_views')
-    datapackag_url = ma.Method('get_url')
+    bitstore_url = ma.Method('get_url')
     short_readme = ma.Method('get_short_readme')
 
 
@@ -332,7 +332,7 @@ class User(LogicBase):
         db.session.add(user)
         db.session.commit()
         return user
-        
+
 
 def get_authorized_user_info():
     '''
