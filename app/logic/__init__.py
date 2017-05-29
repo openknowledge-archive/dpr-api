@@ -100,7 +100,7 @@ class PackageMetadataSchema(ma.Schema):
 
     def get_url(self, data):
         bitstore = BitStore(data.publisher.name, data.name)
-        datapackage_json_url_in_s3 = bitstore.build_s3_object_url('datapackage.json')
+        datapackage_json_url_in_s3 = bitstore.build_s3_object_url()
         return datapackage_json_url_in_s3
 
     def get_short_readme(self, data):

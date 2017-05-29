@@ -36,7 +36,7 @@ class BitStore(object):
         """
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
-        key = self.build_s3_key('datapackage.json')
+        key = self.build_s3_key()
         s3_client.put_object(Bucket=bucket_name, Key=key,
                              Body=self.body, ACL=acl)
 
@@ -44,9 +44,9 @@ class BitStore(object):
         """
         This method retrieve datapackage.json from s3 for specific
         publisher and package
-        :return: The String value of the datapackage.json or None of not found
+        :return: The String value of the datapackage.json or None if not found
         """
-        key = self.build_s3_key('datapackage.json')
+        key = self.build_s3_key()
         return self.get_s3_object(key)
 
     def get_s3_object(self, key):
@@ -96,7 +96,9 @@ class BitStore(object):
                 keys.append(ob['Key'])
         return keys
 
-    def build_s3_key(self, path):
+    def build_s3_key(self, path=None):
+        if not path:
+            return self.build_s3_versioned_prefix()
         return "{prefix}/{path}"\
             .format(prefix=self.build_s3_versioned_prefix(),
                     path=path)
@@ -112,12 +114,12 @@ class BitStore(object):
             format(prefix=self.build_s3_base_prefix(),
                    version=self.version)
 
-    def build_s3_object_url(self, path):
+    def build_s3_object_url(self, path=None):
         return '{base_url}/{key}'.\
             format(base_url=app.config['BITSTORE_URL'],
                    key=self.build_s3_key(path))
 
-    def generate_pre_signed_post_object(self, path, md5,
+    def generate_pre_signed_post_object(self, md5, path=None,
                                         acl='public-read'):
         """
         This method produce required data to upload file from client side
