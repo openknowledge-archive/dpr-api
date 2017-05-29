@@ -46,7 +46,6 @@ class DataPackageShowTest(unittest.TestCase):
         self.assertEqual(package['descriptor']['name'], self.package)
         self.assertEqual(package['descriptor']['owner'], self.publisher)
         self.assertTrue(package.get('bitstore_url'))
-        self.assertEqual(package['views'], self.descriptor['views'])
         self.assertEqual(package['short_readme'], '')
 
     def test_returns_none_if_package_not_found(self):
