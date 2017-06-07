@@ -127,21 +127,17 @@ class Package(LogicBase):
     def create_or_update_tag(cls, publisher, package, tag):
         package = models.Package.get_by_publisher(publisher, package)
 
-        data_latest = models.PackageTag.query.join(models.Package)\
-            .filter(models.Package.id == package.id,
-                    models.PackageTag.tag == 'latest').one()
-
         tag_instance = models.PackageTag.query.join(models.Package) \
             .filter(models.Package.id == package.id,
                     models.PackageTag.tag == tag).first()
 
-        update_props = ['descriptor', 'readme', 'package_id']
         if tag_instance is None:
             tag_instance = models.PackageTag()
 
-        for update_prop in update_props:
-            setattr(tag_instance, update_prop, getattr(data_latest, update_prop))
         tag_instance.tag = tag
+        tag_instance.readme = package.readme
+        tag_instance.descriptor = package.descriptor
+        tag_instance.package_id = package.id
 
         db.session.add(tag_instance)
         db.session.commit()
