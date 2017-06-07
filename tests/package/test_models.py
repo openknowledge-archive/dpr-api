@@ -21,8 +21,8 @@ class PackageTestCase(unittest.TestCase):
         self.publisher_one = 'test_publisher1'
         self.publisher_two = 'test_publisher2'
         self.package_one = 'test_package1'
-        self.package_two = 'test_package2'
-        self.package_three = 'test_package3'
+        self.readme = 'README'
+        self.descriptor = dict(name='test')
         self.app = create_app()
         self.app.app_context().push()
 
@@ -42,14 +42,27 @@ class PackageTestCase(unittest.TestCase):
             association2.publisher = publisher2
             user2.publishers.append(association2)
 
-            metadata1 = Package(name=self.package_one)
-            tag1 = PackageTag(descriptor=dict(name='test_one'))
-            metadata1.tags.append(tag1)
-            publisher1.packages.append(metadata1)
+
+
+            metadata = Package(
+                name=self.package_one,
+                descriptor=self.descriptor,
+                readme=self.readme
+            )
+            publisher1.packages.append(metadata)
 
             db.session.add(user1)
             db.session.add(user2)
             db.session.commit()
+
+    def test_package_table_has_readme_and_descriptor(self):
+        pkg = Package.get_by_publisher(self.publisher_one, self.package_one)
+        self.assertEqual(pkg.readme, self.readme)
+        self.assertEqual(pkg.descriptor, self.descriptor)
+
+    def test_tags_column_is_empty_when_created(self):
+        pkg = Package.get_by_publisher(self.publisher_one, self.package_one)
+        self.assertEqual(pkg.tags, [])
 
     def test_composite_key(self):
         res = Package.query.join(Publisher).filter(Publisher.name ==

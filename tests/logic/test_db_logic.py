@@ -107,6 +107,7 @@ class PackageTestCase(unittest.TestCase):
         self.package_two = 'test_package2'
         self.package_three = 'test_package3'
         self.descriptor = json.loads(open('fixtures/datapackage.json').read())
+        self.readme = 'README'
         self.app = create_app()
         self.app.app_context().push()
 
@@ -114,7 +115,11 @@ class PackageTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
 
-            create_test_package(self.publisher, self.package, self.descriptor)
+            create_test_package(
+                self.publisher,
+                self.package,
+                descriptor = self.descriptor,
+                readme = self.readme)
 
             user1 = User(name=self.publisher_one)
             publisher1 = Publisher(name=self.publisher_one)
@@ -158,39 +163,42 @@ class PackageTestCase(unittest.TestCase):
 
             db.session.commit()
 
-    def test_update_fields_if_instance_present(self):
-        metadata = Package.query.join(Publisher) \
-            .filter(Publisher.name == self.publisher_one,
-                    Package.name == self.package_one).one()
 
-        descriptor = metadata.tags[0].descriptor
-
-        self.assertEqual(descriptor['name'], "test_one")
-        logic.Package.create_or_update(self.package_one, self.publisher_one,
-                                 descriptor=json.dumps(dict(name='sub')),
-                                 private=True)
-        metadata = Package.query.join(Publisher) \
-            .filter(Publisher.name == self.publisher_one,
-                    Package.name == self.package_one).one()
-        descriptor = metadata.tags[0].descriptor
-        self.assertEqual(json.loads(descriptor)['name'], "sub")
-        self.assertEqual(metadata.private, True)
-
-    def test_insert_if_not_present(self):
+    def test_creates_package_if_not_present(self):
         pub = self.publisher_two
         name = "custom_name"
 
-        metadata = Package.query.join(Publisher) \
+        package = Package.query.join(Publisher) \
             .filter(Publisher.name == pub,
                     Package.name == name).all()
-        self.assertEqual(len(metadata), 0)
+        self.assertEqual(len(package), 0)
         logic.Package.create_or_update(name, pub,
-                                 descriptor=json.dumps(dict(name='sub')),
+                                 descriptor=self.descriptor,
+                                 readme=self.readme,
                                  private=True)
-        metadata = Package.query.join(Publisher) \
+        package = Package.query.join(Publisher) \
             .filter(Publisher.name == pub,
                     Package.name == name).all()
-        self.assertEqual(len(metadata), 1)
+        self.assertEqual(len(package), 1)
+
+    def test_updates_package_if_present(self):
+        pub = self.publisher
+        name = self.package
+
+        package = Package.query.join(Publisher) \
+            .filter(Publisher.name == pub,
+                    Package.name == name).all()
+        self.assertEqual(len(package), 1)
+        self.assertEqual(package[0].readme, self.readme)
+        logic.Package.create_or_update(name, pub,
+                                 descriptor=self.descriptor,
+                                 readme='New README',
+                                 private=True)
+        package = Package.query.join(Publisher) \
+            .filter(Publisher.name == pub,
+                    Package.name == name).all()
+        self.assertEqual(len(package), 1)
+        self.assertEqual(package[0].readme, 'New README')
 
     def test_should_populate_new_versioned_data_package(self):
         logic.Package.create_or_update_tag(self.publisher_one,
@@ -313,7 +321,7 @@ class PackageTestCase(unittest.TestCase):
         self.assertEqual(metadata['descriptor'], self.descriptor)
         self.assertEqual(metadata['publisher'], self.publisher)
         self.assertEqual(metadata['name'], self.package)
-        self.assertEqual(metadata['readme'], '')
+        self.assertEqual(metadata['readme'], '<p>README</p>')
         self.assertEqual(metadata['id'], 1)
 
 
@@ -332,7 +340,7 @@ class PackageTestCase(unittest.TestCase):
             db.drop_all()
 
 
-def create_test_package(publisher='demo', package='demo-package', descriptor={}):
+def create_test_package(publisher='demo', package='demo-package', descriptor={}, readme=''):
 
     user = User(name=publisher)
     publisher = Publisher(name=publisher)
@@ -340,10 +348,8 @@ def create_test_package(publisher='demo', package='demo-package', descriptor={})
     association.publisher = publisher
     user.publishers.append(association)
 
-    metadata = Package(name=package)
-    tag = PackageTag(descriptor=descriptor)
-    metadata.tags.append(tag)
-    publisher.packages.append(metadata)
+    package = Package(name=package, descriptor=descriptor, readme=readme)
+    publisher.packages.append(package)
 
     db.session.add(user)
     db.session.commit()

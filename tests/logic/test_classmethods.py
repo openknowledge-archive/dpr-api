@@ -13,7 +13,8 @@ import app.models as models
 
 
 class PackageClassMethodsTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         self.publisher_name = 'demo'
         self.package_name = 'demo-package'
         self.app = create_app()
@@ -26,9 +27,8 @@ class PackageClassMethodsTest(unittest.TestCase):
                 'demot@test.com', self.publisher_name, 'super_secret'
             self.publisher = models.Publisher(name=self.publisher_name)
             self.association = models.PublisherUser(role=models.UserRoleEnum.owner)
-            self.metadata = models.Package(name=self.package_name)
-            self.metadata.tags.append(models.PackageTag(descriptor={}))
-            self.publisher.packages.append(self.metadata)
+            self.package = models.Package(name=self.package_name, descriptor={})
+            self.publisher.packages.append(self.package)
             self.association.publisher = self.publisher
             self.user.publishers.append(self.association)
 
@@ -51,11 +51,11 @@ class PackageClassMethodsTest(unittest.TestCase):
         self.assertIsNone(pkg)
 
 
-    def tearDown(self):
+    @classmethod
+    def teardown_class(self):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
-            db.engine.dispose()
 
 
 class PublisherClassMethodsTest(unittest.TestCase):

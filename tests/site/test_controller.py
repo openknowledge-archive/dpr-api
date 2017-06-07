@@ -36,9 +36,8 @@ class WebsiteTestCase(unittest.TestCase):
         descriptor = json.loads(open('fixtures/datapackage.json').read())
         with self.app.app_context():
             publisher = Publisher(name='core')
-            metadata = Package(name='gold-prices')
-            metadata.tags.append(PackageTag(descriptor=descriptor))
-            publisher.packages.append(metadata)
+            package = Package(name='gold-prices', descriptor=descriptor)
+            publisher.packages.append(package)
             db.session.add(publisher)
             db.session.commit()
         rv = self.client.get('/')
@@ -69,9 +68,8 @@ class WebsiteTestCase(unittest.TestCase):
         descriptor = json.loads(open('fixtures/datapackage.json').read())
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = Package(name=self.package)
-            metadata.tags.append(PackageTag(descriptor=descriptor))
-            publisher.packages.append(metadata)
+            package = Package(name=self.package, descriptor=descriptor)
+            publisher.packages.append(package)
             db.session.add(publisher)
             db.session.commit()
         rv = self.client.get('/{publisher}/{package}'.\
@@ -89,9 +87,8 @@ class WebsiteTestCase(unittest.TestCase):
         descriptor['licenses'] = {'url': 'test/url', 'type': 'Test'}
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = Package(name=self.package)
-            metadata.tags.append(PackageTag(descriptor=descriptor))
-            publisher.packages.append(metadata)
+            package = Package(name=self.package, descriptor=descriptor)
+            publisher.packages.append(package)
             db.session.add(publisher)
             db.session.commit()
         rv = self.client.get('/%s/%s' %(self.publisher,self.package))
@@ -102,9 +99,8 @@ class WebsiteTestCase(unittest.TestCase):
         descriptor = {"data": [], "resources": []}
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = Package(name=self.package)
-            metadata.tags.append(PackageTag(descriptor=descriptor))
-            publisher.packages.append(metadata)
+            package = Package(name=self.package, descriptor=descriptor)
+            publisher.packages.append(package)
             db.session.add(publisher)
             db.session.commit()
         rv = self.client.get('/{publisher}/{package}'.\
@@ -234,10 +230,9 @@ class DataPackageShowTest(unittest.TestCase):
             descriptor = json.loads(open('fixtures/datapackage.json').read())
             readme = open('fixtures/README.md').read()
             publisher = Publisher(name=self.publisher)
-            metadata = Package(name=self.package)
-            metadata.tags.append(PackageTag(descriptor=descriptor, readme=readme))
+            package = Package(name=self.package,descriptor=descriptor, readme=readme)
 
-            publisher.packages.append(metadata)
+            publisher.packages.append(package)
             db.session.add(publisher)
             db.session.commit()
 

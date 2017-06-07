@@ -9,7 +9,7 @@ from app.profile.models import *
 import app.logic as logic
 from app.utils import InvalidUsage
 
-def create_test_package(publisher='demo', package='demo-package', descriptor={}):
+def create_test_package(publisher='demo', package='demo-package', descriptor={}, readme=''):
 
     user = User(name=publisher)
     publisher = Publisher(name=publisher)
@@ -17,10 +17,8 @@ def create_test_package(publisher='demo', package='demo-package', descriptor={})
     association.publisher = publisher
     user.publishers.append(association)
 
-    metadata = Package(name=package)
-    tag = PackageTag(descriptor=descriptor)
-    metadata.tags.append(tag)
-    publisher.packages.append(metadata)
+    package = Package(name=package, descriptor=descriptor, readme=readme)
+    publisher.packages.append(package)
 
     db.session.add(user)
     db.session.commit()
@@ -28,7 +26,8 @@ def create_test_package(publisher='demo', package='demo-package', descriptor={})
 
 class DataPackageShowTest(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         self.publisher = 'demo'
         self.package = 'demo-package'
         self.app = create_app()
@@ -56,12 +55,12 @@ class DataPackageShowTest(unittest.TestCase):
         package = logic.Package.get('unknown', 'unknown')
         self.assertIsNone(package)
 
-    def tearDown(self):
+    @classmethod
+    def teardown_class(self):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
             db.engine.dispose()
-
 
 class PackageTest(unittest.TestCase):
 
