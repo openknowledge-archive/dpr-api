@@ -80,16 +80,14 @@ class PackageMetadataSchema(ma.Schema):
         return data.publisher.name
 
     def get_readme(self, data):
-        version = filter(lambda t: t.tag == 'latest', data.tags)[0]
-        readme_variables_replaced = dp_in_readme(version.readme or '', version.descriptor)
+        readme_variables_replaced = dp_in_readme(data.readme or '', data.descriptor)
         readme = text_to_markdown(readme_variables_replaced)
         return readme
 
     def get_descriptor(self, data):
-        version = filter(lambda t: t.tag == 'latest', data.tags)[0]
-        descriptor = validate_for_template(version.descriptor)
+        descriptor = validate_for_template(data.descriptor)
         descriptor['owner'] = data.publisher.name
-        return version.descriptor
+        return data.descriptor
 
     def get_url(self, data):
         bitstore = BitStore(data.publisher.name, data.name)
@@ -97,8 +95,7 @@ class PackageMetadataSchema(ma.Schema):
         return datapackage_json_url_in_s3
 
     def get_short_readme(self, data):
-        version = filter(lambda t: t.tag == 'latest', data.tags)[0]
-        readme_short_markdown = text_to_markdown(version.readme or '')
+        readme_short_markdown = text_to_markdown(data.readme or '')
         readme_short = ''.join(BeautifulSoup(readme_short_markdown).findAll(text=True)) \
             .split('\n\n')[0].replace(' \n', '') \
             .replace('\n', ' ').replace('/^ /', '')
@@ -130,21 +127,17 @@ class Package(LogicBase):
     def create_or_update_tag(cls, publisher, package, tag):
         package = models.Package.get_by_publisher(publisher, package)
 
-        data_latest = models.PackageTag.query.join(models.Package)\
-            .filter(models.Package.id == package.id,
-                    models.PackageTag.tag == 'latest').one()
-
         tag_instance = models.PackageTag.query.join(models.Package) \
             .filter(models.Package.id == package.id,
                     models.PackageTag.tag == tag).first()
 
-        update_props = ['descriptor', 'readme', 'package_id']
         if tag_instance is None:
             tag_instance = models.PackageTag()
 
-        for update_prop in update_props:
-            setattr(tag_instance, update_prop, getattr(data_latest, update_prop))
         tag_instance.tag = tag
+        tag_instance.readme = package.readme
+        tag_instance.descriptor = package.descriptor
+        tag_instance.package_id = package.id
 
         db.session.add(tag_instance)
         db.session.commit()
@@ -158,17 +151,10 @@ class Package(LogicBase):
         if instance is None:
             instance = models.Package(name=name)
             instance.publisher_id = pub_id
-            tag_instance = models.PackageTag()
-            instance.tags.append(tag_instance)
-        else:
-            tag_instance = models.PackageTag.query.join(models.Package) \
-                .filter(models.Package.id == instance.id,
-                        models.PackageTag.tag == 'latest').one()
+
         for key, value in kwargs.items():
-            if key not in ['descriptor', 'readme']:
-                setattr(instance, key, value)
-            else:
-                setattr(tag_instance, key, value)
+            setattr(instance, key, value)
+
         db.session.add(instance)
         db.session.commit()
 

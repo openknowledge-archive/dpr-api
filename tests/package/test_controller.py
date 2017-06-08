@@ -38,9 +38,8 @@ class GetMetaDataTestCase(unittest.TestCase):
         descriptor = {'name': 'test description'}
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = Package(name=self.package)
-            metadata.tags.append(PackageTag(descriptor=descriptor))
-            publisher.packages.append(metadata)
+            package = Package(name=self.package, descriptor=descriptor)
+            publisher.packages.append(package)
             db.session.add(publisher)
             db.session.commit()
         response = self.client.\
@@ -53,10 +52,9 @@ class GetMetaDataTestCase(unittest.TestCase):
         readme = 'README'
         with self.app.app_context():
             publisher = Publisher(name=self.publisher)
-            metadata = Package(name=self.package)
-            metadata.tags.append(PackageTag(descriptor=descriptor,
-                                            readme=readme))
-            publisher.packages.append(metadata)
+            package = Package(name=self.package,descriptor=descriptor,
+                                            readme=readme)
+            publisher.packages.append(package)
             db.session.add(publisher)
             db.session.commit()
         response = self.client.get('/api/package/%s/%s'%\

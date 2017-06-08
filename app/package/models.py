@@ -40,6 +40,9 @@ class Package(db.Model):
                              cascade="save-update, merge, delete, delete-orphan",
                              single_parent=True)
 
+    descriptor = db.Column(db.JSON)
+    readme = db.Column(db.TEXT)
+
     tags = relationship("PackageTag", back_populates="package")
 
     __table_args__ = (
