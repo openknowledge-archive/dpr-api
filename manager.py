@@ -92,12 +92,9 @@ def populate_data(publisher_name):
         db.session.delete(models.Package.query.get(package.id))
         db.session.commit()
     publisher = models.Publisher.query.filter_by(name=publisher_name).first()
-    metadata = models.Package(name="demo-package")
+    metadata = models.Package(name="demo-package", descriptor=data, readme=readme)
     metadata.status, metadata.private \
         = 'active', False
-    tag = models.PackageTag(descriptor=data, readme=readme)
-
-    metadata.tags.append(tag)
 
     publisher.packages.append(metadata)
     db.session.add(publisher)

@@ -64,10 +64,9 @@ class DataPackageQuery(object):
         results = self._build_sql_query(q, qf).limit(self.limit)
 
         for result in results:
-            tag = filter(lambda t: t.tag == 'latest', result.tags)[0]
             data = {'name': result.name,
-                    'descriptor': tag.descriptor,
-                    'readme': tag.readme,
+                    'descriptor': result.descriptor,
+                    'readme': result.readme,
                     'status': result.status.value,
                     'publisher_name': result.publisher.name}
             data_list.append(data)
