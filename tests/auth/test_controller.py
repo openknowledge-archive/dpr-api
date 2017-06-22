@@ -180,23 +180,8 @@ class AuthorizeUploadTestCase(unittest.TestCase):
             db.drop_all()
             db.create_all()
             base.make_fixtures(self.app, self.package, self.publisher, self.user_id)
-        response = self.client.post(self.jwt_url,
-                                    data=json.dumps({
-                                        'username': self.publisher,
-                                        'secret': 'super_secret'
-                                    }),
-                                    content_type='application/json')
-        data = json.loads(response.data)
-        self.jwt = data['token']
-
-        response = self.client.post(self.jwt_url,
-                                    data=json.dumps({
-                                        'username': 'test1',
-                                        'secret': 'super_secret1'
-                                    }),
-                                    content_type='application/json')
-        data = json.loads(response.data)
-        self.jwt1 = data['token']
+            self.jwt = base.get_valid_token(self.publisher)
+            self.jwt1 = base.get_valid_token('test1')
 
     @mock_s3
     def test_should_return_200_if_all_right(self):

@@ -4,6 +4,7 @@ from app import create_app
 from app.database import db
 from app.profile.models import User, Publisher, PublisherUser, UserRoleEnum
 from app.package.models import Package
+import app.logic as logic
 
 
 def make_fixtures(app, package, publisher, user_id):
@@ -43,6 +44,10 @@ def create_test_package(publisher='demo', package='demo-package', descriptor={},
 
     db.session.add(user)
     db.session.commit()
+
+def get_valid_token(username):
+    user = User.query.filter_by(name=username).one()
+    return logic.get_jwt_token(secret=user.secret, username=username)
 
 
 class TestBase(unittest.TestCase):
