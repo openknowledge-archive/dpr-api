@@ -4,7 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from flask import Blueprint, jsonify, session, g, make_response, render_template
+from flask import Blueprint, jsonify, session, request, g, make_response, render_template
 from flask import current_app as app
 import app.logic as logic
 import app.auth.jwt as jwt
