@@ -32,7 +32,7 @@ def make_fixtures(app, package, publisher, user_id):
         db.session.commit()
 
 def create_test_package(publisher='demo', package='demo-package', descriptor={}, readme=''):
-    user = User(name=publisher)
+    user = User(name=publisher, secret='supersecret', email='test@test.com')
     publisher = Publisher(name=publisher)
     association = PublisherUser(role=UserRoleEnum.owner)
     association.publisher = publisher
@@ -46,5 +46,8 @@ def create_test_package(publisher='demo', package='demo-package', descriptor={},
 
 
 class TestBase(unittest.TestCase):
-    pass
+    def setup_class(self):
+        db.drop_all()
+        db.create_all()
+        create_test_package()
 

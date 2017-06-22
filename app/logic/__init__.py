@@ -334,40 +334,16 @@ def get_authorized_user_info():
     return user_info
 
 
-def get_jwt_token():
-    data = request.get_json()
-    user_name = data.get('username', None)
-    email = data.get('email', None)
-    secret = data.get('secret', None)
-    verify = False
-    user_id = None
-    if user_name is None and email is None:
-        raise InvalidUsage('User name or email both can not be empty', 400)
-
-    if secret is None:
-        raise InvalidUsage('Secret can not be empty', 400)
-    elif user_name is not None:
-        try:
-            user = models.User.query.filter_by(name=user_name).one()
-        except NoResultFound as e:
-            app.logger.error(e)
-            raise InvalidUsage('user does not exists', 404)
-        if secret == user.secret:
-            verify = True
-            user_id = user.id
-    elif email is not None:
-        try:
-            user = models.User.query.filter_by(email=email).one()
-        except NoResultFound as e:
-            app.logger.error(e)
-            raise InvalidUsage('user does not exists', 404)
-        if secret == user.secret:
-            verify = True
-            user_id = user.id
-    if verify:
-        return JWT(app.config['JWT_SEED'], user_id).encode()
+def get_jwt_token(secret, username=None, email=None):
+    if username is not None:
+        user = models.User.query.filter_by(name=username, secret=secret).first()
     else:
-        raise InvalidUsage('Secret key do not match', 403)
+        user = models.User.query.filter_by(email=email, secret=secret).first()
+
+    if not user:
+        raise InvalidUsage('Invalid secret for user', 403)
+    else:
+        return JWT(app.config['JWT_SEED'], user.id).encode()
 
 
 def generate_signed_url():

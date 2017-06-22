@@ -96,7 +96,12 @@ def get_jwt():
             description: Secret key do not match
 
     """
-    token = logic.get_jwt_token()
+    data = request.get_json()
+    token = logic.get_jwt_token(
+            secret=data.get('secret', None),
+            username=data.get('username', None),
+            email=data.get('email', None)
+            )
     return jsonify({'token': token}), 200
 
 

@@ -38,84 +38,6 @@ class AuthTokenTestCase(unittest.TestCase):
             db.drop_all()
             db.engine.dispose()
 
-    def test_throw_400_if_user_name_and_email_is_none(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': None,
-                                  'email': None
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        assert rv.status_code == 400
-        assert data['message'] == 'User name or email both can not be empty'
-
-    def test_throw_400_if_secret_is_none(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': 'test',
-                                  'secret': None,
-                              }),
-                              content_type='application/json')
-        assert rv.status_code == 400
-        data = json.loads(rv.data)
-        assert data['message'] == 'Secret can not be empty'
-
-    def test_throw_404_if_user_id_do_not_exists(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': None,
-                                  'email': 'test1@test.com',
-                                  'secret': 'super_secret'
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 404)
-        self.assertEqual(data['message'], 'user does not exists')
-
-    def test_throw_404_if_user_email_do_not_exists(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': 'not_found_user',
-                                  'email': None,
-                                  'secret': 'super_secret'
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 404)
-        self.assertEqual(data['message'], 'user does not exists')
-
-    def test_throw_403_if_user_name_and_secret_key_does_not_match(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': 'test_user',
-                                  'email': None,
-                                  'secret': 'super_secret1'
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 403)
-        self.assertEqual(data['message'], 'Secret key do not match')
-
-    def test_throw_403_if_email_and_secret_key_does_not_match(self):
-        rv = self.client.post(self.auth_token_url,
-                              data=json.dumps({
-                                  'username': None,
-                                  'email': 'test@test.com',
-                                  'secret': 'super_secret1'
-                              }),
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 403)
-        self.assertEqual(data['message'], 'Secret key do not match')
-
-    def test_throw_400_if_bad_request(self):
-        rv = self.client.post(self.auth_token_url,
-                              data="'username': None,",
-                              content_type='application/json')
-        data = json.loads(rv.data)
-        self.assertEqual(rv.status_code, 400)
-        self.assertEqual(data['message'], 'Bad Request')
-
     def test_return_200_if_email_and_secret_matches(self):
         rv = self.client.post(self.auth_token_url,
                               data=json.dumps({
@@ -126,15 +48,16 @@ class AuthTokenTestCase(unittest.TestCase):
                               content_type='application/json')
         self.assertEqual(rv.status_code, 200)
 
-    def test_return_200_if_user_id_and_secret_matches(self):
+    def test_throw_400_if_user_name_and_email_is_none(self):
         rv = self.client.post(self.auth_token_url,
                               data=json.dumps({
-                                  'username': 'test_user',
-                                  'email': None,
-                                  'secret': 'super_secret'
+                                  'secret': 'abc',
+                                  'username': 'test@test.com'
                               }),
                               content_type='application/json')
-        self.assertEqual(rv.status_code, 200)
+        data = json.loads(rv.data)
+        assert rv.status_code == 403
+        assert data['message'] == 'Invalid secret for user'
 
 
 class CallbackHandlingTestCase(unittest.TestCase):
@@ -243,7 +166,7 @@ class CallbackHandlingTestCase(unittest.TestCase):
 
 import tests.base as base
 
-class AuthorizeUploadTestCase(base.TestBase):
+class AuthorizeUploadTestCase(unittest.TestCase):
     publisher = 'test_publisher'
     package = 'test_package'
     user_id = 1

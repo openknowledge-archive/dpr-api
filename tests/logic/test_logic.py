@@ -9,7 +9,9 @@ from app.profile.models import *
 import app.logic as logic
 from app.utils import InvalidUsage
 
-from tests.base import create_test_package
+import pytest
+import tests.base as base
+
 
 class DataPackageShowTest(unittest.TestCase):
 
@@ -24,7 +26,7 @@ class DataPackageShowTest(unittest.TestCase):
         with self.app.test_request_context():
             db.drop_all()
             db.create_all()
-            create_test_package(self.publisher, self.package, self.descriptor)
+            base.create_test_package(self.publisher, self.package, self.descriptor)
 
     def test_get_package(self):
         # result is a dict ready for passing to templates or API
@@ -64,7 +66,7 @@ class PackageTest(unittest.TestCase):
         with self.app.test_request_context():
             db.drop_all()
             db.create_all()
-            create_test_package(self.publisher, self.package, self.descriptor)
+            base.create_test_package(self.publisher, self.package, self.descriptor)
 
 
     @patch('app.logic.Package.create_or_update')
@@ -140,3 +142,17 @@ class HelpersTest(unittest.TestCase):
         self.descriptor['licenses'] = 1
         descriptor = logic.validate_for_template(self.descriptor)
         self.assertEqual(descriptor.get('licenses'), None)
+
+class TestGetJwtToken(base.TestBase):
+
+    def test_get_jwt_token(self):
+        out = logic.get_jwt_token(username='demo', secret='supersecret')
+        # token are this long!
+        self.assertEqual(len(out), 161)
+
+        out = logic.get_jwt_token(email='test@test.com', secret='supersecret')
+        self.assertEqual(len(out), 161)
+
+        with pytest.raises(InvalidUsage):
+            out = logic.get_jwt_token(username='demo', secret='wrongsecret')
+
