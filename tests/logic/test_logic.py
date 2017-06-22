@@ -156,3 +156,8 @@ class TestGetJwtToken(base.TestBase):
         with pytest.raises(InvalidUsage):
             out = logic.get_jwt_token(username='demo', secret='wrongsecret')
 
+    def teardown_class(self):
+        db.session.remove()
+        db.drop_all()
+        db.engine.dispose()
+
