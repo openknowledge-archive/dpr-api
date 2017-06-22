@@ -241,7 +241,9 @@ class CallbackHandlingTestCase(unittest.TestCase):
             db.engine.dispose()
 
 
-class AuthorizeUploadTestCase(unittest.TestCase):
+import tests.base as base
+
+class AuthorizeUploadTestCase(base.TestBase):
     publisher = 'test_publisher'
     package = 'test_package'
     user_id = 1
@@ -254,26 +256,7 @@ class AuthorizeUploadTestCase(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-            self.user = User()
-            self.user.id = self.user_id
-            self.user.email, self.user.name, self.user.secret = \
-                'test@test.com', self.publisher, 'super_secret'
-            self.pub = Publisher(name=self.publisher)
-            self.pub.packages.append(Package(name=self.package))
-            association = PublisherUser(role=UserRoleEnum.owner)
-            association.publisher = self.pub
-            self.user.publishers.append(association)
-
-            user1 = User(id=2, name='test1',
-                         secret='super_secret1', email="test1@test.com")
-            pub1 = Publisher(name='test1')
-            association1 = PublisherUser(role=UserRoleEnum.owner)
-            association1.publisher = pub1
-            user1.publishers.append(association1)
-
-            db.session.add(self.user)
-            db.session.add(user1)
-            db.session.commit()
+            base.make_fixtures(self.app, self.package, self.publisher, self.user_id)
         response = self.client.post(self.jwt_url,
                                     data=json.dumps({
                                         'username': self.publisher,
@@ -353,8 +336,3 @@ class AuthorizeUploadTestCase(unittest.TestCase):
                                     content_type='application/json')
         self.assertEqual(400, response.status_code)
 
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
