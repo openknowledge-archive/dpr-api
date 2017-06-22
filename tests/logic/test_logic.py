@@ -9,20 +9,7 @@ from app.profile.models import *
 import app.logic as logic
 from app.utils import InvalidUsage
 
-def create_test_package(publisher='demo', package='demo-package', descriptor={}, readme=''):
-
-    user = User(name=publisher)
-    publisher = Publisher(name=publisher)
-    association = PublisherUser(role=UserRoleEnum.owner)
-    association.publisher = publisher
-    user.publishers.append(association)
-
-    package = Package(name=package, descriptor=descriptor, readme=readme)
-    publisher.packages.append(package)
-
-    db.session.add(user)
-    db.session.commit()
-
+from tests.base import create_test_package
 
 class DataPackageShowTest(unittest.TestCase):
 
