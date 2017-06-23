@@ -58,7 +58,7 @@ def datapackage_show(publisher, package):
 
     return render_template("dataset.html",
                            dataset=datapackage.get('descriptor'),
-                           datapackageUrl=datapackage.get('bitstore_url'),
+                           datapackageUrl=datapackage.get('bitstore_url')+'/datapackage.json',
                            showDataApi=True,
                            dataViews=datapackage.get('descriptor').get('views') or [],
                            readmeShort=datapackage.get('short_readme'),

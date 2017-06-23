@@ -43,7 +43,7 @@
       </p>
       <p>More datasets from <a href="/{{ dataset.owner }}" class="explore">{{ dataset.owner }}</a></p>
       <div class="btn-group">
-        <a href="{{ datapackageUrl }}/datapackage.json" class="btn btn-xs btn-default" target="_blank"><small>Data Package Descriptor (JSON)</small></a>
+        <a href="{{ datapackageUrl }}" class="btn btn-xs btn-default" target="_blank"><small>Data Package Descriptor (JSON)</small></a>
         {% if dataset.bugs and dataset.bugs.url %}
         <a href="{{dataset.bugs.url}}" class="btn btn-xs btn-default" target="_blank">Report an Issue</a>
         {% endif %}
