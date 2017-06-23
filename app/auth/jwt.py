@@ -57,9 +57,6 @@ class FileData(object):
         self.package_name = package_name
         self.publisher = publisher
         self.relative_path = relative_path
-        ## remove datapackage.json from url
-        if relative_path.endswith('datapackage.json'):
-            self.relative_path = relative_path.replace('datapackage.json', '')
         self.props = props
         self.bitstore = BitStore(publisher=publisher,
                                  package=package_name)
