@@ -8,6 +8,7 @@ from flask import Blueprint, jsonify, session, request, g, make_response, render
 from flask import current_app as app
 import app.logic as logic
 import app.auth.jwt as jwt
+from app.auth.annotations import get_user_from_jwt
 
 auth_blueprint = Blueprint('auth', __name__, url_prefix='/api/auth')
 bitstore_blueprint = Blueprint('bitstore', __name__, url_prefix='/api/datastore')
@@ -144,5 +145,11 @@ def authorize_upload():
         500:
             description: Internal Server Error
     """
-    payload = logic.generate_signed_url()
+    user_id = None
+    jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
+    if jwt_status:
+        user_id = user_info['user']
+
+    data = request.get_json()
+    payload = logic.generate_signed_url(user_id, data)
     return jsonify(payload), 200

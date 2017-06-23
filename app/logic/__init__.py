@@ -346,13 +346,12 @@ def get_jwt_token(secret, username=None, email=None):
         return JWT(app.config['JWT_SEED'], user.id).encode()
 
 
-def generate_signed_url():
-    user_id = None
-    jwt_status, user_info = get_user_from_jwt(request, app.config['JWT_SEED'])
-    if jwt_status:
-        user_id = user_info['user']
-
-    data = request.get_json()
+def generate_signed_url(user_id, data):
+    '''
+    @param data: data is dictionary of metadata (package owner and name) and
+    filedata (info for all the failes for package)
+    @param user_id: uniq id for user 
+    '''
     metadata, filedata = data['metadata'], data['filedata']
     publisher, package_name = metadata['owner'], metadata['name']
     res_payload = {'filedata': {}}

@@ -19,9 +19,9 @@ class BitStoreTestCase(unittest.TestCase):
 
     def test_metadata_s3_key(self):
         metadata = BitStore(publisher="pub_test", package="test_package")
-        expected = "{t}/pub_test/test_package/_v/latest". \
+        expected = "{t}/pub_test/test_package/_v/latest/datapckage.json". \
             format(t=metadata.prefix)
-        self.assertEqual(expected, metadata.build_s3_key())
+        self.assertEqual(expected, metadata.build_s3_key('datapckage.json'))
 
     def test_metadata_s3_prefix(self):
         metadata = BitStore(publisher="pub_test", package="test_package")
@@ -30,7 +30,7 @@ class BitStoreTestCase(unittest.TestCase):
 
     def test_extract_information_from_s3_url(self):
         metadata = BitStore(publisher="pub_test", package="test_package")
-        s3_key = metadata.build_s3_key()
+        s3_key = metadata.build_s3_key('datapckage.json')
         pub, package, version = BitStore.extract_information_from_s3_url(s3_key)
         self.assertEqual(pub, 'pub_test')
         self.assertEqual(package, 'test_package')
@@ -45,7 +45,7 @@ class BitStoreTestCase(unittest.TestCase):
             metadata = BitStore(publisher="pub_test",
                                 package="test_package",
                                 body='hi')
-            key = metadata.build_s3_key()
+            key = metadata.build_s3_key('datapackage.json')
             metadata.save_metadata()
             obs_list = list(s3.list_objects(Bucket=bucket_name, Prefix=key). \
                             get('Contents'))
@@ -75,7 +75,7 @@ class BitStoreTestCase(unittest.TestCase):
                                 body='hi')
             s3.put_object(
                 Bucket=bucket_name,
-                Key=metadata.build_s3_key(),
+                Key=metadata.build_s3_key('datapackage.json'),
                 Body=metadata.body)
             self.assertEqual(metadata.body, metadata.get_metadata_body())
 
@@ -90,7 +90,7 @@ class BitStoreTestCase(unittest.TestCase):
                                 body='hi')
             s3.put_object(
                 Bucket=bucket_name,
-                Key=metadata.build_s3_key(),
+                Key=metadata.build_s3_key('datapackage.json'),
                 Body=metadata.body)
             self.assertEqual(1, len(metadata.get_all_metadata_name_for_publisher()))
 
@@ -118,7 +118,7 @@ class BitStoreTestCase(unittest.TestCase):
             metadata = BitStore(publisher="pub_test",
                                 package="test_package",
                                 body='hi')
-            post = metadata.generate_pre_signed_post_object(123)
+            post = metadata.generate_pre_signed_post_object(123, 'datapackage.json')
             parsed = urlparse(post['url'])
             self.assertEqual(parsed.netloc,
                              's3-{region}.amazonaws.com'.
@@ -172,7 +172,7 @@ class BitStoreTestCase(unittest.TestCase):
             s3 = boto3.client('s3')
             bucket_name = self.app.config['S3_BUCKET_NAME']
             s3.create_bucket(Bucket=bucket_name)
-            metadata_key = bit_store.build_s3_key()
+            metadata_key = bit_store.build_s3_key('datapackage.json')
 
             bit_store.save_metadata()
 

@@ -112,10 +112,90 @@ class PackageTest(unittest.TestCase):
             db.drop_all()
             db.engine.dispose()
 
+class TestGetJwtToken(base.TestBase):
+
+    def test_get_jwt_token(self):
+        out = logic.get_jwt_token(username='demo', secret='supersecret')
+        # token are this long!
+        self.assertEqual(len(out), 161)
+
+        out = logic.get_jwt_token(email='test@test.com', secret='supersecret')
+        self.assertEqual(len(out), 161)
+
+        with pytest.raises(InvalidUsage):
+            out = logic.get_jwt_token(username='demo', secret='wrongsecret')
+
+    def teardown_class(self):
+        db.session.remove()
+        db.drop_all()
+        db.engine.dispose()
+
+class TestGetSignedUrl(unittest.TestCase):
+
+    publisher = 'test_publisher'
+    package = 'test_package'
+    user_id = 1
+
+    @classmethod
+    def setup_class(self):
+        self.app = create_app()
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
+            base.make_fixtures(self.app, self.package, self.publisher, self.user_id)
+
+    def test_generate_signed_url_is_ok(self):
+        data = {
+            'metadata': {
+                "owner": self.publisher,
+                "name": self.package
+            },
+            "filedata": {
+                "datapackage.json": {
+                    "name": "datapackage.json",
+                    "md5": "12345y65uyhgfed23243y6"
+                }
+            }
+        }
+        file_data = logic.generate_signed_url(1, data)
+        self.assertTrue('filedata' in file_data)
+
+        file_info = file_data['filedata']['datapackage.json']
+        self.assertEqual(file_info.get('name'), 'datapackage.json')
+
+        upload_query = file_info.get('upload_query')
+        self.assertEqual(upload_query.get('key'),
+            'metadata/test_publisher/test_package/_v/latest/datapackage.json')
+        self.assertEqual(upload_query.get('Content-Type'), 'text/plain')
+        self.assertEqual(upload_query.get('acl'), 'public-read')
+
+    def test_generate_signed_url_fails_if_not_an_owner(self):
+        data = {
+            'metadata': {
+                "owner": self.publisher,
+                "name": self.package
+            },
+            "filedata": {
+                "datapackage.json": {
+                    "name": "datapackage.json",
+                    "md5": "12345y65uyhgfed23243y6"
+                }
+            }
+        }
+        with pytest.raises(InvalidUsage):
+            out = logic.generate_signed_url(2, data)
+
+    @classmethod
+    def teardown_class(self):
+        db.session.remove()
+        db.drop_all()
+        db.engine.dispose()
+
 class HelpersTest(unittest.TestCase):
 
-
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         self.descriptor = json.loads(open('fixtures/datapackage.json').read())
 
 
@@ -142,22 +222,3 @@ class HelpersTest(unittest.TestCase):
         self.descriptor['licenses'] = 1
         descriptor = logic.validate_for_template(self.descriptor)
         self.assertEqual(descriptor.get('licenses'), None)
-
-class TestGetJwtToken(base.TestBase):
-
-    def test_get_jwt_token(self):
-        out = logic.get_jwt_token(username='demo', secret='supersecret')
-        # token are this long!
-        self.assertEqual(len(out), 161)
-
-        out = logic.get_jwt_token(email='test@test.com', secret='supersecret')
-        self.assertEqual(len(out), 161)
-
-        with pytest.raises(InvalidUsage):
-            out = logic.get_jwt_token(username='demo', secret='wrongsecret')
-
-    def teardown_class(self):
-        db.session.remove()
-        db.drop_all()
-        db.engine.dispose()
-
