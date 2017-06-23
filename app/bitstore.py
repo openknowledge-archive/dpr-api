@@ -36,7 +36,7 @@ class BitStore(object):
         """
         bucket_name = app.config['S3_BUCKET_NAME']
         s3_client = app.config['S3']
-        key = self.build_s3_key()
+        key = self.build_s3_key('datapackage.json')
         s3_client.put_object(Bucket=bucket_name, Key=key,
                              Body=self.body, ACL=acl)
 
@@ -46,7 +46,7 @@ class BitStore(object):
         publisher and package
         :return: The String value of the datapackage.json or None if not found
         """
-        key = self.build_s3_key()
+        key = self.build_s3_key('datapackage.json')
         return self.get_s3_object(key)
 
     def get_s3_object(self, key):
